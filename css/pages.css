@@ -1,0 +1,86 @@
+/* =========================================================
+   Multi-page layer: page banners, explore grid, pager
+   ========================================================= */
+
+/* Page banner */
+.page-hero { position: relative; overflow: hidden; padding: 150px 0 40px; }
+.page-hero > .container { position: relative; z-index: 1; }
+.page-hero-inner {
+  display: grid; grid-template-columns: 1fr 300px; gap: 40px; align-items: center;
+  padding: clamp(28px, 4vw, 48px); border-radius: 32px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: var(--shadow-lg);
+  position: relative; overflow: hidden;
+}
+.page-hero-inner::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: conic-gradient(from var(--rim, 0deg), transparent 0 60%, var(--c1), var(--c2), var(--c3), var(--c5), var(--c4), transparent 96%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: rim 8s linear infinite;
+}
+.page-title { font-size: clamp(36px, 5.4vw, 64px); font-weight: 800; letter-spacing: -0.035em; margin: 18px 0 16px; }
+.crumbs { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--text-3); margin-bottom: 16px; }
+.crumbs a:hover { color: var(--accent-2); }
+.crumbs b { color: var(--text); }
+.page-hero + section, .page-hero + .marquee-section { padding-top: 40px; }
+
+/* Animated orb on each banner */
+.page-orb { position: relative; width: 260px; height: 260px; margin: 0 auto; }
+.orb-ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px dashed rgba(26,155,215,.45); animation: spin 22s linear infinite; }
+.orb-ring.r2 { inset: 34px; border-style: solid; border-color: rgba(142,92,245,.35); animation-duration: 14s; animation-direction: reverse; }
+.orb-ring.r3 { inset: 70px; border: 2px dotted rgba(255,159,10,.5); animation-duration: 9s; }
+.orb-core { position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; border-radius: 24px; transform: translate(-50%, -50%); animation: orbPulse 3.2s ease-in-out infinite; }
+.orb-core svg { width: 36px; height: 36px; }
+@keyframes orbPulse { 50% { transform: translate(-50%, -50%) scale(1.08) rotate(-4deg); box-shadow: 0 0 40px -6px currentColor; } }
+.page-orb i {
+  position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px; border-radius: 50%;
+  background: var(--c); box-shadow: 0 0 16px var(--c);
+  transform: rotate(var(--a)) translateX(130px); animation: orbit 12s linear infinite;
+}
+@keyframes orbit { from { transform: rotate(var(--a)) translateX(130px); } to { transform: rotate(calc(var(--a) + 360deg)) translateX(130px); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Home: explore grid */
+.explore-section { padding-top: 40px; }
+.explore-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.explore-card { display: flex; flex-direction: column; padding: 28px; position: relative; overflow: hidden; color: inherit; }
+.explore-card h3 { font-size: 22px; font-weight: 800; margin: 18px 0 8px; }
+.explore-card p { margin: 0 0 20px; color: var(--text-2); }
+.explore-card .go { margin-top: auto; font-weight: 700; font-size: 14.5px; color: var(--accent-2); display: inline-flex; gap: 8px; align-items: center; }
+.explore-card .go span { transition: transform .3s ease; }
+.explore-card:hover .go span { transform: translateX(6px); }
+.explore-card::after {
+  content: ""; position: absolute; right: -60px; bottom: -60px; width: 180px; height: 180px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(26,155,215,.18), transparent 70%); transition: transform .5s ease;
+}
+.explore-card:hover::after { transform: scale(1.6); }
+
+/* Previous / next pager */
+.pager { display: flex; justify-content: space-between; gap: 14px; padding: 56px 0 10px; }
+.pager-link { display: flex; flex-direction: column; gap: 4px; padding: 18px 24px; min-width: 220px; transition: transform .25s ease; }
+.pager-link.next { text-align: right; margin-left: auto; }
+.pager-link small { font-size: 12.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+.pager-link b { font-size: 19px; }
+.pager-link:hover { transform: translateY(-3px); }
+
+/* Page fade-in on load */
+body { animation: pageIn .5s ease both; }
+@keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
+
+@media (max-width: 1080px) {
+  .explore-grid { grid-template-columns: repeat(2, 1fr); }
+  .page-hero-inner { grid-template-columns: 1fr 200px; }
+  .page-orb { width: 190px; height: 190px; }
+  .page-orb i { animation-name: orbitSm; transform: rotate(var(--a)) translateX(95px); }
+  .orb-ring.r2 { inset: 26px; } .orb-ring.r3 { inset: 52px; }
+}
+@keyframes orbitSm { from { transform: rotate(var(--a)) translateX(95px); } to { transform: rotate(calc(var(--a) + 360deg)) translateX(95px); } }
+@media (max-width: 720px) {
+  .page-hero { padding-top: 110px; }
+  .page-hero-inner { grid-template-columns: 1fr; gap: 10px; }
+  .page-orb { display: none; }
+  .explore-grid { grid-template-columns: 1fr; }
+  .pager-link { min-width: 0; flex: 1; padding: 14px 16px; }
+  .pager-link b { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { body { animation: none; } }

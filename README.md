@@ -2,9 +2,16 @@
 
 Static website for **Motamax India Private Limited** (Bhubaneswar, Odisha) — Solution Architecture, Automation and Infrastructure Development.
 
-- `index.html` — main site: about, services (3 domains + detailed expertise), delivery process, industries, success stories, clients, site gallery, credentials, contact
+- `index.html` — home: animated capability map, client strip, key numbers, links to every page
+- `about.html` — mission, vision, values, delivery process, credentials
+- `services.html` — 3 domains + detailed expertise
+- `industries.html` — 11 sectors with solutions and clients served
+- `stories.html` — success stories with sector filter
+- `clients.html` — key clients
+- `work.html` — site photo gallery with lightbox
+- `contact.html` — addresses, phone, WhatsApp, email, enquiry form
 - `login.html` — login page with a Back button
-- `css/style.css` — iOS-style glass design system (light & dark mode)
+- `css/style.css`, `css/motion.css`, `css/pages.css` — glass design system, animations, page layouts
 - `js/main.js` — content data and interactions
 - `assets/` — logo, site photos and the downloadable company profile PDF
 

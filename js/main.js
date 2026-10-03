@@ -665,15 +665,13 @@
     $$('a', menu).forEach((a) => a.addEventListener('click', () => { menu.classList.remove('open'); burger.setAttribute('aria-expanded', 'false'); }));
   }
 
-  // Active nav link on scroll
-  const links = $$('.nav-links a');
-  const sections = links.map((a) => $(a.getAttribute('href'))).filter(Boolean);
-  const navIO = new IntersectionObserver((entries) => {
-    entries.forEach((en) => {
-      if (en.isIntersecting) links.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
-    });
-  }, { rootMargin: '-45% 0px -50% 0px' });
-  sections.forEach((s) => navIO.observe(s));
+  // Highlight the menu link for the current page
+  const here = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  $$('.nav-links a, .mobile-menu a').forEach((a) => {
+    const on = a.getAttribute('href').toLowerCase() === here;
+    a.classList.toggle('active', on);
+    if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
 
   // Reveal on scroll + counters
   const revealIO = new IntersectionObserver((entries) => {
@@ -686,7 +684,7 @@
   }, { threshold: 0.12 });
   $$('.reveal').forEach((el) => revealIO.observe(el));
   // The hero is always on screen at load: start its intro straight away rather than waiting on the observer.
-  $$('.hero .reveal').forEach((el) => { el.classList.add('in'); $$('[data-count]', el).forEach(countUp); revealIO.unobserve(el); });
+  $$('.hero .reveal, .page-hero .reveal').forEach((el) => { el.classList.add('in'); $$('[data-count]', el).forEach(countUp); revealIO.unobserve(el); });
 
   function countUp(el) {
     if (el.dataset.done) return;
