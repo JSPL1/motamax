@@ -329,6 +329,176 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* Capability map                                                      */
+  /* ------------------------------------------------------------------ */
+
+  const PALETTE = ['#1A9BD7', '#8E5CF5', '#E3342F', '#22B45A', '#FF9F0A'];
+  const CAPS = [
+    ['Electrical', 'HT & LT construction, substations and panels — from DISCOM application to charging.', ['Substations from 16 kVA', 'HT & LT construction', 'Panels & distribution boards', 'DG, UPS & battery systems']],
+    ['IT', 'Hardware, servers and IT operations for plants, offices and campuses.', ['Desktops, laptops & servers', 'Office automation', 'Data‑centre build‑up', 'IT operation & support']],
+    ['Networking', 'Wired and wireless networks engineered for industrial sites.', ['LAN / WAN & Wi‑Fi', 'P2P & RF links', 'Switches, routers, firewalls', 'Panduit & Fluke cabling']],
+    ['CCTV', 'Surveillance designed for plants, mines, townships and corporates.', ['CCTV analytics', 'Solar & GSM‑based CCTV', 'Control‑room monitoring', 'Drones for security']],
+    ['Security', 'Physical access and perimeter control.', ['Access control & biometrics', 'Boom barriers', 'Flap & turnstile barriers', 'Fire detection systems']],
+    ['Telecom', 'Telecom infrastructure build‑out and site power.', ['EPABX / IPPBX, SIP & VoIP', 'FTTx / IBD projects', 'NLD‑OFC by HDD', 'Telecom ODC electrical']],
+    ['Communication', 'Critical and everyday communication across large sites.', ['Walkie‑talkie: MCX, DMR, TETRA', 'Private 4G / 5G', 'PA & VA systems', 'Intercom']],
+    ['Automation', 'Automating weighing, switching and business processes.', ['Weighbridge automation', 'Electrical switch automation', 'HRMS, CLMS & BPA', 'AI video analytics']],
+    ['AV', 'Audio‑video integration for meetings and classrooms.', ['AVSI integration', 'Audio & video conferencing', 'Telepresence', 'Smart classrooms']],
+    ['Displays', 'Visual systems for control rooms and public spaces.', ['Video walls', 'Indoor & outdoor LED / LCD', 'Interactive panels', 'Industrial monitors']],
+    ['Solar', 'Renewable power for sites, lighting and security.', ['Solar panels & inverters', 'Batteries', 'Solar lighting', 'Solar‑powered CCTV']],
+    ['Infrastructure', 'Civil, OFC and site infrastructure for complete projects.', ['OFC — UG & overhead', 'Street lighting', 'EPC & site preparation', 'Industrial tools & equipment']]
+  ];
+  const capMap = $('#capMap');
+  const capDetail = $('#capDetail');
+  const capWrap = $('#capWrap');
+  if (capMap && capDetail) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const CX = 500, CY = 430, R = 255, LR = 292;
+    const CYCLE = 3200;
+    let html = `
+      <defs>
+        <linearGradient id="capCenterGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2B2D8A"/><stop offset="1" stop-color="#3B1F8F"/></linearGradient>
+        <linearGradient id="capBorder" x1="0" y1="0" x2="1" y2="0">${PALETTE.map((c, i) => `<stop offset="${i / 4}" stop-color="${c}"/>`).join('')}</linearGradient>
+        <radialGradient id="capSweepGrad" cx="0" cy="0" r="1"><stop offset="0" stop-color="#5CC8FF" stop-opacity=".35"/><stop offset="1" stop-color="#5CC8FF" stop-opacity="0"/></radialGradient>
+        <filter id="capBlur"><feGaussianBlur stdDeviation="6"/></filter>
+      </defs>
+      <circle class="cap-ring" cx="${CX}" cy="${CY}" r="${R + 75}"/>
+      <circle class="cap-ring" cx="${CX}" cy="${CY}" r="160"/>
+      <circle class="cap-orbit" cx="${CX}" cy="${CY}" r="${R}"/>
+      <circle class="cap-orbit rev" cx="${CX}" cy="${CY}" r="${R + 40}"/>
+      <g class="cap-sweep"><path d="M${CX} ${CY} L${CX + R + 75} ${CY} A${R + 75} ${R + 75} 0 0 0 ${CX + (R + 75) * Math.cos(-0.5)} ${CY + (R + 75) * Math.sin(-0.5)} Z" fill="url(#capSweepGrad)" opacity=".5"/></g>`;
+    const lines = [], nodes = [], labels = [], particles = [];
+    CAPS.forEach((c, i) => {
+      const a = (-90 + i * 30) * Math.PI / 180;
+      const col = PALETTE[i % PALETTE.length];
+      const x = CX + R * Math.cos(a), y = CY + R * Math.sin(a);
+      const len = Math.hypot(x - CX, y - CY);
+      const dl = (i * 0.08).toFixed(2) + 's';
+      lines.push(`<line class="cap-line" data-i="${i}" x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${CX}" y2="${CY}" stroke="${col}" style="--len:${len.toFixed(0)};--dl:${dl}"/>`);
+      particles.push(`<circle class="cap-particle" r="4" fill="${col}"><animateMotion dur="${(2.2 + (i % 3) * 0.4).toFixed(1)}s" begin="${(i * 0.23).toFixed(2)}s" repeatCount="indefinite" path="M${x.toFixed(1)} ${y.toFixed(1)} L${CX} ${CY}"/><animate attributeName="opacity" values="0;1;1;0" dur="${(2.2 + (i % 3) * 0.4).toFixed(1)}s" begin="${(i * 0.23).toFixed(2)}s" repeatCount="indefinite"/></circle>`);
+      nodes.push(`<g class="cap-node" data-i="${i}" tabindex="0" role="button" aria-label="${esc(c[0])}" style="color:${col};--dl:${(0.5 + i * 0.08).toFixed(2)}s;--pd:${(i * 0.23).toFixed(2)}s">
+          <circle class="hit" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="30"/>
+          <circle class="pulse" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="10" stroke="${col}"/>
+          <g class="dotg"><circle class="core" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="10" stroke="${col}"/></g>
+        </g>`);
+      const lx = CX + LR * Math.cos(a), ly = CY + LR * Math.sin(a);
+      const cos = Math.cos(a);
+      const anchor = cos > 0.2 ? 'start' : cos < -0.2 ? 'end' : 'middle';
+      const ox = anchor === 'start' ? -8 : anchor === 'end' ? 8 : 0;
+      const oy = Math.sin(a) < -0.9 ? -6 : Math.sin(a) > 0.9 ? 14 : 6;
+      labels.push(`<text class="cap-label" data-i="${i}" x="${(lx + ox).toFixed(1)}" y="${(ly + oy).toFixed(1)}" text-anchor="${anchor}" fill="${col}">${esc(c[0].toUpperCase())}</text>`);
+    });
+    html += lines.join('') + particles.join('') + `
+      <g class="cap-center">
+        <rect class="glow" x="${CX - 115}" y="${CY - 50}" width="230" height="100" rx="18" fill="#5CC8FF" opacity=".35" filter="url(#capBlur)"/>
+        <rect class="box" x="${CX - 105}" y="${CY - 44}" width="210" height="88" rx="14" fill="url(#capCenterGrad)" stroke="url(#capBorder)" stroke-width="2.2"/>
+        <text class="k" x="${CX}" y="${CY - 8}" text-anchor="middle" id="capKicker">INTEGRATED</text>
+        <text class="t" x="${CX}" y="${CY + 24}" text-anchor="middle">Project Delivery</text>
+      </g>` + nodes.join('') + labels.join('');
+    capMap.innerHTML = html;
+
+    let active = 0, timer = null, paused = false, visibleMap = false;
+    function select(i, user) {
+      active = i;
+      const col = PALETTE[i % PALETTE.length];
+      const c = CAPS[i];
+      capMap.classList.add('focus');
+      $$('.cap-line, .cap-node, .cap-label', capMap).forEach((el) => el.classList.toggle('on', +el.dataset.i === i));
+      $('#capKicker', capMap).textContent = c[0].toUpperCase();
+      $('#capKicker', capMap).setAttribute('fill', col);
+      capDetail.style.setProperty('--nc', col);
+      capDetail.style.setProperty('--cycle', CYCLE + 'ms');
+      capDetail.innerHTML = `
+        <div class="cap-progress"><span class="${user ? '' : 'run'}"></span></div>
+        <span class="idx anim">${String(i + 1).padStart(2, '0')} / ${CAPS.length} · CAPABILITY</span>
+        <h3 class="anim"><i></i>${esc(c[0])}</h3>
+        <p class="anim">${esc(c[1])}</p>
+        <ul>${c[2].map((t, k) => `<li style="animation-delay:${0.08 * (k + 1)}s">${esc(t)}</li>`).join('')}</ul>
+        <div class="cap-chips">${CAPS.map((x, k) => `<button data-i="${k}" class="${k === i ? 'on' : ''}" style="--nc:${PALETTE[k % PALETTE.length]}"><i></i>${esc(x[0])}</button>`).join('')}</div>`;
+    }
+    function schedule() {
+      clearTimeout(timer);
+      if (paused || !visibleMap) return;
+      timer = setTimeout(() => { select((active + 1) % CAPS.length); schedule(); }, CYCLE);
+    }
+    function userPick(i) { paused = true; clearTimeout(timer); select(i, true); }
+    capMap.addEventListener('mouseover', (e) => { const n = e.target.closest('.cap-node'); if (n) userPick(+n.dataset.i); });
+    capMap.addEventListener('click', (e) => { const n = e.target.closest('.cap-node'); if (n) userPick(+n.dataset.i); });
+    capMap.addEventListener('keydown', (e) => { const n = e.target.closest('.cap-node'); if (n && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); userPick(+n.dataset.i); } });
+    capMap.addEventListener('focusin', (e) => { const n = e.target.closest('.cap-node'); if (n) userPick(+n.dataset.i); });
+    capDetail.addEventListener('click', (e) => { const b = e.target.closest('.cap-chips button'); if (b) userPick(+b.dataset.i); });
+    capWrap.addEventListener('mouseleave', () => { paused = false; schedule(); });
+    new IntersectionObserver((en) => { visibleMap = en[0].isIntersecting; schedule(); }, { threshold: 0.25 }).observe(capWrap);
+    select(0);
+    const hint = $('.cap-hint');
+    if (hint && matchMedia('(pointer: coarse)').matches) hint.textContent = 'TAP A NODE';
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Motion layer                                                        */
+  /* ------------------------------------------------------------------ */
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Hero headline: split into words that rise in one after another
+  const h1 = $('.hero h1');
+  if (h1 && !reduceMotion) {
+    let n = 0;
+    const wrap = (node) => {
+      Array.from(node.childNodes).forEach((ch) => {
+        if (ch.nodeType === 3) {
+          const frag = document.createDocumentFragment();
+          ch.textContent.split(/(\s+)/).forEach((part) => {
+            if (!part) return;
+            if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); return; }
+            const s = document.createElement('span');
+            s.className = 'w'; s.textContent = part; s.style.animationDelay = (0.15 + n++ * 0.09) + 's';
+            frag.appendChild(s);
+          });
+          ch.replaceWith(frag);
+        } else if (ch.nodeType === 1) {
+          if (ch.classList.contains('grad-text')) {
+            ch.classList.add('w'); ch.style.animationDelay = (0.15 + n++ * 0.09) + 's';
+          } else wrap(ch);
+        }
+      });
+    };
+    wrap(h1);
+  }
+
+  // Stagger reveal delays among siblings
+  $$('.reveal').forEach((el) => {
+    const sibs = Array.from(el.parentElement.children).filter((s) => s.classList.contains('reveal'));
+    const k = sibs.indexOf(el);
+    if (sibs.length > 1 && k > 0) el.style.setProperty('--d', Math.min(k * 0.07, 0.6) + 's');
+  });
+
+  // Spotlight + 3D tilt on cards (fine pointers only)
+  if (!reduceMotion && matchMedia('(pointer: fine)').matches) {
+    $$('.svc, .story, .step, .card, .cred, .client, .ci, .widget, .acc').forEach((el) => {
+      el.classList.add('spot', 'tilt');
+      el.addEventListener('pointermove', (e) => {
+        const r = el.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+        el.style.setProperty('--mx', px * 100 + '%');
+        el.style.setProperty('--my', py * 100 + '%');
+        if (!el.classList.contains('acc')) el.style.transform = `perspective(900px) rotateX(${(0.5 - py) * 6}deg) rotateY(${(px - 0.5) * 6}deg) translateY(-4px)`;
+      });
+      el.addEventListener('pointerleave', () => { el.style.transform = ''; });
+    });
+  }
+
+  // Scroll progress bar
+  const bar = $('#scrollProgress');
+  if (bar) {
+    const onScroll = () => {
+      const h = document.documentElement.scrollHeight - innerHeight;
+      bar.style.transform = `scaleX(${h > 0 ? scrollY / h : 0})`;
+    };
+    addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  /* ------------------------------------------------------------------ */
   /* UI behaviour                                                        */
   /* ------------------------------------------------------------------ */
 

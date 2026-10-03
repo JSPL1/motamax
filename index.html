@@ -14,6 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/motion.css">
   <script>try{var t=localStorage.getItem('mmx-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 </head>
 <body>
@@ -67,7 +68,8 @@
   </defs>
 </svg>
 
-<div class="ambient" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+<div class="ambient" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
 <!-- ============ NAV ============ -->
 <div class="nav-wrap">
@@ -77,11 +79,11 @@
     </a>
     <div class="nav-links">
       <a href="#about">About</a>
+      <a href="#capabilities">Capabilities</a>
       <a href="#services">Services</a>
       <a href="#industries">Industries</a>
       <a href="#stories">Success Stories</a>
       <a href="#clients">Clients</a>
-      <a href="#gallery">Our Work</a>
       <a href="#contact">Contact</a>
     </div>
     <div class="nav-actions">
@@ -92,6 +94,7 @@
   </nav>
   <div class="mobile-menu glass" id="mobileMenu">
     <a href="#about">About</a>
+    <a href="#capabilities">Capabilities</a>
     <a href="#services">Services</a>
     <a href="#industries">Industries</a>
     <a href="#stories">Success Stories</a>
@@ -229,6 +232,24 @@
     <div class="stat"><b><span data-count="11">0</span></b><span>Industries served</span></div>
   </div>
 </div>
+
+<!-- ============ CAPABILITY MAP ============ -->
+<section id="capabilities">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Capability Map</span>
+      <h2 class="title">Twelve disciplines. <span class="grad-text">One integrated delivery.</span></h2>
+      <p class="lead">Every capability connects to a single project team — so electrical, IT, security, communication and automation are designed, installed and handed over together.</p>
+    </div>
+    <div class="cap-wrap reveal" id="capWrap">
+      <div class="cap-stage">
+        <div class="cap-head"><span>FIG. 01 — CAPABILITY MAP</span><span class="cap-hint">HOVER A NODE</span></div>
+        <svg class="cap-map" id="capMap" viewBox="40 30 920 810" role="img" aria-label="Capability map: twelve disciplines connected to integrated project delivery"></svg>
+      </div>
+      <aside class="cap-detail" id="capDetail" aria-live="polite"></aside>
+    </div>
+  </div>
+</section>
 
 <!-- ============ SERVICES ============ -->
 <section id="services">

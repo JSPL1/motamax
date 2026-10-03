@@ -1,0 +1,169 @@
+/* =========================================================
+   Five-colour palette + motion layer + capability map
+   ========================================================= */
+:root {
+  --c1: #1A9BD7; /* sky    */
+  --c2: #8E5CF5; /* violet */
+  --c3: #E3342F; /* red    */
+  --c4: #22B45A; /* green  */
+  --c5: #FF9F0A; /* amber  */
+}
+.ambient span:nth-child(5) { width: 22vmax; height: 22vmax; background: var(--c5); top: 60vh; right: 6vw; opacity: .3; animation-delay: -9s; }
+
+/* Animated gradient text in the 5 colours */
+.grad-text {
+  background: linear-gradient(100deg, var(--c1), var(--c2), var(--c3), var(--c5), var(--c4), var(--c1));
+  background-size: 300% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: gradShift 9s linear infinite;
+}
+@keyframes gradShift { to { background-position: 300% 0; } }
+
+/* Scroll progress */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; height: 3px; width: 100%; z-index: 150; transform-origin: left; transform: scaleX(0);
+  background: linear-gradient(90deg, var(--c1), var(--c2), var(--c3), var(--c5), var(--c4));
+}
+
+/* Primary button: flowing gradient + shine sweep */
+.btn-primary {
+  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #3436A8, var(--c1), var(--c2));
+  background-size: 200% 200%; animation: btnGrad 6s ease infinite;
+}
+.btn-primary::after {
+  content: ""; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.45), transparent); transform: skewX(-20deg);
+  animation: shine 4.5s ease-in-out infinite;
+}
+@keyframes btnGrad { 50% { background-position: 100% 100%; } }
+@keyframes shine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+
+/* Hero: words rise in, widgets float */
+.hero h1 .w { display: inline-block; opacity: 0; transform: translateY(.5em) rotate(2deg); filter: blur(6px); animation: wordIn .8s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes wordIn { to { opacity: 1; transform: none; filter: none; } }
+.hero-stack .widget { animation: floaty 7s ease-in-out infinite; }
+.hero-stack .widget-row .widget:nth-child(2) { animation-delay: -2s; }
+.hero-stack > .widget:last-child { animation-delay: -4s; }
+@keyframes floaty { 50% { transform: translateY(-8px); } }
+.domain-item .ico { animation: icoPop 3.6s ease-in-out infinite; }
+.domain-item:nth-child(2) .ico { animation-delay: .6s; }
+.domain-item:nth-child(3) .ico { animation-delay: 1.2s; }
+@keyframes icoPop { 0%, 80%, 100% { transform: none; } 88% { transform: scale(1.15) rotate(-6deg); } }
+
+/* Eyebrow dot cycles through the palette */
+.eyebrow::before { animation: dotCycle 5s linear infinite; }
+@keyframes dotCycle {
+  0%   { background: var(--c3); box-shadow: 0 0 0 4px rgba(227,52,47,.2); }
+  20%  { background: var(--c5); box-shadow: 0 0 0 6px rgba(255,159,10,.2); }
+  40%  { background: var(--c4); box-shadow: 0 0 0 4px rgba(34,180,90,.2); }
+  60%  { background: var(--c1); box-shadow: 0 0 0 6px rgba(26,155,215,.2); }
+  80%  { background: var(--c2); box-shadow: 0 0 0 4px rgba(142,92,245,.2); }
+  100% { background: var(--c3); box-shadow: 0 0 0 4px rgba(227,52,47,.2); }
+}
+
+/* Staggered reveal, spotlight and tilt on glass cards */
+.reveal { transition-delay: var(--d, 0s); }
+.tilt { will-change: transform; transition: transform .25s ease, box-shadow .25s ease; }
+.glass.spot::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .3s ease; z-index: 0;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(26,155,215,.20), rgba(142,92,245,.10) 40%, transparent 70%);
+}
+.glass.spot { position: relative; }
+.glass.spot:hover::before { opacity: 1; }
+.card-icon { transition: transform .35s cubic-bezier(.3,1.6,.5,1); }
+.glass:hover > .card-icon, .svc:hover .card-icon, .cred:hover .card-icon { transform: scale(1.1) rotate(-6deg); }
+.stat b { background: linear-gradient(100deg, var(--c1), var(--c2), var(--c3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* =========================================================
+   Capability map
+   ========================================================= */
+.cap-wrap { display: grid; grid-template-columns: 1.45fr 1fr; gap: 18px; align-items: stretch; }
+.cap-stage {
+  position: relative; border-radius: var(--radius); overflow: hidden; padding: 22px 22px 8px;
+  background:
+    radial-gradient(70% 60% at 50% 55%, rgba(26,155,215,.28), transparent 70%),
+    linear-gradient(160deg, #0E1A4A 0%, #0B2350 55%, #1A1660 100%);
+  border: 1px solid rgba(143,180,255,.25);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(143,180,255,.2);
+}
+.cap-stage::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(92,200,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(92,200,255,.07) 1px, transparent 1px);
+  background-size: 60px 60px; animation: gridPan 30s linear infinite;
+}
+@keyframes gridPan { to { background-position: 60px 60px; } }
+.cap-head { position: relative; display: flex; justify-content: space-between; gap: 12px; font: 600 12.5px/1 ui-monospace, "SF Mono", Consolas, monospace; letter-spacing: .18em; color: #8FB4FF; }
+.cap-hint { color: var(--c5); animation: blink 2.4s ease-in-out infinite; }
+.cap-map { position: relative; width: 100%; height: auto; display: block; overflow: visible; }
+
+.cap-ring { fill: none; stroke: rgba(92,200,255,.18); stroke-width: 1.2; }
+.cap-orbit { fill: none; stroke: rgba(143,180,255,.5); stroke-width: 2; stroke-dasharray: 2 12; stroke-linecap: round; transform-origin: 500px 430px; animation: spin 60s linear infinite; }
+.cap-orbit.rev { stroke-dasharray: 40 18; stroke: rgba(142,92,245,.4); stroke-width: 1.5; animation-duration: 90s; animation-direction: reverse; }
+.cap-sweep { transform-origin: 500px 430px; animation: spin 8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.cap-line { stroke-width: 1.6; opacity: .6; stroke-dasharray: var(--len); stroke-dashoffset: var(--len); transition: opacity .3s ease, stroke-width .3s ease; }
+.cap-wrap.in .cap-line { animation: draw 1.2s cubic-bezier(.6,0,.2,1) forwards; animation-delay: var(--dl); }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.cap-node { cursor: pointer; opacity: 0; transition: opacity .3s ease; }
+.cap-wrap.in .cap-node { animation: nodeIn .7s cubic-bezier(.3,1.6,.5,1) forwards; animation-delay: var(--dl); }
+@keyframes nodeIn { from { opacity: 0; } to { opacity: 1; } }
+.cap-node .dotg { transform-box: fill-box; transform-origin: center; transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
+.cap-node:hover .dotg, .cap-node.on .dotg { transform: scale(1.35); }
+.cap-node .core { fill: #0E1A4A; stroke-width: 2.6; transition: fill .3s ease; }
+.cap-node.on .core { fill: currentColor; }
+.cap-node .pulse { fill: none; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: ping 2.8s ease-out infinite; animation-delay: var(--pd); }
+@keyframes ping { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(3.2); opacity: 0; } }
+.cap-node .hit { fill: transparent; }
+.cap-label { font: 700 19px ui-monospace, "SF Mono", Consolas, monospace; letter-spacing: .12em; transition: opacity .3s ease; }
+.cap-particle { opacity: 0; transition: opacity .4s ease; }
+.cap-wrap.in .cap-particle { opacity: 1; transition-delay: 1.4s; }
+
+.cap-map.focus .cap-line { opacity: .14; }
+.cap-map.focus .cap-line.on { opacity: 1; stroke-width: 3.2; }
+.cap-map.focus .cap-label:not(.on) { opacity: .7; }
+
+.cap-center .glow { transform-box: fill-box; transform-origin: center; animation: glow 3s ease-in-out infinite; }
+@keyframes glow { 50% { opacity: .2; transform: scale(1.14); } }
+.cap-center .k { font: 600 13px ui-monospace, Consolas, monospace; letter-spacing: .2em; fill: #7FD3FF; }
+.cap-center .t { font: 800 25px Inter, system-ui, sans-serif; fill: #DCEBFF; }
+
+.cap-detail {
+  padding: clamp(22px, 3vw, 32px); display: flex; flex-direction: column; border-radius: var(--radius);
+  background: var(--glass); border: 1px solid var(--glass-border); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: var(--shadow);
+}
+.cap-detail .idx { font: 600 12.5px ui-monospace, Consolas, monospace; letter-spacing: .14em; color: var(--text-3); }
+.cap-detail h3 { font-size: clamp(26px, 2.6vw, 34px); font-weight: 800; margin: 12px 0 10px; display: flex; align-items: center; gap: 12px; color: var(--nc); }
+.cap-detail h3 i { width: 14px; height: 14px; border-radius: 50%; background: var(--nc); box-shadow: 0 0 0 6px color-mix(in srgb, var(--nc) 22%, transparent); flex: none; animation: blink 1.8s ease-in-out infinite; }
+.cap-detail p { margin: 0 0 18px; color: var(--text-2); }
+.cap-detail ul { list-style: none; margin: 0 0 22px; padding: 0; display: grid; gap: 8px; }
+.cap-detail li { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; animation: fadeUp .45s ease both; }
+.cap-detail li::before { content: ""; width: 8px; height: 8px; margin-top: 7px; border-radius: 2px; background: var(--nc); flex: none; transform: rotate(45deg); }
+.cap-detail .anim { animation: fadeUp .45s ease both; }
+.cap-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 18px; border-top: 1px solid var(--glass-edge); }
+.cap-chips button {
+  border: 1px solid var(--glass-border); background: var(--glass-strong); border-radius: 999px; padding: 6px 12px;
+  font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); transition: transform .2s ease;
+}
+.cap-chips button i { width: 8px; height: 8px; border-radius: 50%; background: var(--nc); }
+.cap-chips button:hover { transform: translateY(-2px); }
+.cap-chips button.on { color: var(--text); box-shadow: inset 0 0 0 1.5px var(--nc); }
+.cap-progress { height: 3px; border-radius: 3px; background: var(--glass-edge); overflow: hidden; margin-bottom: 16px; }
+.cap-progress span { display: block; height: 100%; width: 100%; background: var(--nc); transform-origin: left; transform: scaleX(0); }
+.cap-progress span.run { animation: capBar var(--cycle) linear forwards; }
+@keyframes capBar { to { transform: scaleX(1); } }
+
+@media (max-width: 1080px) { .cap-wrap { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+  .cap-label { display: none; }
+  .cap-node .dotg { transform: scale(1.8); }
+  .cap-node.on .dotg { transform: scale(2.3); }
+  .cap-stage { padding: 16px 6px 4px; }
+  .cap-head { font-size: 10.5px; padding: 0 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cap-line { stroke-dashoffset: 0; }
+  .cap-node, .cap-particle { opacity: 1; }
+  .hero h1 .w { opacity: 1; transform: none; filter: none; }
+}
