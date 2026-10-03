@@ -1,0 +1,7 @@
+# Design-tool mockup files (not part of the static site)
+*.dc.html
+support.js
+.thumbnail
+uploads/
+assets/profile/
+.claude/

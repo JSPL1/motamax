@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Login | Motamax India</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#23246E">
+  <link rel="icon" href="assets/motamax-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>try{var t=localStorage.getItem('mmx-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+  <style>
+    body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+    .login-top { padding: 18px 16px 0; }
+    .login-top .container { display: flex; align-items: center; justify-content: space-between; }
+    .back {
+      display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px 0 12px; border-radius: 999px;
+      font-weight: 600; font-size: 15px;
+    }
+    .back svg { width: 20px; height: 20px; }
+    .back:hover { transform: translateX(-2px); }
+    .login-main { flex: 1; display: grid; place-items: center; padding: 32px 16px 48px; }
+    .login-card { width: min(440px, 100%); padding: clamp(28px, 5vw, 44px); border-radius: 32px; }
+    .login-card .brand-logo { margin: 0 auto 26px; width: max-content; height: 60px; padding: 6px 18px; }
+    .login-card .brand-logo img { height: 48px; }
+    .login-card h1 { font-size: 30px; font-weight: 800; text-align: center; }
+    .login-card .sub { text-align: center; color: var(--text-2); margin: 8px 0 28px; }
+    .input-wrap { position: relative; }
+    .input-wrap svg.lead-ico { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 19px; height: 19px; color: var(--text-3); pointer-events: none; }
+    .input-wrap input { padding-left: 46px; height: 54px; }
+    .input-wrap .peek { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border: 0; border-radius: 12px; background: transparent; cursor: pointer; color: var(--text-3); display: grid; place-items: center; }
+    .input-wrap .peek:hover { background: var(--glass-strong); color: var(--text); }
+    .input-wrap .peek svg { width: 19px; height: 19px; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 6px 0 22px; font-size: 14px; }
+    .row a { color: var(--accent-2); font-weight: 600; }
+    /* iOS-style switch */
+    .switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-2); font-weight: 500; }
+    .switch input { position: absolute; opacity: 0; pointer-events: none; }
+    .switch .track { width: 46px; height: 28px; border-radius: 999px; background: rgba(120,120,128,.32); position: relative; transition: background .25s ease; flex: none; }
+    .switch .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); transition: transform .25s cubic-bezier(.3,1.4,.5,1); }
+    .switch input:checked + .track { background: var(--green); }
+    .switch input:checked + .track::after { transform: translateX(18px); }
+    .switch input:focus-visible + .track { box-shadow: 0 0 0 4px rgba(26,155,215,.3); }
+    .err { color: var(--red); font-size: 13px; padding-left: 4px; min-height: 0; display: none; }
+    .err.show { display: block; }
+    .field.invalid input { border-color: var(--red); box-shadow: 0 0 0 4px rgba(227,52,47,.15); }
+    .submit { width: 100%; height: 54px; font-size: 16px; }
+    .submit[disabled] { opacity: .7; cursor: progress; }
+    .spinner { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; animation: spin .8s linear infinite; display: none; }
+    .submit.loading .spinner { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .notice { margin-top: 18px; padding: 14px 16px; border-radius: 16px; font-size: 14px; display: none; background: var(--glass-strong); border: 1px solid var(--glass-border); }
+    .notice.show { display: block; animation: pop .25s ease; }
+    .help { text-align: center; margin-top: 24px; font-size: 14px; color: var(--text-3); }
+    .help a { color: var(--accent-2); font-weight: 600; }
+    .login-foot { text-align: center; padding: 0 16px 24px; font-size: 13px; color: var(--text-3); }
+  </style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.8 10.8 0 0112 20C5 20 1 12 1 12a19.8 19.8 0 015.1-5.9M9.9 4.2A9.6 9.6 0 0112 4c7 0 11 8 11 8a19.7 19.7 0 01-2.2 3.3M14.1 14.1a3 3 0 01-4.2-4.2M1 1l22 22"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></symbol>
+  </defs>
+</svg>
+
+<div class="ambient" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+
+<header class="login-top">
+  <div class="container">
+    <a href="index.html" class="back glass" id="backBtn"><svg><use href="#i-back"/></svg>Back</a>
+    <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><svg><use href="#i-moon"/></svg></button>
+  </div>
+</header>
+
+<main class="login-main">
+  <form class="login-card glass glass-strong" id="loginForm" novalidate>
+    <a href="index.html" class="brand-logo" aria-label="Motamax India home"><img src="assets/motamax-logo.png" alt="Motamax India Private Limited"></a>
+    <h1>Login</h1>
+    <p class="sub">Sign in to continue to your account.</p>
+
+    <div class="field" id="f-user">
+      <label for="username">Email or username</label>
+      <div class="input-wrap">
+        <svg class="lead-ico"><use href="#i-user"/></svg>
+        <input id="username" name="username" autocomplete="username" required>
+      </div>
+      <span class="err" id="e-user">Please enter your email or username.</span>
+    </div>
+
+    <div class="field" id="f-pass">
+      <label for="password">Password</label>
+      <div class="input-wrap">
+        <svg class="lead-ico"><use href="#i-lock"/></svg>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button type="button" class="peek" id="peek" aria-label="Show password"><svg><use href="#i-eye"/></svg></button>
+      </div>
+      <span class="err" id="e-pass">Please enter your password.</span>
+    </div>
+
+    <div class="row">
+      <label class="switch"><input type="checkbox" name="remember"><span class="track"></span>Remember me</label>
+      <a href="mailto:info@motamaxindia.com?subject=Password%20reset%20request">Forgot password?</a>
+    </div>
+
+    <button class="btn btn-primary submit" type="submit" id="submitBtn"><span class="spinner"></span><span class="label">Login</span></button>
+    <div class="notice" id="notice" role="status"></div>
+
+    <p class="help">Need access? <a href="mailto:info@motamaxindia.com?subject=Login%20access%20request">Contact your administrator</a></p>
+  </form>
+</main>
+
+<p class="login-foot">© <span id="year"></span> Motamax India Private Limited</p>
+
+<script>
+(function () {
+  'use strict';
+  // Set this to your authentication endpoint when the backend is ready, e.g. '/api/auth/login'.
+  var AUTH_ENDPOINT = '';
+
+  var $ = function (s) { return document.querySelector(s); };
+  $('#year').textContent = new Date().getFullYear();
+
+  // Back: return to the previous page on this site if there is one, otherwise go home.
+  $('#backBtn').addEventListener('click', function (e) {
+    if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
+      e.preventDefault();
+      history.back();
+    }
+  });
+
+  // Theme
+  var themeBtn = $('#themeToggle');
+  function isDark() {
+    var t = document.documentElement.getAttribute('data-theme');
+    return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function syncIcon() { themeBtn.innerHTML = '<svg><use href="#' + (isDark() ? 'i-sun' : 'i-moon') + '"/></svg>'; }
+  syncIcon();
+  themeBtn.addEventListener('click', function () {
+    var next = isDark() ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('mmx-theme', next); } catch (e) {}
+    syncIcon();
+  });
+
+  // Show / hide password
+  var pass = $('#password');
+  $('#peek').addEventListener('click', function () {
+    var show = pass.type === 'password';
+    pass.type = show ? 'text' : 'password';
+    this.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    this.innerHTML = '<svg><use href="#' + (show ? 'i-eye-off' : 'i-eye') + '"/></svg>';
+  });
+
+  function setErr(fieldId, errId, on) {
+    $(fieldId).classList.toggle('invalid', on);
+    $(errId).classList.toggle('show', on);
+  }
+  $('#username').addEventListener('input', function () { setErr('#f-user', '#e-user', false); });
+  pass.addEventListener('input', function () { setErr('#f-pass', '#e-pass', false); });
+
+  var notice = $('#notice');
+  function say(msg) { notice.textContent = msg; notice.classList.add('show'); }
+
+  $('#loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    notice.classList.remove('show');
+    var u = $('#username').value.trim();
+    var p = pass.value;
+    setErr('#f-user', '#e-user', !u);
+    setErr('#f-pass', '#e-pass', !p);
+    if (!u || !p) return;
+
+    var btn = $('#submitBtn');
+    btn.disabled = true; btn.classList.add('loading');
+    var done = function () { btn.disabled = false; btn.classList.remove('loading'); };
+
+    if (!AUTH_ENDPOINT) {
+      setTimeout(function () {
+        done();
+        say('Online login is not available yet. Please contact info@motamaxindia.com for access.');
+      }, 700);
+      return;
+    }
+
+    fetch(AUTH_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ username: u, password: p, remember: !!this.remember.checked })
+    }).then(function (r) {
+      done();
+      if (r.ok) { location.href = 'index.html'; }
+      else { say('Incorrect username or password.'); }
+    }).catch(function () {
+      done();
+      say('Unable to reach the server. Please try again.');
+    });
+  });
+})();
+</script>
+</body>
+</html>

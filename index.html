@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Motamax India Pvt. Ltd. | Solution Architecture, Automation &amp; Infrastructure</title>
+  <meta name="description" content="Motamax India Private Limited — ISO 9001:2015 certified provider of IT infrastructure, CCTV &amp; security, telecom, automation, electrical (HT &amp; LT), solar and data-centre solutions for industries, mines, construction and government across India.">
+  <meta name="theme-color" content="#23246E">
+  <meta property="og:title" content="Motamax India Private Limited">
+  <meta property="og:description" content="End-to-end Solution Architecture, Automation and Infrastructure Development — from requirement analysis to operational maintenance.">
+  <meta property="og:image" content="assets/motamax-logo.png">
+  <link rel="icon" href="assets/motamax-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>try{var t=localStorage.getItem('mmx-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+
+<!-- SVG icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.01M7 17.5h.01M11 6.5h6M11 17.5h6"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/><rect x="10" y="10" width="4" height="4"/></symbol>
+    <symbol id="i-build" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21h20M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6M9 11h.01M15 11h.01"/></symbol>
+    <symbol id="i-cam" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l13-3 2 6-13 3z"/><path d="M18 10l3 1M8 13l1 5M5 21h8"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+    <symbol id="i-net" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M12 7.5v4M12 11.5L6.5 17M12 11.5l5.5 5.5"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.4 1.8.7 2.7a2 2 0 01-.5 2.1L8 9.8a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.6 2.7.7a2 2 0 011.7 2z"/></symbol>
+    <symbol id="i-radio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="12" height="14" rx="2"/><path d="M9 8V2M10 13h4M10 17h4"/></symbol>
+    <symbol id="i-display" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></symbol>
+    <symbol id="i-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 17h22M3 17V9h10v8M13 12h5l3 5"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></symbol>
+    <symbol id="i-flow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><path d="M10 6.5h4a3 3 0 013 3V14"/></symbol>
+    <symbol id="i-ai" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></symbol>
+    <symbol id="i-class" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></symbol>
+    <symbol id="i-cable" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a2 2 0 012-2h2v4H6a2 2 0 01-2-2zM16 15h2a2 2 0 010 4h-2zM8 9h3a3 3 0 013 3v2a3 3 0 003 3"/><path d="M2 9h2M20 17h2"/></symbol>
+    <symbol id="i-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V6a3 3 0 013-3h7"/><path d="M14 3h6l-1 4h-4z"/><path d="M3 22h6"/></symbol>
+    <symbol id="i-battery" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2M10 9l-2 3h4l-2 3"/></symbol>
+    <symbol id="i-tools" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></symbol>
+    <symbol id="i-db" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+    <symbol id="i-speaker" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4zM15.5 8.5a5 5 0 010 7M19 5a10 10 0 010 14"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 000-7.8z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 014 13c0-6 7-10 16-10 0 9-4 16-10 16"/><path d="M4 21c4-6 8-9 12-11"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M1 21v-1a6 6 0 016-6h4a6 6 0 016 6v1M17 4a4 4 0 010 8M23 21v-1a6 6 0 00-4-5.7"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></symbol>
+    <symbol id="i-whatsapp" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2.1-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5 2.5 1 3 .8 3.6.7.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3zM12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2z"/></symbol>
+    <symbol id="i-fb" viewBox="0 0 24 24" fill="currentColor"><path d="M14 8h3V4h-3a4 4 0 00-4 4v2H8v4h2v8h4v-8h3l1-4h-4V8z"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="currentColor"><path d="M17.8 3h3.3l-7.2 8.2L22.4 21h-6.6l-5.2-6.8L4.6 21H1.3l7.7-8.8L.9 3h6.8l4.7 6.2zm-1.2 16h1.8L6.5 4.9H4.5z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3"/></symbol>
+    <symbol id="i-award" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.2 13.2L7 22l5-3 5 3-1.2-8.8"/></symbol>
+  </defs>
+</svg>
+
+<div class="ambient" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+
+<!-- ============ NAV ============ -->
+<div class="nav-wrap">
+  <nav class="nav glass" aria-label="Primary">
+    <a href="#top" class="brand" aria-label="Motamax India home">
+      <span class="brand-logo"><img src="assets/motamax-logo.png" alt="Motamax India Private Limited"></span>
+    </a>
+    <div class="nav-links">
+      <a href="#about">About</a>
+      <a href="#services">Services</a>
+      <a href="#industries">Industries</a>
+      <a href="#stories">Success Stories</a>
+      <a href="#clients">Clients</a>
+      <a href="#gallery">Our Work</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><svg><use href="#i-moon"/></svg></button>
+      <a href="login.html" class="btn btn-primary btn-sm"><svg width="16" height="16"><use href="#i-lock"/></svg><span class="nav-login-text">Login</span></a>
+      <button class="icon-btn burger" id="burger" aria-label="Open menu" aria-expanded="false"><svg><use href="#i-menu"/></svg></button>
+    </div>
+  </nav>
+  <div class="mobile-menu glass" id="mobileMenu">
+    <a href="#about">About</a>
+    <a href="#services">Services</a>
+    <a href="#industries">Industries</a>
+    <a href="#stories">Success Stories</a>
+    <a href="#clients">Clients</a>
+    <a href="#gallery">Our Work</a>
+    <a href="#contact">Contact</a>
+  </div>
+</div>
+
+<main id="top">
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="reveal">
+      <span class="eyebrow">ISO 9001:2015 Certified · Bhubaneswar, Odisha</span>
+      <h1>Engineering the <span class="grad-text">connected, secure &amp; powered</span> enterprise.</h1>
+      <p class="lead">Motamax India delivers end-to-end <b>Solution Architecture</b>, <b>Automation</b> and <b>Infrastructure Development</b> — from requirement analysis, supply and installation to testing, commissioning, training, handover and operational maintenance.</p>
+      <div class="hero-ctas">
+        <a href="#contact" class="btn btn-primary">Discuss your project <span aria-hidden="true">→</span></a>
+        <a href="#stories" class="btn btn-glass">View success stories</a>
+      </div>
+      <div class="badges">
+        <span class="badge"><svg><use href="#i-check"/></svg>ISO 9001:2015</span>
+        <span class="badge"><svg><use href="#i-check"/></svg>MSME Registered</span>
+        <span class="badge"><svg><use href="#i-check"/></svg>GeM Seller</span>
+        <span class="badge"><svg><use href="#i-check"/></svg>DPIIT #startupindia</span>
+        <span class="badge"><svg><use href="#i-check"/></svg>GST · EPFO · ESIC</span>
+      </div>
+    </div>
+
+    <div class="hero-stack reveal">
+      <div class="widget widget-hero glass">
+        <div class="photo">
+          <span class="live-pill"><i></i>On site</span>
+          <div class="hero-mosaic">
+            <img src="assets/site/e4.jpg" alt="Transformer installation">
+            <img src="assets/site/i7.jpg" alt="CCTV monitoring station">
+            <img src="assets/site/i10.jpg" alt="Tower installation">
+          </div>
+          <div class="photo-caption"><b>Our work at site</b><span>Electrical · CCTV · Telecom</span></div>
+        </div>
+      </div>
+      <div class="widget-row">
+        <div class="widget glass">
+          <div class="w-label"><span class="dot" style="background:var(--sky)"></span>Key clients</div>
+          <div class="w-value"><span data-count="35">0</span>+</div>
+          <div class="w-sub">Corporates, PSUs &amp; Govt.</div>
+        </div>
+        <div class="widget glass">
+          <div class="w-label"><span class="dot" style="background:var(--red)"></span>Solution lines</div>
+          <div class="w-value"><span data-count="25">0</span>+</div>
+          <div class="w-sub">Across 3 core domains</div>
+        </div>
+      </div>
+      <div class="widget glass">
+        <div class="w-label">Core domains</div>
+        <div class="domain-list">
+          <div class="domain-item"><span class="ico bg-navy"><svg><use href="#i-server"/></svg></span><div>Solution Architecture<small>IT · CCTV · Telecom · AV · Data Centre</small></div></div>
+          <div class="domain-item"><span class="ico bg-sky"><svg><use href="#i-cpu"/></svg></span><div>Automation<small>Switch · Weighbridge · BPA · AI &amp; Analytics</small></div></div>
+          <div class="domain-item"><span class="ico bg-red"><svg><use href="#i-build"/></svg></span><div>Infrastructure Development<small>Networks · OFC/FTTx · HT/LT · Solar · Power</small></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MARQUEE ============ -->
+<div class="marquee-section">
+  <div class="container">
+    <div class="marquee glass" aria-label="Some of our clients">
+      <div class="marquee-track" id="marquee"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ABOUT ============ -->
+<section id="about">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Company Profile</span>
+      <h2 class="title">Latest technology. Cost‑effective architecture.<br><span class="grad-text">Committed timelines.</span></h2>
+      <p class="lead">Motamax India Pvt. Ltd.'s business model is built on sustainability — responding to an organisation's core needs through the latest technology, cost‑effective solution architecture, infrastructure development and quality of service delivered on a committed timeline.</p>
+    </div>
+
+    <div class="about-grid">
+      <article class="card glass span-7 reveal">
+        <span class="card-icon bg-navy"><svg><use href="#i-target"/></svg></span>
+        <h3>Our Mission</h3>
+        <p>To be the leader in Solution Architecture for ICT (Information Communication Technology), Electrical Infrastructure, Renewable Energies and best QoS services — driving sustainable development and creating value for stakeholders.</p>
+        <ul class="check-list">
+          <li>Continuously improving the standards and quality of our solutions.</li>
+          <li>Constantly striving to exceed each customer's expectations.</li>
+          <li>Upholding the highest moral principles and a challenging, secure environment for our people.</li>
+          <li>Maintaining a high &amp; committed service standard through relationships, expertise and experience.</li>
+        </ul>
+      </article>
+
+      <article class="card glass span-5 reveal">
+        <span class="card-icon bg-sky"><svg><use href="#i-eye"/></svg></span>
+        <h3>Our Vision</h3>
+        <p>To achieve sustainable development in every area of activity, for the betterment of customers and society — both in the present and in the future.</p>
+        <h3 style="margin-top:26px">Three pillars of sustainability</h3>
+        <div class="pillars">
+          <div class="pillar"><span class="card-icon bg-green" style="width:36px;height:36px;border-radius:10px"><svg style="width:18px;height:18px"><use href="#i-leaf"/></svg></span><b>Environmental</b><span>Protection</span></div>
+          <div class="pillar"><span class="card-icon bg-purple" style="width:36px;height:36px;border-radius:10px"><svg style="width:18px;height:18px"><use href="#i-users"/></svg></span><b>Social</b><span>Progress</span></div>
+          <div class="pillar"><span class="card-icon bg-orange" style="width:36px;height:36px;border-radius:10px"><svg style="width:18px;height:18px"><use href="#i-chart"/></svg></span><b>Economic</b><span>Growth</span></div>
+        </div>
+      </article>
+
+      <article class="card glass span-8 reveal">
+        <span class="card-icon bg-red"><svg><use href="#i-heart"/></svg></span>
+        <h3>Our Values</h3>
+        <p>The principles behind every survey, drawing, installation and handover.</p>
+        <div class="values">
+          <span>Honesty</span><span>Social Responsibility</span><span>Leadership</span><span>Long‑term Focus</span><span>Innovation</span><span>Financial Soundness</span><span>Care for People</span><span>Customer Orientation</span><span>Concern for the Environment</span>
+        </div>
+      </article>
+
+      <article class="card glass span-4 quote-card reveal">
+        <span class="card-icon bg-purple"><svg><use href="#i-shield"/></svg></span>
+        <blockquote style="margin-top:18px">“To be regarded by all of our stakeholders as honourable and conscientious.”</blockquote>
+        <p style="margin-top:14px;font-weight:600">— Company Ethos</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATS ============ -->
+<div class="container reveal">
+  <div class="stats glass">
+    <div class="stat"><b><span data-count="3">0</span></b><span>Core business domains</span></div>
+    <div class="stat"><b><span data-count="8">0</span></b><span>Lifecycle stages, one partner</span></div>
+    <div class="stat"><b><span data-count="35">0</span>+</b><span>Reputed corporate &amp; Govt. clients</span></div>
+    <div class="stat"><b><span data-count="11">0</span></b><span>Industries served</span></div>
+  </div>
+</div>
+
+<!-- ============ SERVICES ============ -->
+<section id="services">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">What we do</span>
+      <h2 class="title">Three domains. <span class="grad-text">One accountable partner.</span></h2>
+      <p class="lead">Motamax specialises in industrial projects with high technological content — Industrial Infrastructure, Projects and Services — covering every aspect of electrical and IT processes from consulting and engineering to procurement, building and maintenance.</p>
+    </div>
+
+    <div class="seg-center reveal">
+      <div class="segmented" role="tablist" id="domainTabs">
+        <button class="active" data-domain="arch" role="tab">Solution Architecture</button>
+        <button data-domain="auto" role="tab">Automation</button>
+        <button data-domain="infra" role="tab">Infrastructure</button>
+      </div>
+    </div>
+    <div id="domainPanels"></div>
+
+    <div class="section-head reveal" style="margin-top:72px;margin-bottom:0">
+      <span class="eyebrow">Core expertise in detail</span>
+      <h2 class="title" style="font-size:clamp(26px,3.2vw,38px)">Everything in our scope</h2>
+    </div>
+    <div class="expertise" id="expertise"></div>
+  </div>
+</section>
+
+<!-- ============ PROCESS ============ -->
+<section id="process" style="padding-top:20px">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">How we deliver</span>
+      <h2 class="title">From the first survey <span class="grad-text">to years of uptime.</span></h2>
+      <p class="lead">A single team owns the full lifecycle, so nothing falls between vendors.</p>
+    </div>
+    <div class="process" id="process-grid"></div>
+  </div>
+</section>
+
+<!-- ============ INDUSTRIES ============ -->
+<section id="industries">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Industries</span>
+      <h2 class="title">Built for <span class="grad-text">demanding environments.</span></h2>
+      <p class="lead">Corporates, manufacturing plants, mines, construction sites and Government organisations across Odisha, Rajasthan, Madhya Pradesh and beyond.</p>
+    </div>
+    <div class="ind-layout reveal">
+      <div class="ind-list glass" id="indList" role="tablist"></div>
+      <div class="ind-detail glass" id="indDetail" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SUCCESS STORIES ============ -->
+<section id="stories">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Success Stories</span>
+      <h2 class="title">Delivered on site, <span class="grad-text">trusted by leaders.</span></h2>
+      <p class="lead">A look at the work we've delivered for steel majors, mines, telecom operators, ports, Government institutions and leading construction groups.</p>
+    </div>
+
+    <article class="featured glass reveal" id="featuredStory">
+      <div class="media">
+        <div class="mosaic">
+          <img src="assets/site/i7.jpg" alt="CCTV monitoring station">
+          <img src="assets/site/i3.jpg" alt="Biometric access terminal">
+          <img src="assets/site/i8.jpg" alt="Pole-mounted cameras">
+          <img src="assets/site/i11.jpg" alt="Network rack">
+        </div>
+      </div>
+      <div class="body">
+        <span class="story-tag bg-orange">Featured · Construction</span>
+        <h3>IT, CCTV &amp; security for leading construction groups</h3>
+        <p>For builders and MEP partners, we install systems while the site is still being built — then hand over a working, documented setup for residents and facility teams. Our construction portfolio spans premium residential projects, an IOCL township expansion, police housing, and truck &amp; bus terminals.</p>
+        <ul class="check-list">
+          <li><span><b>IT</b> — hardware, networking and telecom / intercom systems</span></li>
+          <li><span><b>CCTV</b> — perimeter, common areas, lifts and other critical areas</span></li>
+          <li><span><b>Security</b> — boom barriers, biometric attendance and access control</span></li>
+        </ul>
+        <div class="kv">
+          <div><small>Clients</small><b>AMSB Infra (Prestine Green), DN Group, Vaterland, Falcon Crest</b></div>
+          <div><small>Also delivered for</small><b>Shradha Saboori (IOCL Township), OEYE MEP — Baibhav, Metro Group</b></div>
+        </div>
+      </div>
+    </article>
+
+    <div class="story-filter reveal">
+      <div class="segmented" id="storyFilter">
+        <button class="active" data-filter="all">All</button>
+        <button data-filter="Industrial">Industrial</button>
+        <button data-filter="Mining">Mining</button>
+        <button data-filter="Government">Government</button>
+        <button data-filter="Telecom">Telecom</button>
+        <button data-filter="Construction">Construction</button>
+      </div>
+    </div>
+    <div class="stories" id="storyGrid"></div>
+  </div>
+</section>
+
+<!-- ============ CLIENTS ============ -->
+<section id="clients">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Key Clients</span>
+      <h2 class="title">The privilege of serving <span class="grad-text">India's most reputed names.</span></h2>
+      <p class="lead">Reputed corporates, manufacturing plants, mines, construction groups and Government organisations — including the Ministry of Coal's NLC India, Indian Railways and DRDO.</p>
+    </div>
+    <div class="client-grid" id="clientGrid"></div>
+  </div>
+</section>
+
+<!-- ============ GALLERY ============ -->
+<section id="gallery">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Our Work at Site</span>
+      <h2 class="title">Real projects. <span class="grad-text">Real sites.</span></h2>
+      <p class="lead">Snapshots of our electrical, IT &amp; networking, CCTV &amp; security, automation and civil / OFC activities.</p>
+    </div>
+    <div class="seg-center reveal" style="justify-content:flex-start">
+      <div class="segmented" id="galleryFilter">
+        <button class="active" data-filter="all">All</button>
+        <button data-filter="Electrical">Electrical</button>
+        <button data-filter="IT &amp; Networking">IT &amp; Networking</button>
+        <button data-filter="CCTV &amp; Security">CCTV &amp; Security</button>
+        <button data-filter="Automation">Automation</button>
+        <button data-filter="Civil &amp; OFC">Civil &amp; OFC</button>
+      </div>
+    </div>
+    <div class="gallery" id="galleryGrid"></div>
+  </div>
+</section>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
+  <button class="lb-close" aria-label="Close">×</button>
+  <button class="lb-nav lb-prev" aria-label="Previous">‹</button>
+  <figure><img id="lbImg" alt=""><figcaption id="lbCap"></figcaption></figure>
+  <button class="lb-nav lb-next" aria-label="Next">›</button>
+</div>
+
+<!-- ============ CREDENTIALS ============ -->
+<section id="credentials" style="padding-top:20px">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Credentials</span>
+      <h2 class="title">Registered, certified <span class="grad-text">&amp; compliant.</span></h2>
+    </div>
+    <div class="creds">
+      <div class="cred glass reveal"><span class="card-icon bg-navy"><svg><use href="#i-award"/></svg></span><b>ISO 9001:2015</b><span>Certified quality management</span></div>
+      <div class="cred glass reveal"><span class="card-icon bg-sky"><svg><use href="#i-build"/></svg></span><b>MSME</b><span>Micro, Small &amp; Medium Enterprise</span></div>
+      <div class="cred glass reveal"><span class="card-icon bg-green"><svg><use href="#i-flow"/></svg></span><b>GeM</b><span>Government e‑Marketplace seller</span></div>
+      <div class="cred glass reveal"><span class="card-icon bg-orange"><svg><use href="#i-ai"/></svg></span><b>DPIIT</b><span>Recognised under #startupindia</span></div>
+      <div class="cred glass reveal"><span class="card-icon bg-purple"><svg><use href="#i-file"/></svg></span><b>GST</b><span>Registered taxpayer</span></div>
+      <div class="cred glass reveal"><span class="card-icon bg-red"><svg><use href="#i-users"/></svg></span><b>EPFO &amp; ESIC</b><span>Statutory workforce compliance</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<div class="container reveal">
+  <div class="cta-band glass">
+    <h2>Give us a chance to serve you —<br>never get a chance to think for the alternative.</h2>
+    <p>Tell us about your site, plant or project. Our team will get back with a solution approach and the right next step.</p>
+    <div class="hero-ctas" style="justify-content:center;margin-top:0;position:relative">
+      <a href="#contact" class="btn btn-white">Start a conversation</a>
+      <a href="assets/Motamax-Company-Profile.pdf" class="btn btn-glass" download><svg width="18" height="18"><use href="#i-file"/></svg>Company profile (PDF)</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CONTACT ============ -->
+<section id="contact">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Contact</span>
+      <h2 class="title">Let's build <span class="grad-text">something reliable.</span></h2>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-info">
+        <div class="ci glass reveal"><span class="card-icon bg-navy"><svg><use href="#i-pin"/></svg></span><div><small>Office</small><b>Plot No‑199(P)202/611, Gajapati Nagar, Bhubaneswar, Odisha – 751005</b></div></div>
+        <div class="ci glass reveal"><span class="card-icon bg-purple"><svg><use href="#i-pin"/></svg></span><div><small>Registered address</small><b>Plot No. 5, Bishal Residency, 4th Floor, Sriram Nagar, Bhubaneswar – 751002</b></div></div>
+        <div class="ci glass reveal"><span class="card-icon bg-sky"><svg><use href="#i-phone"/></svg></span><div><small>Phone</small><a href="tel:+919938041356">+91 99380 41356</a></div></div>
+        <div class="ci glass reveal"><span class="card-icon bg-green"><svg><use href="#i-whatsapp"/></svg></span><div><small>WhatsApp</small><a href="https://wa.me/919938041356" target="_blank" rel="noopener">Chat with us</a></div></div>
+        <div class="ci glass reveal"><span class="card-icon bg-red"><svg><use href="#i-mail"/></svg></span><div><small>Email</small><a href="mailto:info@motamaxindia.com">info@motamaxindia.com</a></div></div>
+        <div class="ci glass reveal"><span class="card-icon bg-orange"><svg><use href="#i-globe"/></svg></span><div><small>Web</small><a href="https://www.motamaxindia.com" target="_blank" rel="noopener">www.motamaxindia.com</a></div></div>
+      </div>
+
+      <form class="form glass reveal" id="contactForm" novalidate>
+        <h3>Discuss your project</h3>
+        <p>Share a few details and we'll respond within one business day.</p>
+        <div class="field-row">
+          <div class="field"><label for="cf-name">Full name</label><input id="cf-name" name="name" required autocomplete="name"></div>
+          <div class="field"><label for="cf-org">Organisation</label><input id="cf-org" name="org" autocomplete="organization"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="cf-email">Email</label><input id="cf-email" name="email" type="email" required autocomplete="email"></div>
+          <div class="field"><label for="cf-phone">Phone</label><input id="cf-phone" name="phone" type="tel" autocomplete="tel"></div>
+        </div>
+        <div class="field"><label for="cf-domain">Area of interest</label>
+          <select id="cf-domain" name="domain">
+            <option>Solution Architecture (IT, CCTV, Telecom, AV, Data Centre)</option>
+            <option>Automation (Switch, Weighbridge, BPA, AI &amp; Analytics)</option>
+            <option>Infrastructure Development (Network, OFC, HT/LT, Solar)</option>
+            <option>Construction site package (IT, CCTV, Security)</option>
+            <option>Annual maintenance / support</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field"><label for="cf-msg">Project details</label><textarea id="cf-msg" name="message" required placeholder="Site location, scope, timeline…"></textarea></div>
+        <button class="btn btn-primary" type="submit" style="width:100%">Send enquiry <span aria-hidden="true">→</span></button>
+        <p class="form-note">Submitting opens your email app with the details pre‑filled, addressed to info@motamaxindia.com.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner glass">
+      <div>
+        <span class="brand-logo" style="display:inline-flex"><img src="assets/motamax-logo.png" alt="Motamax India Private Limited"></span>
+        <p style="color:var(--text-2);font-size:14.5px;margin:16px 0 0;max-width:340px">End‑to‑end Solution Architecture, Automation and Infrastructure Development for industry, mining, construction and Government.</p>
+        <div class="socials">
+          <a href="https://www.facebook.com/" target="_blank" rel="noopener" aria-label="Facebook — Motamax India"><svg><use href="#i-fb"/></svg></a>
+          <a href="https://x.com/Motamax_bbsr" target="_blank" rel="noopener" aria-label="X — @Motamax_bbsr"><svg><use href="#i-x"/></svg></a>
+          <a href="https://wa.me/919938041356" target="_blank" rel="noopener" aria-label="WhatsApp"><svg><use href="#i-whatsapp"/></svg></a>
+        </div>
+      </div>
+      <div><h5>Company</h5><ul><li><a href="#about">About us</a></li><li><a href="#process">How we deliver</a></li><li><a href="#credentials">Credentials</a></li><li><a href="#clients">Clients</a></li></ul></div>
+      <div><h5>Explore</h5><ul><li><a href="#services">Services</a></li><li><a href="#industries">Industries</a></li><li><a href="#stories">Success stories</a></li><li><a href="#gallery">Our work</a></li></ul></div>
+      <div><h5>Reach us</h5><ul><li><a href="tel:+919938041356">+91 99380 41356</a></li><li><a href="mailto:info@motamaxindia.com">info@motamaxindia.com</a></li><li>Bhubaneswar, Odisha</li><li><a href="login.html">Login</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year"></span> Motamax India Private Limited. All rights reserved.</span>
+      <span>ISO 9001:2015 · MSME · DPIIT #startupindia</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast glass glass-strong" id="toast" role="status"></div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
