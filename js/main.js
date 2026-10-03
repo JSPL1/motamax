@@ -350,87 +350,222 @@
   const capMap = $('#capMap');
   const capDetail = $('#capDetail');
   const capWrap = $('#capWrap');
+  const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (capMap && capDetail) {
-    const NS = 'http://www.w3.org/2000/svg';
-    const CX = 500, CY = 430, R = 255, LR = 292;
-    const CYCLE = 3200;
+    const CX = 500, CY = 430, R = 255, LR = 300;
+    const CYCLE = 3400;
+    const f = (n) => n.toFixed(1);
+    const pt = (i, r) => {
+      const a = (-90 + i * 30) * Math.PI / 180;
+      return [CX + r * Math.cos(a), CY + r * Math.sin(a), a];
+    };
+
     let html = `
       <defs>
         <linearGradient id="capCenterGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2B2D8A"/><stop offset="1" stop-color="#3B1F8F"/></linearGradient>
-        <linearGradient id="capBorder" x1="0" y1="0" x2="1" y2="0">${PALETTE.map((c, i) => `<stop offset="${i / 4}" stop-color="${c}"/>`).join('')}</linearGradient>
-        <radialGradient id="capSweepGrad" cx="0" cy="0" r="1"><stop offset="0" stop-color="#5CC8FF" stop-opacity=".35"/><stop offset="1" stop-color="#5CC8FF" stop-opacity="0"/></radialGradient>
+        <linearGradient id="capBorder" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+          ${PALETTE.map((c, i) => `<stop offset="${i / 4}" stop-color="${c}"/>`).join('')}
+          <animateTransform attributeName="gradientTransform" type="rotate" from="0 .5 .5" to="360 .5 .5" dur="6s" repeatCount="indefinite"/>
+        </linearGradient>
+        <radialGradient id="capSweepGrad" cx="0" cy="0" r="1"><stop offset="0" stop-color="#5CC8FF" stop-opacity=".4"/><stop offset="1" stop-color="#5CC8FF" stop-opacity="0"/></radialGradient>
+        <radialGradient id="capCoreGlow"><stop offset="0" stop-color="#5CC8FF" stop-opacity=".45"/><stop offset="1" stop-color="#5CC8FF" stop-opacity="0"/></radialGradient>
         <filter id="capBlur"><feGaussianBlur stdDeviation="6"/></filter>
+        <filter id="capGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <path id="capOrbitPath" d="M${CX} ${CY - R} a${R} ${R} 0 1 1 -0.1 0z"/>
+        <path id="capOrbitPath2" d="M${CX} ${CY - R - 40} a${R + 40} ${R + 40} 0 1 0 0.1 0z"/>
       </defs>
-      <circle class="cap-ring" cx="${CX}" cy="${CY}" r="${R + 75}"/>
-      <circle class="cap-ring" cx="${CX}" cy="${CY}" r="160"/>
-      <circle class="cap-orbit" cx="${CX}" cy="${CY}" r="${R}"/>
-      <circle class="cap-orbit rev" cx="${CX}" cy="${CY}" r="${R + 40}"/>
-      <g class="cap-sweep"><path d="M${CX} ${CY} L${CX + R + 75} ${CY} A${R + 75} ${R + 75} 0 0 0 ${CX + (R + 75) * Math.cos(-0.5)} ${CY + (R + 75) * Math.sin(-0.5)} Z" fill="url(#capSweepGrad)" opacity=".5"/></g>`;
+      <g class="cap-layer" data-depth="6">
+        <circle cx="${CX}" cy="${CY}" r="${R + 90}" fill="url(#capCoreGlow)" opacity=".35"/>
+        <circle class="cap-ring r1" cx="${CX}" cy="${CY}" r="${R + 75}"/>
+        <circle class="cap-ring r2" cx="${CX}" cy="${CY}" r="160"/>
+        <circle class="cap-ring r3" cx="${CX}" cy="${CY}" r="95"/>
+        <g class="cap-ticks">${Array.from({ length: 72 }, (_, k) => {
+          const a = k * 5 * Math.PI / 180, r1 = R + 75, r2 = r1 + (k % 6 === 0 ? 12 : 5);
+          return `<line x1="${f(CX + r1 * Math.cos(a))}" y1="${f(CY + r1 * Math.sin(a))}" x2="${f(CX + r2 * Math.cos(a))}" y2="${f(CY + r2 * Math.sin(a))}"/>`;
+        }).join('')}</g>
+        <circle class="cap-orbit" cx="${CX}" cy="${CY}" r="${R}"/>
+        <circle class="cap-orbit rev" cx="${CX}" cy="${CY}" r="${R + 40}"/>
+        <g class="cap-sweep"><path d="M${CX} ${CY} L${CX + R + 75} ${CY} A${R + 75} ${R + 75} 0 0 0 ${f(CX + (R + 75) * Math.cos(-0.6))} ${f(CY + (R + 75) * Math.sin(-0.6))} Z" fill="url(#capSweepGrad)"/></g>
+        ${PALETTE.slice(0, 3).map((c, k) => `<circle class="cap-sat" r="${k === 0 ? 5 : 3.5}" fill="${c}" filter="url(#capGlow)"><animateMotion dur="${14 + k * 6}s" begin="${-k * 4}s" repeatCount="indefinite"><mpath href="#${k === 1 ? 'capOrbitPath2' : 'capOrbitPath'}"/></animateMotion></circle>`).join('')}
+      </g>`;
+
     const lines = [], nodes = [], labels = [], particles = [];
     CAPS.forEach((c, i) => {
-      const a = (-90 + i * 30) * Math.PI / 180;
+      const [x, y, a] = pt(i, R);
       const col = PALETTE[i % PALETTE.length];
-      const x = CX + R * Math.cos(a), y = CY + R * Math.sin(a);
       const len = Math.hypot(x - CX, y - CY);
-      const dl = (i * 0.08).toFixed(2) + 's';
-      lines.push(`<line class="cap-line" data-i="${i}" x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${CX}" y2="${CY}" stroke="${col}" style="--len:${len.toFixed(0)};--dl:${dl}"/>`);
-      particles.push(`<circle class="cap-particle" r="4" fill="${col}"><animateMotion dur="${(2.2 + (i % 3) * 0.4).toFixed(1)}s" begin="${(i * 0.23).toFixed(2)}s" repeatCount="indefinite" path="M${x.toFixed(1)} ${y.toFixed(1)} L${CX} ${CY}"/><animate attributeName="opacity" values="0;1;1;0" dur="${(2.2 + (i % 3) * 0.4).toFixed(1)}s" begin="${(i * 0.23).toFixed(2)}s" repeatCount="indefinite"/></circle>`);
-      nodes.push(`<g class="cap-node" data-i="${i}" tabindex="0" role="button" aria-label="${esc(c[0])}" style="color:${col};--dl:${(0.5 + i * 0.08).toFixed(2)}s;--pd:${(i * 0.23).toFixed(2)}s">
-          <circle class="hit" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="30"/>
-          <circle class="pulse" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="10" stroke="${col}"/>
-          <g class="dotg"><circle class="core" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="10" stroke="${col}"/></g>
+      lines.push(`<line class="cap-line" data-i="${i}" x1="${f(x)}" y1="${f(y)}" x2="${CX}" y2="${CY}" stroke="${col}" style="--len:${len.toFixed(0)};--dl:${(0.6 + i * 0.07).toFixed(2)}s"/>`);
+      const dur = (2.2 + (i % 3) * 0.4).toFixed(1), beg = (i * 0.23).toFixed(2);
+      particles.push(`<circle class="cap-particle" r="3.6" fill="${col}"><animateMotion dur="${dur}s" begin="${beg}s" repeatCount="indefinite" path="M${f(x)} ${f(y)} L${CX} ${CY}"/><animate attributeName="opacity" values="0;1;1;0" dur="${dur}s" begin="${beg}s" repeatCount="indefinite"/></circle>`);
+      nodes.push(`<g class="cap-node" data-i="${i}" tabindex="0" role="button" aria-label="${esc(c[0])}" style="color:${col};--dl:${(1 + i * 0.07).toFixed(2)}s;--pd:${(i * 0.23).toFixed(2)}s">
+          <circle class="hit" cx="${f(x)}" cy="${f(y)}" r="32"/>
+          <circle class="pulse" cx="${f(x)}" cy="${f(y)}" r="10" stroke="${col}"/>
+          <g class="dotg"><circle class="halo" cx="${f(x)}" cy="${f(y)}" r="18" fill="${col}"/><circle class="core" cx="${f(x)}" cy="${f(y)}" r="10" stroke="${col}"/></g>
         </g>`);
-      const lx = CX + LR * Math.cos(a), ly = CY + LR * Math.sin(a);
-      const cos = Math.cos(a);
+      const [lx, ly] = pt(i, LR);
+      const cos = Math.cos(a), sin = Math.sin(a);
       const anchor = cos > 0.2 ? 'start' : cos < -0.2 ? 'end' : 'middle';
-      const ox = anchor === 'start' ? -8 : anchor === 'end' ? 8 : 0;
-      const oy = Math.sin(a) < -0.9 ? -6 : Math.sin(a) > 0.9 ? 14 : 6;
-      labels.push(`<text class="cap-label" data-i="${i}" x="${(lx + ox).toFixed(1)}" y="${(ly + oy).toFixed(1)}" text-anchor="${anchor}" fill="${col}">${esc(c[0].toUpperCase())}</text>`);
+      const ox = anchor === 'start' ? 4 : anchor === 'end' ? -4 : 0;
+      const oy = sin < -0.9 ? -8 : sin > 0.9 ? 18 : sin < -0.4 ? -2 : sin > 0.4 ? 14 : 7;
+      labels.push(`<text class="cap-label" data-i="${i}" data-text="${esc(c[0].toUpperCase())}" x="${f(lx + ox)}" y="${f(ly + oy)}" text-anchor="${anchor}" fill="${col}" style="--dl:${(1.2 + i * 0.07).toFixed(2)}s">${esc(c[0].toUpperCase())}</text>`);
     });
-    html += lines.join('') + particles.join('') + `
-      <g class="cap-center">
-        <rect class="glow" x="${CX - 115}" y="${CY - 50}" width="230" height="100" rx="18" fill="#5CC8FF" opacity=".35" filter="url(#capBlur)"/>
-        <rect class="box" x="${CX - 105}" y="${CY - 44}" width="210" height="88" rx="14" fill="url(#capCenterGrad)" stroke="url(#capBorder)" stroke-width="2.2"/>
-        <text class="k" x="${CX}" y="${CY - 8}" text-anchor="middle" id="capKicker">INTEGRATED</text>
+
+    html += `<g class="cap-layer" data-depth="12">${lines.join('')}<line class="cap-beam" id="capBeam" x1="${CX}" y1="${CY}" x2="${CX}" y2="${CY}"/>${particles.join('')}
+        <circle class="cap-comet" id="capComet" r="6" filter="url(#capGlow)"><animateMotion id="capCometMotion" dur="0.9s" begin="indefinite" fill="freeze" path="M${CX} ${CY} L${CX} ${CY}"/></circle>
+      </g>
+      <g class="cap-layer cap-center" data-depth="4">
+        <rect class="glow" x="${CX - 118}" y="${CY - 52}" width="236" height="104" rx="18" fill="#5CC8FF" opacity=".35" filter="url(#capBlur)"/>
+        <rect class="box" x="${CX - 108}" y="${CY - 46}" width="216" height="92" rx="15" fill="url(#capCenterGrad)" stroke="url(#capBorder)" stroke-width="2.6"/>
+        <text class="k" x="${CX}" y="${CY - 9}" text-anchor="middle" id="capKicker">INTEGRATED</text>
         <text class="t" x="${CX}" y="${CY + 24}" text-anchor="middle">Project Delivery</text>
-      </g>` + nodes.join('') + labels.join('');
+      </g>
+      <g class="cap-layer" data-depth="20">${nodes.join('')}<g id="capShock"></g>${labels.join('')}</g>`;
     capMap.innerHTML = html;
+
+    // Text scramble for the centre kicker
+    const kicker = $('#capKicker', capMap);
+    const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*';
+    let scrambleRaf;
+    function scramble(el, to) {
+      cancelAnimationFrame(scrambleRaf);
+      if (prefersReduced) { el.textContent = to; return; }
+      const start = performance.now(), dur = 520;
+      (function step(now) {
+        const p = Math.min(1, (now - start) / dur);
+        const keep = Math.floor(to.length * p);
+        el.textContent = to.slice(0, keep) + Array.from(to.slice(keep), (ch) => ch === ' ' ? ' ' : GLYPHS[(Math.random() * GLYPHS.length) | 0]).join('');
+        if (p < 1) scrambleRaf = requestAnimationFrame(step);
+      })(start);
+    }
+
+    const beam = $('#capBeam', capMap);
+    const comet = $('#capComet', capMap);
+    const cometMotion = $('#capCometMotion', capMap);
+    const shock = $('#capShock', capMap);
 
     let active = 0, timer = null, paused = false, visibleMap = false;
     function select(i, user) {
       active = i;
       const col = PALETTE[i % PALETTE.length];
       const c = CAPS[i];
+      const [x, y] = pt(i, R);
       capMap.classList.add('focus');
       $$('.cap-line, .cap-node, .cap-label', capMap).forEach((el) => el.classList.toggle('on', +el.dataset.i === i));
-      $('#capKicker', capMap).textContent = c[0].toUpperCase();
-      $('#capKicker', capMap).setAttribute('fill', col);
+
+      // energy beam + comet from the core to the node
+      beam.setAttribute('x2', f(x)); beam.setAttribute('y2', f(y)); beam.setAttribute('stroke', col);
+      beam.classList.remove('fire'); void beam.getBBox(); beam.classList.add('fire');
+      comet.setAttribute('fill', col);
+      cometMotion.setAttribute('path', `M${CX} ${CY} L${f(x)} ${f(y)}`);
+      try { cometMotion.beginElement(); } catch (e) { /* SMIL unavailable */ }
+
+      // shockwave rings at the node
+      shock.innerHTML = [0, 0.18].map((d) => `<circle class="cap-shock" cx="${f(x)}" cy="${f(y)}" r="12" stroke="${col}" style="animation-delay:${d + 0.75}s"/>`).join('');
+
+      scramble(kicker, c[0].toUpperCase());
+      kicker.setAttribute('fill', col);
+
       capDetail.style.setProperty('--nc', col);
       capDetail.style.setProperty('--cycle', CYCLE + 'ms');
       capDetail.innerHTML = `
         <div class="cap-progress"><span class="${user ? '' : 'run'}"></span></div>
-        <span class="idx anim">${String(i + 1).padStart(2, '0')} / ${CAPS.length} · CAPABILITY</span>
+        <div class="hud-top anim">
+          <span class="idx">${String(i + 1).padStart(2, '0')} / ${CAPS.length} · LINK ACTIVE</span>
+          <span class="eq" aria-hidden="true">${PALETTE.map((p, k) => `<b style="background:${p};animation-delay:${-k * 0.17}s"></b>`).join('')}</span>
+        </div>
         <h3 class="anim"><i></i>${esc(c[0])}</h3>
         <p class="anim">${esc(c[1])}</p>
-        <ul>${c[2].map((t, k) => `<li style="animation-delay:${0.08 * (k + 1)}s">${esc(t)}</li>`).join('')}</ul>
-        <div class="cap-chips">${CAPS.map((x, k) => `<button data-i="${k}" class="${k === i ? 'on' : ''}" style="--nc:${PALETTE[k % PALETTE.length]}"><i></i>${esc(x[0])}</button>`).join('')}</div>`;
+        <ul>${c[2].map((t, k) => `<li style="animation-delay:${0.07 * (k + 1)}s">${esc(t)}</li>`).join('')}</ul>`;
     }
     function schedule() {
       clearTimeout(timer);
       if (paused || !visibleMap) return;
       timer = setTimeout(() => { select((active + 1) % CAPS.length); schedule(); }, CYCLE);
     }
-    function userPick(i) { paused = true; clearTimeout(timer); select(i, true); }
+    function userPick(i) {
+      paused = true; clearTimeout(timer);
+      if (i !== active || !capMap.classList.contains('focus')) select(i, true);
+    }
     capMap.addEventListener('mouseover', (e) => { const n = e.target.closest('.cap-node'); if (n) userPick(+n.dataset.i); });
     capMap.addEventListener('click', (e) => { const n = e.target.closest('.cap-node'); if (n) userPick(+n.dataset.i); });
     capMap.addEventListener('keydown', (e) => { const n = e.target.closest('.cap-node'); if (n && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); userPick(+n.dataset.i); } });
     capMap.addEventListener('focusin', (e) => { const n = e.target.closest('.cap-node'); if (n) userPick(+n.dataset.i); });
-    capDetail.addEventListener('click', (e) => { const b = e.target.closest('.cap-chips button'); if (b) userPick(+b.dataset.i); });
     capWrap.addEventListener('mouseleave', () => { paused = false; schedule(); });
-    new IntersectionObserver((en) => { visibleMap = en[0].isIntersecting; schedule(); }, { threshold: 0.25 }).observe(capWrap);
-    select(0);
+    new IntersectionObserver((en) => { visibleMap = en[0].isIntersecting; schedule(); }, { threshold: 0.2 }).observe(capWrap);
+    // start the cycle once the intro sequence has played
+    setTimeout(() => select(0), prefersReduced ? 0 : 1900);
+
     const hint = $('.cap-hint');
     if (hint && matchMedia('(pointer: coarse)').matches) hint.textContent = 'TAP A NODE';
+
+    // 3D parallax: tilt the stage and drift each depth layer with the pointer
+    const stage = $('.cap-stage', capWrap);
+    const layers = $$('.cap-layer', capMap);
+    if (!prefersReduced && matchMedia('(pointer: fine)').matches) {
+      let tx = 0, ty = 0, cx = 0, cy = 0, raf = null;
+      const loop = () => {
+        cx += (tx - cx) * 0.08; cy += (ty - cy) * 0.08;
+        stage.style.transform = `perspective(1400px) rotateX(${(-cy * 5).toFixed(2)}deg) rotateY(${(cx * 6).toFixed(2)}deg)`;
+        layers.forEach((l) => { const d = +l.dataset.depth; l.setAttribute('transform', `translate(${f(cx * d)} ${f(cy * d)})`); });
+        raf = (Math.abs(tx - cx) > 0.001 || Math.abs(ty - cy) > 0.001) ? requestAnimationFrame(loop) : null;
+      };
+      const kick = () => { if (!raf) raf = requestAnimationFrame(loop); };
+      stage.addEventListener('pointermove', (e) => {
+        const r = stage.getBoundingClientRect();
+        tx = (e.clientX - r.left) / r.width - 0.5; ty = (e.clientY - r.top) / r.height - 0.5; kick();
+      });
+      stage.addEventListener('pointerleave', () => { tx = 0; ty = 0; kick(); });
+    }
+  }
+
+  /* Hero constellation: drifting 5-colour particles that link up near each other and the pointer */
+  const net = $('#heroNet');
+  if (net && !prefersReduced) {
+    const ctx = net.getContext('2d');
+    const host = net.parentElement;
+    let W = 0, H = 0, dpr = 1, pts = [], mouse = { x: -9999, y: -9999 }, running = false, rafId;
+    const resize = () => {
+      dpr = Math.min(devicePixelRatio || 1, 2);
+      W = host.clientWidth; H = host.clientHeight;
+      net.width = W * dpr; net.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const count = Math.round(Math.min(90, (W * H) / 16000));
+      pts = Array.from({ length: count }, (_, k) => ({
+        x: Math.random() * W, y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.35, vy: (Math.random() - 0.5) * 0.35,
+        r: 1.2 + Math.random() * 1.8, c: PALETTE[k % PALETTE.length]
+      }));
+    };
+    const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      for (const p of pts) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > W) p.vx *= -1;
+        if (p.y < 0 || p.y > H) p.vy *= -1;
+        const dx = p.x - mouse.x, dy = p.y - mouse.y, dm = dx * dx + dy * dy;
+        if (dm < 22000) { p.x += dx * 0.012; p.y += dy * 0.012; }
+      }
+      for (let a = 0; a < pts.length; a++) {
+        for (let b = a + 1; b < pts.length; b++) {
+          const p = pts[a], q = pts[b], d = Math.hypot(p.x - q.x, p.y - q.y);
+          if (d < 120) { ctx.strokeStyle = hexA(p.c, (1 - d / 120) * 0.35); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
+        }
+        const p = pts[a], dmx = Math.hypot(p.x - mouse.x, p.y - mouse.y);
+        if (dmx < 170) { ctx.strokeStyle = hexA(p.c, (1 - dmx / 170) * 0.6); ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke(); }
+        ctx.fillStyle = hexA(p.c, 0.85); ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      }
+      if (running) rafId = requestAnimationFrame(draw);
+    };
+    resize();
+    addEventListener('resize', resize);
+    host.addEventListener('pointermove', (e) => { const r = host.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; });
+    host.addEventListener('pointerleave', () => { mouse.x = mouse.y = -9999; });
+    new IntersectionObserver((en) => {
+      running = en[0].isIntersecting;
+      cancelAnimationFrame(rafId);
+      if (running) rafId = requestAnimationFrame(draw);
+    }).observe(host);
   }
 
   /* ------------------------------------------------------------------ */

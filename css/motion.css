@@ -76,94 +76,167 @@
 .stat b { background: linear-gradient(100deg, var(--c1), var(--c2), var(--c3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
 /* =========================================================
-   Capability map
+   Capability map (hero)
    ========================================================= */
-.cap-wrap { display: grid; grid-template-columns: 1.45fr 1fr; gap: 18px; align-items: stretch; }
+.hero { position: relative; overflow: hidden; }
+.hero-net { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: .85; }
+.hero > .container { position: relative; z-index: 1; }
+.hero-grid { grid-template-columns: .95fr 1.05fr; }
+.hero-map { position: relative; }
+
 .cap-stage {
-  position: relative; border-radius: var(--radius); overflow: hidden; padding: 22px 22px 8px;
+  position: relative; border-radius: 30px; overflow: hidden; padding: 20px 18px 0;
   background:
-    radial-gradient(70% 60% at 50% 55%, rgba(26,155,215,.28), transparent 70%),
+    radial-gradient(70% 60% at 50% 48%, rgba(26,155,215,.30), transparent 70%),
     linear-gradient(160deg, #0E1A4A 0%, #0B2350 55%, #1A1660 100%);
-  border: 1px solid rgba(143,180,255,.25);
-  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(143,180,255,.2);
+  border: 1px solid rgba(143,180,255,.28);
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(142,92,245,.12), 0 40px 120px -40px rgba(26,155,215,.55), inset 0 1px 0 rgba(143,180,255,.22);
+  transform-style: preserve-3d; will-change: transform;
 }
 .cap-stage::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background-image: linear-gradient(rgba(92,200,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(92,200,255,.07) 1px, transparent 1px);
-  background-size: 60px 60px; animation: gridPan 30s linear infinite;
+  background-size: 52px 52px; animation: gridPan 30s linear infinite;
 }
-@keyframes gridPan { to { background-position: 60px 60px; } }
-.cap-head { position: relative; display: flex; justify-content: space-between; gap: 12px; font: 600 12.5px/1 ui-monospace, "SF Mono", Consolas, monospace; letter-spacing: .18em; color: #8FB4FF; }
+/* animated 5-colour rim light */
+.cap-stage::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: conic-gradient(from var(--rim, 0deg), transparent 0 55%, var(--c1), var(--c2), var(--c3), var(--c5), var(--c4), transparent 95%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: rim 7s linear infinite; opacity: .9;
+}
+@property --rim { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes rim { to { --rim: 360deg; } }
+@keyframes gridPan { to { background-position: 52px 52px; } }
+.cap-stars { display: none; }
+.cap-head { position: relative; display: flex; justify-content: space-between; gap: 12px; font: 600 12px/1 ui-monospace, "SF Mono", Consolas, monospace; letter-spacing: .18em; color: #8FB4FF; padding: 0 6px; }
+.cap-head span:first-child::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--c4); margin-right: 10px; box-shadow: 0 0 10px var(--c4); animation: blink 1.6s ease-in-out infinite; vertical-align: 1px; }
 .cap-hint { color: var(--c5); animation: blink 2.4s ease-in-out infinite; }
-.cap-map { position: relative; width: 100%; height: auto; display: block; overflow: visible; }
+.cap-map { position: relative; width: 100%; height: auto; display: block; overflow: visible; margin-top: -6px; }
 
-.cap-ring { fill: none; stroke: rgba(92,200,255,.18); stroke-width: 1.2; }
-.cap-orbit { fill: none; stroke: rgba(143,180,255,.5); stroke-width: 2; stroke-dasharray: 2 12; stroke-linecap: round; transform-origin: 500px 430px; animation: spin 60s linear infinite; }
-.cap-orbit.rev { stroke-dasharray: 40 18; stroke: rgba(142,92,245,.4); stroke-width: 1.5; animation-duration: 90s; animation-direction: reverse; }
-.cap-sweep { transform-origin: 500px 430px; animation: spin 8s linear infinite; }
+/* --- intro sequence: rings bloom out of the core --- */
+.cap-ring, .cap-orbit, .cap-ticks, .cap-sweep { transform-box: view-box; transform-origin: 500px 430px; }
+.cap-ring { fill: none; stroke: rgba(92,200,255,.2); stroke-width: 1.2; }
+.cap-ring.r3 { stroke-dasharray: 3 6; stroke: rgba(255,159,10,.35); animation: spin 24s linear infinite reverse; }
+.cap-ticks line { stroke: rgba(143,180,255,.35); stroke-width: 1.2; }
+.cap-ticks { animation: spin 120s linear infinite; }
+.cap-orbit { fill: none; stroke: rgba(143,180,255,.5); stroke-width: 2; stroke-dasharray: 2 12; stroke-linecap: round; animation: spin 60s linear infinite; }
+.cap-orbit.rev { stroke-dasharray: 40 18; stroke: rgba(142,92,245,.45); stroke-width: 1.5; animation-duration: 90s; animation-direction: reverse; }
+.cap-sweep { animation: spin 7s linear infinite; }
+.cap-layer > .cap-ring, .cap-layer > .cap-orbit, .cap-layer > .cap-ticks { opacity: 0; }
+.hero-map.in .cap-layer > .cap-ring,
+.hero-map.in .cap-layer > .cap-orbit,
+.hero-map.in .cap-layer > .cap-ticks { animation-name: bloom, spin; animation-duration: 1.1s, var(--sd, 60s); animation-timing-function: cubic-bezier(.2,.9,.3,1.2), linear; animation-iteration-count: 1, infinite; animation-fill-mode: forwards, none; }
+.hero-map.in .cap-ring.r1 { --sd: 9999s; animation-delay: .25s, 0s; }
+.hero-map.in .cap-ring.r2 { --sd: 9999s; animation-delay: .1s, 0s; }
+.hero-map.in .cap-ring.r3 { --sd: 24s; animation-delay: 0s, 0s; animation-direction: normal, reverse; }
+.hero-map.in .cap-orbit { --sd: 60s; animation-delay: .35s, 0s; }
+.hero-map.in .cap-orbit.rev { --sd: 90s; animation-delay: .45s, 0s; animation-direction: normal, reverse; }
+.hero-map.in .cap-ticks { --sd: 120s; animation-delay: .5s, 0s; }
+@keyframes bloom { from { opacity: 0; transform: scale(.2) rotate(-40deg); } to { opacity: 1; transform: none; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.cap-line { stroke-width: 1.6; opacity: .6; stroke-dasharray: var(--len); stroke-dashoffset: var(--len); transition: opacity .3s ease, stroke-width .3s ease; }
-.cap-wrap.in .cap-line { animation: draw 1.2s cubic-bezier(.6,0,.2,1) forwards; animation-delay: var(--dl); }
-@keyframes draw { to { stroke-dashoffset: 0; } }
-.cap-node { cursor: pointer; opacity: 0; transition: opacity .3s ease; }
-.cap-wrap.in .cap-node { animation: nodeIn .7s cubic-bezier(.3,1.6,.5,1) forwards; animation-delay: var(--dl); }
-@keyframes nodeIn { from { opacity: 0; } to { opacity: 1; } }
-.cap-node .dotg { transform-box: fill-box; transform-origin: center; transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
-.cap-node:hover .dotg, .cap-node.on .dotg { transform: scale(1.35); }
-.cap-node .core { fill: #0E1A4A; stroke-width: 2.6; transition: fill .3s ease; }
-.cap-node.on .core { fill: currentColor; }
-.cap-node .pulse { fill: none; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: ping 2.8s ease-out infinite; animation-delay: var(--pd); }
-@keyframes ping { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(3.2); opacity: 0; } }
-.cap-node .hit { fill: transparent; }
-.cap-label { font: 700 19px ui-monospace, "SF Mono", Consolas, monospace; letter-spacing: .12em; transition: opacity .3s ease; }
-.cap-particle { opacity: 0; transition: opacity .4s ease; }
-.cap-wrap.in .cap-particle { opacity: 1; transition-delay: 1.4s; }
-
-.cap-map.focus .cap-line { opacity: .14; }
-.cap-map.focus .cap-line.on { opacity: 1; stroke-width: 3.2; }
-.cap-map.focus .cap-label:not(.on) { opacity: .7; }
-
-.cap-center .glow { transform-box: fill-box; transform-origin: center; animation: glow 3s ease-in-out infinite; }
+.cap-center { transform-box: fill-box; transform-origin: center; }
+.cap-center > * { transform-box: fill-box; transform-origin: center; }
+.cap-center .box, .cap-center .t, .cap-center .k { opacity: 0; }
+.hero-map.in .cap-center .box { animation: corePop .9s cubic-bezier(.3,1.6,.5,1) .15s forwards; }
+.hero-map.in .cap-center .t, .hero-map.in .cap-center .k { animation: fadeIn .6s ease .55s forwards; }
+@keyframes corePop { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn { to { opacity: 1; } }
+.cap-center .glow { animation: glow 3s ease-in-out infinite; }
 @keyframes glow { 50% { opacity: .2; transform: scale(1.14); } }
-.cap-center .k { font: 600 13px ui-monospace, Consolas, monospace; letter-spacing: .2em; fill: #7FD3FF; }
+.cap-center .k { font: 700 13px ui-monospace, Consolas, monospace; letter-spacing: .22em; fill: #7FD3FF; }
 .cap-center .t { font: 800 25px Inter, system-ui, sans-serif; fill: #DCEBFF; }
 
-.cap-detail {
-  padding: clamp(22px, 3vw, 32px); display: flex; flex-direction: column; border-radius: var(--radius);
-  background: var(--glass); border: 1px solid var(--glass-border); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: var(--shadow);
+.cap-line { stroke-width: 1.6; opacity: .55; stroke-dasharray: var(--len); stroke-dashoffset: var(--len); transition: opacity .35s ease, stroke-width .35s ease; }
+.hero-map.in .cap-line { animation: draw 1s cubic-bezier(.6,0,.2,1) forwards; animation-delay: var(--dl); }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+.cap-node { cursor: pointer; opacity: 0; outline: none; }
+.hero-map.in .cap-node { animation: fadeIn .5s ease forwards; animation-delay: var(--dl); }
+.cap-node .dotg { transform-box: fill-box; transform-origin: center; transform: scale(0); transition: transform .35s cubic-bezier(.3,1.6,.5,1); }
+.hero-map.in .cap-node .dotg { animation: popIn .7s cubic-bezier(.3,1.8,.5,1) forwards; animation-delay: var(--dl); }
+@keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+.cap-node .halo { opacity: 0; transition: opacity .35s ease; }
+.cap-node:hover .halo, .cap-node.on .halo { opacity: .22; }
+.cap-node.on .dotg, .cap-node:hover .dotg { animation: none; transform: scale(1.4); }
+.cap-node:focus-visible .core { stroke-width: 4.5; }
+.cap-node .core { fill: #0E1A4A; stroke-width: 2.6; transition: fill .3s ease; }
+.cap-node.on .core { fill: currentColor; }
+.cap-node .pulse { fill: none; stroke-width: 2; transform-box: fill-box; transform-origin: center; opacity: 0; }
+.hero-map.in .cap-node .pulse { animation: ping 2.8s ease-out infinite; animation-delay: calc(var(--pd) + 1.6s); }
+@keyframes ping { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(3.2); opacity: 0; } }
+.cap-node .hit { fill: transparent; }
+
+.cap-label { font: 700 19px ui-monospace, "SF Mono", Consolas, monospace; letter-spacing: .12em; opacity: 0; transition: opacity .35s ease, letter-spacing .35s ease; }
+.hero-map.in .cap-label { animation: labelIn .7s ease forwards; animation-delay: var(--dl); }
+@keyframes labelIn { from { opacity: 0; letter-spacing: .5em; } to { opacity: 1; letter-spacing: .12em; } }
+.cap-map.focus .cap-label { animation: none; opacity: .65; }
+.cap-map.focus .cap-label.on { opacity: 1; letter-spacing: .18em; filter: url(#capGlow); }
+
+.cap-particle { opacity: 0; transition: opacity .5s ease; }
+.hero-map.in .cap-particle { opacity: 1; transition-delay: 1.6s; }
+.cap-map.focus .cap-line { opacity: .14; }
+.cap-map.focus .cap-line.on { opacity: 1; stroke-width: 3; }
+
+/* energy beam, comet and shockwave on the active capability */
+.cap-beam { stroke-width: 4; stroke-linecap: round; stroke-dasharray: 10 14; opacity: 0; filter: url(#capGlow); }
+.cap-beam.fire { opacity: .95; animation: beamFlow .6s linear infinite; }
+@keyframes beamFlow { to { stroke-dashoffset: -24; } }
+.cap-comet { opacity: 0; }
+.cap-map.focus .cap-comet { opacity: 1; }
+.cap-shock { fill: none; stroke-width: 2.5; transform-box: fill-box; transform-origin: center; opacity: 0; animation: shock 1s ease-out forwards; }
+@keyframes shock { 0% { opacity: .95; transform: scale(1); } 100% { opacity: 0; transform: scale(4.5); } }
+.cap-sat { opacity: 0; }
+.hero-map.in .cap-sat { opacity: 1; transition: opacity .6s ease 1.4s; }
+
+/* HUD card overlaid on the map */
+.cap-hud {
+  position: relative; margin: -18px -2px 18px; padding: 22px 20px 16px; border-radius: 20px;
+  background: rgba(16, 24, 72, .58); border: 1px solid rgba(143,180,255,.22);
+  -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%);
+  color: #DCEBFF; min-height: 168px;
+  opacity: 0; transform: translateY(16px);
 }
-.cap-detail .idx { font: 600 12.5px ui-monospace, Consolas, monospace; letter-spacing: .14em; color: var(--text-3); }
-.cap-detail h3 { font-size: clamp(26px, 2.6vw, 34px); font-weight: 800; margin: 12px 0 10px; display: flex; align-items: center; gap: 12px; color: var(--nc); }
-.cap-detail h3 i { width: 14px; height: 14px; border-radius: 50%; background: var(--nc); box-shadow: 0 0 0 6px color-mix(in srgb, var(--nc) 22%, transparent); flex: none; animation: blink 1.8s ease-in-out infinite; }
-.cap-detail p { margin: 0 0 18px; color: var(--text-2); }
-.cap-detail ul { list-style: none; margin: 0 0 22px; padding: 0; display: grid; gap: 8px; }
-.cap-detail li { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; animation: fadeUp .45s ease both; }
-.cap-detail li::before { content: ""; width: 8px; height: 8px; margin-top: 7px; border-radius: 2px; background: var(--nc); flex: none; transform: rotate(45deg); }
-.cap-detail .anim { animation: fadeUp .45s ease both; }
-.cap-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 18px; border-top: 1px solid var(--glass-edge); }
-.cap-chips button {
-  border: 1px solid var(--glass-border); background: var(--glass-strong); border-radius: 999px; padding: 6px 12px;
-  font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); transition: transform .2s ease;
-}
-.cap-chips button i { width: 8px; height: 8px; border-radius: 50%; background: var(--nc); }
-.cap-chips button:hover { transform: translateY(-2px); }
-.cap-chips button.on { color: var(--text); box-shadow: inset 0 0 0 1.5px var(--nc); }
-.cap-progress { height: 3px; border-radius: 3px; background: var(--glass-edge); overflow: hidden; margin-bottom: 16px; }
-.cap-progress span { display: block; height: 100%; width: 100%; background: var(--nc); transform-origin: left; transform: scaleX(0); }
+.hero-map.in .cap-hud { animation: hudIn .7s cubic-bezier(.2,.8,.2,1) 1.7s forwards; }
+@keyframes hudIn { to { opacity: 1; transform: none; } }
+.cap-hud .hud-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cap-hud .idx { font: 600 11.5px ui-monospace, Consolas, monospace; letter-spacing: .16em; color: #8FB4FF; }
+.cap-hud .eq { display: inline-flex; gap: 3px; align-items: flex-end; height: 16px; }
+.cap-hud .eq b { width: 4px; height: 100%; border-radius: 2px; transform-origin: bottom; animation: eq .9s ease-in-out infinite alternate; }
+@keyframes eq { 0% { transform: scaleY(.25); } 100% { transform: scaleY(1); } }
+.cap-hud h3 { font-size: 26px; font-weight: 800; margin: 8px 0 4px; display: flex; align-items: center; gap: 10px; color: var(--nc); }
+.cap-hud h3 i { width: 11px; height: 11px; border-radius: 50%; background: var(--nc); box-shadow: 0 0 0 5px color-mix(in srgb, var(--nc) 25%, transparent), 0 0 16px var(--nc); flex: none; animation: blink 1.6s ease-in-out infinite; }
+.cap-hud p { margin: 0 0 10px; font-size: 14.5px; color: #B9C8F0; }
+.cap-hud ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+.cap-hud li { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; color: #DCEBFF; animation: fadeUp .45s ease both; }
+.cap-hud li::before { content: ""; width: 7px; height: 7px; margin-top: 6px; border-radius: 2px; background: var(--nc); flex: none; transform: rotate(45deg); box-shadow: 0 0 8px var(--nc); }
+.cap-hud .anim { animation: fadeUp .45s ease both; }
+.cap-progress { position: absolute; left: 20px; right: 20px; top: 0; height: 2px; border-radius: 2px; overflow: hidden; background: rgba(143,180,255,.15); }
+.cap-progress span { display: block; height: 100%; width: 100%; background: var(--nc); transform-origin: left; transform: scaleX(0); box-shadow: 0 0 10px var(--nc); }
 .cap-progress span.run { animation: capBar var(--cycle) linear forwards; }
 @keyframes capBar { to { transform: scaleX(1); } }
 
-@media (max-width: 1080px) { .cap-wrap { grid-template-columns: 1fr; } }
+@media (max-width: 1080px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .hero-map { max-width: 680px; width: 100%; margin: 0 auto; }
+}
 @media (max-width: 720px) {
   .cap-label { display: none; }
-  .cap-node .dotg { transform: scale(1.8); }
+  .cap-node .dotg, .hero-map.in .cap-node .dotg { animation: none; transform: scale(1.8); }
   .cap-node.on .dotg { transform: scale(2.3); }
-  .cap-stage { padding: 16px 6px 4px; }
-  .cap-head { font-size: 10.5px; padding: 0 10px; }
+  .cap-stage { padding: 14px 8px 0; border-radius: 24px; }
+  .cap-head { font-size: 10px; letter-spacing: .12em; }
+  .cap-hud { margin: -8px 0 10px; padding: 16px 14px 14px; }
+  .cap-hud ul { grid-template-columns: 1fr; }
+  .cap-hud h3 { font-size: 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .cap-line { stroke-dashoffset: 0; }
-  .cap-node, .cap-particle { opacity: 1; }
+  .cap-node, .cap-particle, .cap-label, .cap-hud, .cap-sat,
+  .cap-center .box, .cap-center .t, .cap-center .k,
+  .cap-layer > .cap-ring, .cap-layer > .cap-orbit, .cap-layer > .cap-ticks { opacity: 1; transform: none; }
+  .cap-node .dotg { transform: none; }
   .hero h1 .w { opacity: 1; transform: none; filter: none; }
+  .hero-net { display: none; }
 }

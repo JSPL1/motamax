@@ -107,7 +107,8 @@
 <main id="top">
 
 <!-- ============ HERO ============ -->
-<section class="hero">
+<section class="hero" id="capabilities">
+  <canvas class="hero-net" id="heroNet" aria-hidden="true"></canvas>
   <div class="container hero-grid">
     <div class="reveal">
       <span class="eyebrow">ISO 9001:2015 Certified · Bhubaneswar, Odisha</span>
@@ -126,37 +127,11 @@
       </div>
     </div>
 
-    <div class="hero-stack reveal">
-      <div class="widget widget-hero glass">
-        <div class="photo">
-          <span class="live-pill"><i></i>On site</span>
-          <div class="hero-mosaic">
-            <img src="assets/site/e4.jpg" alt="Transformer installation">
-            <img src="assets/site/i7.jpg" alt="CCTV monitoring station">
-            <img src="assets/site/i10.jpg" alt="Tower installation">
-          </div>
-          <div class="photo-caption"><b>Our work at site</b><span>Electrical · CCTV · Telecom</span></div>
-        </div>
-      </div>
-      <div class="widget-row">
-        <div class="widget glass">
-          <div class="w-label"><span class="dot" style="background:var(--sky)"></span>Key clients</div>
-          <div class="w-value"><span data-count="35">0</span>+</div>
-          <div class="w-sub">Corporates, PSUs &amp; Govt.</div>
-        </div>
-        <div class="widget glass">
-          <div class="w-label"><span class="dot" style="background:var(--red)"></span>Solution lines</div>
-          <div class="w-value"><span data-count="25">0</span>+</div>
-          <div class="w-sub">Across 3 core domains</div>
-        </div>
-      </div>
-      <div class="widget glass">
-        <div class="w-label">Core domains</div>
-        <div class="domain-list">
-          <div class="domain-item"><span class="ico bg-navy"><svg><use href="#i-server"/></svg></span><div>Solution Architecture<small>IT · CCTV · Telecom · AV · Data Centre</small></div></div>
-          <div class="domain-item"><span class="ico bg-sky"><svg><use href="#i-cpu"/></svg></span><div>Automation<small>Switch · Weighbridge · BPA · AI &amp; Analytics</small></div></div>
-          <div class="domain-item"><span class="ico bg-red"><svg><use href="#i-build"/></svg></span><div>Infrastructure Development<small>Networks · OFC/FTTx · HT/LT · Solar · Power</small></div></div>
-        </div>
+    <div class="hero-map reveal" id="capWrap">
+      <div class="cap-stage">
+        <div class="cap-head"><span>FIG. 01 — CAPABILITY MAP</span><span class="cap-hint">HOVER A NODE</span></div>
+        <svg class="cap-map" id="capMap" viewBox="30 40 940 790" role="img" aria-label="Capability map: twelve disciplines connected to integrated project delivery"></svg>
+        <aside class="cap-hud" id="capDetail" aria-live="polite"></aside>
       </div>
     </div>
   </div>
@@ -232,24 +207,6 @@
     <div class="stat"><b><span data-count="11">0</span></b><span>Industries served</span></div>
   </div>
 </div>
-
-<!-- ============ CAPABILITY MAP ============ -->
-<section id="capabilities">
-  <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">Capability Map</span>
-      <h2 class="title">Twelve disciplines. <span class="grad-text">One integrated delivery.</span></h2>
-      <p class="lead">Every capability connects to a single project team — so electrical, IT, security, communication and automation are designed, installed and handed over together.</p>
-    </div>
-    <div class="cap-wrap reveal" id="capWrap">
-      <div class="cap-stage">
-        <div class="cap-head"><span>FIG. 01 — CAPABILITY MAP</span><span class="cap-hint">HOVER A NODE</span></div>
-        <svg class="cap-map" id="capMap" viewBox="40 30 920 810" role="img" aria-label="Capability map: twelve disciplines connected to integrated project delivery"></svg>
-      </div>
-      <aside class="cap-detail" id="capDetail" aria-live="polite"></aside>
-    </div>
-  </div>
-</section>
 
 <!-- ============ SERVICES ============ -->
 <section id="services">
