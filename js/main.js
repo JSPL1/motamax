@@ -685,6 +685,8 @@
     });
   }, { threshold: 0.12 });
   $$('.reveal').forEach((el) => revealIO.observe(el));
+  // The hero is always on screen at load: start its intro straight away rather than waiting on the observer.
+  $$('.hero .reveal').forEach((el) => { el.classList.add('in'); $$('[data-count]', el).forEach(countUp); revealIO.unobserve(el); });
 
   function countUp(el) {
     if (el.dataset.done) return;
