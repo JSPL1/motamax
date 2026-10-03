@@ -84,3 +84,71 @@ body { animation: pageIn .5s ease both; }
   .pager-link b { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { body { animation: none; } }
+
+/* =========================================================
+   Client logos
+   ========================================================= */
+.marquee { padding: 14px 0; border-radius: 26px; }
+.marquee-track { gap: 14px; animation-duration: 60s; }
+.marquee-track.reverse { animation-direction: reverse; animation-duration: 70s; }
+.marquee-track .logo-chip {
+  display: grid; place-items: center; width: 132px; height: 84px; flex: none; gap: 0;
+  background: #fff; border-radius: 18px; padding: 8px 12px;
+  box-shadow: 0 6px 18px -8px rgba(11,16,48,.35), inset 0 0 0 1px rgba(11,16,48,.06);
+  transition: transform .3s ease;
+}
+.marquee-track .logo-chip::after { content: none; }
+.marquee-track .logo-chip img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.marquee-track .logo-chip.text { font-size: 15px; font-weight: 800; color: #23246E; }
+.marquee-track .logo-chip:hover { transform: translateY(-4px) scale(1.06); }
+
+.client-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+.client { flex-direction: column; align-items: stretch; text-align: center; gap: 10px; padding: 12px 12px 14px; }
+.client-logo {
+  display: grid; place-items: center; height: 104px; border-radius: 14px; background: #fff; overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(11,16,48,.06);
+}
+.client-logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; transition: transform .4s cubic-bezier(.3,1.5,.5,1); }
+.client:hover .client-logo img { transform: scale(1.08); }
+.client-logo .mono { width: 64px; height: 64px; border-radius: 18px; font-size: 22px; }
+.client b { font-size: 14px; }
+
+/* =========================================================
+   Touch devices / small screens: lighter compositing.
+   Mobile Chrome drops layers (visible flashing) when large blurred,
+   animated, backdrop-filtered and 3D layers stack up — so here we keep
+   the look but render it with cheap, static equivalents.
+   ========================================================= */
+@media (hover: none), (max-width: 1080px) {
+  /* static ambient background instead of huge animated blur blobs */
+  .ambient { background:
+      radial-gradient(60vmax 50vmax at 0% 0%, color-mix(in srgb, var(--blob-a) 75%, transparent), transparent 70%),
+      radial-gradient(50vmax 45vmax at 100% 20%, color-mix(in srgb, var(--blob-b) 70%, transparent), transparent 70%),
+      radial-gradient(50vmax 40vmax at 30% 100%, color-mix(in srgb, var(--blob-c) 65%, transparent), transparent 70%); }
+  .ambient span, .ambient::after { display: none; }
+
+  /* no backdrop blur: use a more opaque glass instead */
+  :root { --glass: rgba(255,255,255,.80); --glass-strong: rgba(255,255,255,.90); }
+  .glass, .btn-glass, .eyebrow, .badge, .segmented, .cap-hud, .cap-detail, .page-hero-inner, .g-item figcaption, .lightbox {
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  }
+  .cap-hud { background: rgba(16,24,72,.92); }
+
+  /* no 3D / will-change layers, no masked animated rims */
+  .cap-stage, .tilt { transform: none !important; transform-style: flat; will-change: auto; }
+  .cap-stage::after, .page-hero-inner::after { display: none; }
+  .cap-stage::before { animation: none; }
+  .hero-stack .widget, .btn-primary, .btn-primary::after { animation: none; }
+  .glass.spot::before { display: none; }
+  body { animation: none; }
+  .cap-beam, .cap-map.focus .cap-label.on { filter: none; }
+}
+@media (hover: none) and (prefers-color-scheme: dark), (max-width: 1080px) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --glass: rgba(24,30,66,.86); --glass-strong: rgba(30,36,78,.92); }
+}
+@media (hover: none), (max-width: 1080px) {
+  :root[data-theme="dark"] { --glass: rgba(24,30,66,.86); --glass-strong: rgba(30,36,78,.92); }
+}
+
+/* number inside a stat must not inherit the label style */
+.stat b span { display: inline; margin: 0; font-size: inherit; font-weight: inherit; color: inherit; }

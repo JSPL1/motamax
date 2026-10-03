@@ -158,18 +158,20 @@
     { cat: 'Construction', color: 'bg-navy', img: 'i14', title: 'IOCL township expansion project', client: 'Shradha Saboori Group', text: 'IT, telecom / intercom, CCTV and security systems installed alongside construction for the IOCL township expansion.', tags: ['Intercom', 'CCTV', 'Networking', 'Security'] }
   ];
 
+  // [name, sector, logo file in assets/clients/ (null when no logo is available)]
   const CLIENTS = [
-    ['Reliance Industries', 'Energy & Petrochem'], ['Indian Oil', 'Oil & Gas'], ['CPWD', 'Government'], ['Aditya Birla (Hindalco)', 'Metals'],
-    ['Bharti Airtel', 'Telecom'], ['JSW Group', 'Steel'], ['Jindal Steel & Power', 'Steel'], ['Mahindra Logistics', 'Logistics'],
-    ['CSM Technologies', 'IT'], ['Paradip Port Authority', 'Ports'], ['BMRCL', 'Metro Rail'], ['MP Birla Group', 'Cement'],
-    ['Alexis', 'Enterprise'], ['Luminous Infoways', 'IT'], ['KCC', 'Infrastructure'], ['STL', 'Telecom'],
-    ['Power HF', 'Power'], ['RITES Limited', 'Railways PSU'], ['Vaterland Group', 'Construction'], ['The HHI Bhubaneswar', 'Hospitality'],
-    ['KICTPL', 'Ports'], ['AE Commercial', 'Commercial'], ['DRDO', 'Defence R&D'], ['IIT', 'Education'],
-    ['OHPC', 'Hydro Power'], ['Siksha ‘O’ Anusandhan', 'Education'], ['LIC of India', 'Insurance'], ['Odisha TV (OTV)', 'Media'],
-    ['Tushali', 'Hospitality'], ['UltraTech Cement', 'Cement'], ['Indian Railways', 'Railways'], ['NLC India', 'Ministry of Coal'],
-    ['Hindustan Copper', 'Mining PSU'], ['IMFA', 'Ferro Alloys'], ['Manikstu', 'Agro'], ['Jindal Stainless', 'Steel'],
-    ['AG Office Bhubaneswar', 'Government'], ['OEYE MEP Engineers', 'MEP'], ['Tata Power', 'Power'], ['OMC', 'Mining PSU']
+    ['Reliance Industries', 'Energy & Petrochem', 'reliance'], ['Indian Oil', 'Oil & Gas', 'indianoil'], ['CPWD', 'Government', 'cpwd'], ['Aditya Birla (Hindalco)', 'Metals', 'hindalco'],
+    ['Bharti Airtel', 'Telecom', 'airtel'], ['JSW Group', 'Steel', 'jsw'], ['Jindal Steel & Power', 'Steel', 'jspl'], ['Mahindra Logistics', 'Logistics', 'mahindra-logistics'],
+    ['CSM Technologies', 'IT', 'csm'], ['Paradip Port Authority', 'Ports', 'paradip-port'], ['BMRCL', 'Metro Rail', 'bmrcl'], ['MP Birla Group', 'Cement', 'mp-birla'],
+    ['Alexis', 'Enterprise', 'alexis'], ['Luminous Infoways', 'IT', 'luminous'], ['KCC', 'Infrastructure', 'kcc'], ['STL', 'Telecom', 'stl'],
+    ['Power HF', 'Power', 'power-hf'], ['RITES Limited', 'Railways PSU', 'rites'], ['Vaterland Group', 'Construction', 'vaterland'], ['The HHI Bhubaneswar', 'Hospitality', 'the-hhi'],
+    ['KICTPL', 'Ports', 'kictppl'], ['AE Commercial', 'Commercial', 'ae-commercial'], ['DRDO', 'Defence R&D', 'drdo'], ['IIT', 'Education', 'iit'],
+    ['OHPC', 'Hydro Power', 'ohpc'], ['Siksha ‘O’ Anusandhan', 'Education', 'soa'], ['LIC of India', 'Insurance', 'lic'], ['Odisha TV (OTV)', 'Media', 'otv'],
+    ['Toshali', 'Hospitality', 'toshali'], ['UltraTech Cement', 'Cement', 'ultratech'], ['Indian Railways', 'Railways', 'indian-railways'], ['NLC India', 'Ministry of Coal', 'nlc-india'],
+    ['Hindustan Copper', 'Mining PSU', 'hindustan-copper'], ['IMFA', 'Ferro Alloys', 'imfa'], ['Manikstu', 'Agro', 'manikstu'], ['Jindal Stainless', 'Steel', 'jindal-stainless'],
+    ['AG Office Bhubaneswar', 'Government', 'ag-office'], ['OEYE MEP Engineers', 'MEP', 'oeye-mep'], ['Tata Power', 'Power', 'tata-power'], ['OMC', 'Mining PSU', null]
   ];
+
 
   const GALLERY = [
     ['e1', 'Electrical', 'Substation structure'], ['e2', 'Electrical', 'Pole‑mounted transformer'], ['e3', 'Electrical', 'Overhead line work'], ['e4', 'Electrical', 'Transformer installation'],
@@ -187,12 +189,16 @@
   /* Rendering                                                           */
   /* ------------------------------------------------------------------ */
 
-  // Marquee (duplicated for a seamless loop)
+  // Logo marquees (duplicated for a seamless loop); a second row runs the other way
+  const logoTile = ([n, , logo]) => logo
+    ? `<span class="logo-chip"><img src="assets/clients/${logo}.png" alt="${esc(n)}" loading="lazy" decoding="async" width="110" height="80"></span>`
+    : `<span class="logo-chip text">${esc(n)}</span>`;
+  const withLogos = CLIENTS.filter((c) => c[2]);
+  const fillTrack = (el, list) => { const row = list.map(logoTile).join(''); el.innerHTML = row + row; };
   const mq = $('#marquee');
-  if (mq) {
-    const names = CLIENTS.map((c) => `<span>${esc(c[0])}</span>`).join('');
-    mq.innerHTML = names + names;
-  }
+  if (mq) fillTrack(mq, withLogos.slice(0, Math.ceil(withLogos.length / 2)).concat($('#marquee2') ? [] : withLogos.slice(Math.ceil(withLogos.length / 2))));
+  const mq2 = $('#marquee2');
+  if (mq2) fillTrack(mq2, withLogos.slice(Math.ceil(withLogos.length / 2)));
 
   // Domain panels
   const panels = $('#domainPanels');
@@ -276,9 +282,12 @@
   // Clients
   const cg = $('#clientGrid');
   if (cg) {
-    cg.innerHTML = CLIENTS.map(([n, s], i) => {
+    cg.innerHTML = CLIENTS.map(([n, sec, logo], i) => {
       const initials = n.replace(/[^A-Za-z ]/g, '').split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-      return `<div class="client glass reveal"><span class="mono ${MONO_COLORS[i % MONO_COLORS.length]}">${initials}</span><div><b>${esc(n)}</b><small>${esc(s)}</small></div></div>`;
+      const mark = logo
+        ? `<span class="client-logo"><img src="assets/clients/${logo}.png" alt="${esc(n)} logo" loading="lazy" decoding="async" width="220" height="160"></span>`
+        : `<span class="client-logo"><span class="mono ${MONO_COLORS[i % MONO_COLORS.length]}">${initials}</span></span>`;
+      return `<div class="client glass reveal">${mark}<div><b>${esc(n)}</b><small>${esc(sec)}</small></div></div>`;
     }).join('');
   }
 
@@ -351,6 +360,7 @@
   const capDetail = $('#capDetail');
   const capWrap = $('#capWrap');
   const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const LIGHT_RENDER = matchMedia('(hover: none), (max-width: 1080px)').matches;
   if (capMap && capDetail) {
     const CX = 500, CY = 430, R = 255, LR = 300;
     const CYCLE = 3400;
@@ -421,6 +431,8 @@
       </g>
       <g class="cap-layer" data-depth="20">${nodes.join('')}<g id="capShock"></g>${labels.join('')}</g>`;
     capMap.innerHTML = html;
+    // Phones/tablets: SVG blur filters on moving elements overload the mobile compositor (flashing)
+    if (LIGHT_RENDER) $$('[filter]', capMap).forEach((el) => el.removeAttribute('filter'));
 
     // Text scramble for the centre kicker
     const kicker = $('#capKicker', capMap);
@@ -524,12 +536,16 @@
     const ctx = net.getContext('2d');
     const host = net.parentElement;
     let W = 0, H = 0, dpr = 1, pts = [], mouse = { x: -9999, y: -9999 }, running = false, rafId;
+    let lastW = 0;
     const resize = () => {
-      dpr = Math.min(devicePixelRatio || 1, 2);
+      // ignore height-only changes (mobile address bar showing/hiding) so the canvas isn't rebuilt mid-scroll
+      if (host.clientWidth === lastW && pts.length) return;
+      lastW = host.clientWidth;
+      dpr = Math.min(devicePixelRatio || 1, LIGHT_RENDER ? 1.5 : 2);
       W = host.clientWidth; H = host.clientHeight;
       net.width = W * dpr; net.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.round(Math.min(90, (W * H) / 16000));
+      const count = Math.round(Math.min(LIGHT_RENDER ? 34 : 90, (W * H) / (LIGHT_RENDER ? 22000 : 16000)));
       pts = Array.from({ length: count }, (_, k) => ({
         x: Math.random() * W, y: Math.random() * H,
         vx: (Math.random() - 0.5) * 0.35, vy: (Math.random() - 0.5) * 0.35,
