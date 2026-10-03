@@ -191,7 +191,7 @@
 
   // Logo marquees (duplicated for a seamless loop); a second row runs the other way
   const logoTile = ([n, , logo]) => logo
-    ? `<span class="logo-chip"><img src="assets/clients/${logo}.png" alt="${esc(n)}" loading="lazy" decoding="async" width="110" height="80"></span>`
+    ? `<span class="logo-chip"><img src="assets/clients/${logo}.png" alt="${esc(n)}" decoding="async" width="110" height="80"></span>`
     : `<span class="logo-chip text">${esc(n)}</span>`;
   const withLogos = CLIENTS.filter((c) => c[2]);
   const fillTrack = (el, list) => { const row = list.map(logoTile).join(''); el.innerHTML = row + row; };
