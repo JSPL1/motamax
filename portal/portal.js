@@ -63,7 +63,7 @@
       ['#/dashboard', 'p-dash', 'Dashboard'],
       ['#/pool', 'p-inbox', 'Open pool', counts.pool],
       ['#/mine', 'p-bucket', 'My bucket', counts.mine],
-      ...(isAdmin() ? [['#/all', 'p-list', 'All enquiries'], ['#/users', 'p-users', 'Team'], ['#/mail', 'p-mail', 'Mail settings']] : []),
+      ...(isAdmin() ? [['#/all', 'p-list', 'All enquiries'], ['#/users', 'p-users', 'Team'], ['#/media', 'p-image', 'Media'], ['#/mail', 'p-mail', 'Mail settings']] : []),
       ['#/account', 'p-key', 'My account'],
     ];
     $('#nav').innerHTML = items.map(([h, i, t, c]) => `<a href="${h}" data-route="${h}">${icon(i)}<span>${t}</span>${c ? `<b class="p-count">${c}</b>` : ''}</a>`).join('');
@@ -72,7 +72,7 @@
     $('#logout').addEventListener('click', async () => { await fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); location.href = '/login.html'; });
   }
   function highlightNav() {
-    const base = '#/' + (location.hash.replace(/^#\//, '').split('/')[0] || 'dashboard');
+    const base = '#/' + (location.hash.replace(/^#\//, '').split('?')[0].split('/')[0] || 'dashboard');
     $$('#nav a').forEach((a) => a.classList.toggle('active', a.dataset.route === base || (base === '#/enquiry' && a.dataset.route === '#/mine')));
   }
   async function refreshCounts() {
@@ -99,7 +99,7 @@
   const setTitle = (t) => { $('#pageTitle').textContent = t; document.title = t + ' | Motamax Portal'; };
   async function route() {
     destroyCharts(); highlightNav();
-    const [name, arg] = location.hash.replace(/^#\//, '').split('/');
+    const [name, arg] = location.hash.replace(/^#\//, '').split('?')[0].split('/');
     view.innerHTML = '<div class="p-spin center"></div>';
     try {
       switch (name || 'dashboard') {
@@ -110,6 +110,7 @@
         case 'enquiry': return await viewEnquiry(arg);
         case 'users': return isAdmin() ? await viewUsers() : (location.hash = '#/dashboard');
         case 'mail': return isAdmin() ? await viewMail() : (location.hash = '#/dashboard');
+        case 'media': return isAdmin() ? await viewMedia() : (location.hash = '#/dashboard');
         case 'account': return viewAccount();
         default: location.hash = '#/dashboard';
       }
@@ -416,6 +417,74 @@
       const u = users.find((x) => x.id === b.dataset.activate);
       try { await api('/users/' + u.id, { method: 'PATCH', body: { active: true } }); toast(`${u.name} reactivated`); route(); } catch (err) { toast(err.message, 'err'); }
     }));
+  }
+
+  /* ---------------- media (admin) ---------------- */
+  async function viewMedia() {
+    setTitle('Media');
+    const { slots } = await api('/media');
+    const tab = new URLSearchParams(location.hash.split('?')[1] || '').get('tab') || 'site';
+    const GROUPS = [['site', 'Site photos'], ['clients', 'Client logos'], ['brand', 'Logo'], ['brochure', 'Brochure']];
+    const quality = (s) => {
+      if (s.kind !== 'image' || !s.width) return '';
+      const need = s.group === 'site' ? [1200, 1920] : [500, 1000];
+      const [label, color] = s.width >= need[1] ? ['HD', '#22B45A'] : s.width >= need[0] ? ['Good', '#1A9BD7'] : ['Low-res', '#E3342F'];
+      return `<span class="p-badge" style="--bc:${color}">${label} · ${s.width}×${s.height}</span>`;
+    };
+    const kb = (n) => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB';
+    const low = slots.filter((s) => s.kind === 'image' && s.width && s.width < (s.group === 'site' ? 1200 : 500)).length;
+    const card = (s) => `
+      <div class="p-media" data-path="${esc(s.path)}">
+        <div class="p-media-img ${s.group === 'clients' || s.group === 'brand' ? 'contain' : ''}">${s.kind === 'pdf'
+          ? `<div class="p-pdf">PDF<small>${kb(s.size)}</small></div>`
+          : `<img src="/${esc(s.path)}?t=${encodeURIComponent(s.updatedAt || '')}" alt="${esc(s.label)}" loading="lazy">`}
+          ${s.overridden ? '<span class="p-media-flag">Replaced</span>' : ''}</div>
+        <div class="p-media-body"><b>${esc(s.label)}</b><small>${esc(s.usedIn)}</small>${quality(s)}</div>
+        <div class="p-media-actions">
+          <label class="p-btn p-btn-primary sm">Replace<input type="file" accept="${s.kind === 'pdf' ? 'application/pdf' : 'image/jpeg,image/png,image/webp'}" hidden></label>
+          ${s.overridden ? '<button class="p-btn sm" data-restore>Restore original</button>' : ''}
+        </div>
+      </div>`;
+    view.innerHTML = `
+      <div class="p-card p-media-intro">
+        <div><h3>Replace website &amp; brochure images</h3>
+          <p class="p-muted">Upload a sharper photo or logo for any slot — it replaces the image everywhere it is used (website, galleries, stories, brochure). Originals are kept; use <b>Restore original</b> to undo.
+          Recommended: photos at least <b>1920 px</b> wide (JPG), logos as <b>PNG</b> at least 1000 px wide.</p></div>
+        ${low ? `<div class="p-alert" style="margin:0">${low} images are low resolution — replacing them will make the site look sharper.</div>` : ''}
+      </div>
+      <div class="p-tabs">${GROUPS.map(([k, l]) => `<a href="#/media?tab=${k}" class="${k === tab ? 'on' : ''}">${l} <small>${slots.filter((s) => s.group === k).length}</small></a>`).join('')}</div>
+      ${tab === 'brochure' ? `
+        <div class="p-card p-brochure">
+          <div><h3>Company brochure</h3>
+            <ol class="p-steps">
+              <li>Replace photos, client logos or the brochure logo in the other tabs.</li>
+              <li>Open the <b>brochure designer</b> — it always uses the current images.</li>
+              <li>Click <b>Print / Save as PDF</b> (Margins: None, Background graphics: on) and save the PDF.</li>
+              <li>Upload that PDF below. Website downloads and brochure emails use it immediately.</li>
+            </ol>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="p-btn p-btn-primary" href="/brochure/brochure.html" target="_blank" rel="noopener">Open brochure designer</a><a class="p-btn" href="/assets/Motamax-Company-Profile.pdf" target="_blank" rel="noopener">${icon('p-download')}<span>Current PDF</span></a></div>
+          </div>
+        </div>` : ''}
+      <div class="p-media-grid">${slots.filter((s) => s.group === tab).map(card).join('')}</div>`;
+
+    $$('.p-media').forEach((el) => {
+      const p = el.dataset.path;
+      $('input[type=file]', el).addEventListener('change', async (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        if (file.size > 25 * 1024 * 1024) { toast('File is larger than 25 MB', 'err'); return; }
+        el.classList.add('busy');
+        try {
+          const r = await fetch('/api/media?path=' + encodeURIComponent(p), { method: 'PUT', credentials: 'same-origin', headers: { 'Content-Type': file.type || 'application/octet-stream' }, body: file });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(j.error || 'Upload failed');
+          toast('Replaced — live on the website now'); route();
+        } catch (err) { toast(err.message, 'err'); el.classList.remove('busy'); }
+      });
+      $('[data-restore]', el)?.addEventListener('click', async () => {
+        if (!confirm('Restore the original file for this slot?')) return;
+        try { await api('/media?path=' + encodeURIComponent(p), { method: 'DELETE', body: {} }); toast('Original restored'); route(); } catch (err) { toast(err.message, 'err'); }
+      });
+    });
   }
 
   /* ---------------- mail settings (admin) ---------------- */

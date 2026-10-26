@@ -4,13 +4,11 @@ const fs = require('fs');
 const path = require('path');
 
 /* Secret used to sign sessions and encrypt stored SMTP/IMAP passwords.
-   Production must set SESSION_SECRET; locally a random one is kept in data/.secret. */
+   SESSION_SECRET wins if set; otherwise a random secret is generated once and kept in
+   <DATA_DIR>/.secret (persistent on cPanel). On hosts with a throw-away disk, set SESSION_SECRET. */
 function loadSecret() {
   if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('SESSION_SECRET must be set in production');
-  }
-  const file = path.join(__dirname, '..', 'data', '.secret');
+  const file = path.join(process.env.DATA_DIR || path.join(__dirname, '..', 'data'), '.secret');
   fs.mkdirSync(path.dirname(file), { recursive: true });
   if (!fs.existsSync(file)) fs.writeFileSync(file, crypto.randomBytes(48).toString('hex'));
   return fs.readFileSync(file, 'utf8').trim();

@@ -23,6 +23,10 @@ Static website for **Motamax India Private Limited** (Bhubaneswar, Odisha) — S
   - **Admins** also see every enquiry, who took it, team performance graphs, CSV export, team management and mail settings.
 - **Mail settings** (admin): SMTP for sending (with optional IMAP to save a copy in the Sent folder). Emails can attach the company brochure; brochure requests from the website are answered automatically.
 
+## Media manager
+
+Admins open **Media** in the portal to replace any website photo, client logo, the logo, or the brochure PDF with a higher-resolution file. Replacements are stored in `data/media/` and served instead of the originals (restore any time). The **brochure designer** (`/brochure/`) always uses the current images — print it to PDF and upload it on the Media page.
+
 ## Run locally
 
 ```bash
@@ -31,7 +35,7 @@ cp .env.example .env   # set ADMIN_EMAIL / ADMIN_PASSWORD
 npm start              # http://localhost:5510
 ```
 
-Without `DATABASE_URL`, data is stored in `data/db.json`.
+Without a database setting, data is stored in `data/db.json` (set `DATA_DIR` to move it). For MySQL (e.g. a cPanel database) set `MYSQL_HOST`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`; for Postgres set `DATABASE_URL`.
 
 ## Brochure
 

@@ -95,7 +95,55 @@ function createPgStore(url) {
   };
 }
 
+/* MySQL / MariaDB (e.g. a cPanel database). Same single-table document layout. */
+function createMysqlStore(config) {
+  const mysql = require('mysql2/promise');
+  const pool = mysql.createPool({ ...config, waitForConnections: true, connectionLimit: 5, charset: 'utf8mb4' });
+  const parse = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
+  return {
+    kind: 'mysql',
+    async init() {
+      await pool.query(`CREATE TABLE IF NOT EXISTS mmx_docs (
+        collection VARCHAR(64) NOT NULL, id VARCHAR(64) NOT NULL, data LONGTEXT NOT NULL,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (collection, id)) CHARACTER SET utf8mb4`);
+      await pool.query('CREATE TABLE IF NOT EXISTS mmx_seq (name VARCHAR(64) PRIMARY KEY, value BIGINT NOT NULL)');
+    },
+    async all(c) { const [rows] = await pool.query('SELECT data FROM mmx_docs WHERE collection=?', [c]); return rows.map((r) => parse(r.data)); },
+    async get(c, id) { const [rows] = await pool.query('SELECT data FROM mmx_docs WHERE collection=? AND id=?', [c, id]); return rows[0] ? parse(rows[0].data) : null; },
+    async insert(c, doc) { await pool.query('INSERT INTO mmx_docs(collection,id,data) VALUES(?,?,?)', [c, doc.id, JSON.stringify(doc)]); return doc; },
+    async update(c, id, fn) {
+      const conn = await pool.getConnection();
+      try {
+        await conn.beginTransaction();
+        const [rows] = await conn.query('SELECT data FROM mmx_docs WHERE collection=? AND id=? FOR UPDATE', [c, id]);
+        if (!rows[0]) { await conn.rollback(); return null; }
+        const next = fn(parse(rows[0].data));
+        if (!next) { await conn.rollback(); return null; }
+        await conn.query('UPDATE mmx_docs SET data=? WHERE collection=? AND id=?', [JSON.stringify(next), c, id]);
+        await conn.commit();
+        return next;
+      } catch (e) { await conn.rollback().catch(() => {}); throw e; } finally { conn.release(); }
+    },
+    async remove(c, id) { await pool.query('DELETE FROM mmx_docs WHERE collection=? AND id=?', [c, id]); },
+    async nextSeq(name) {
+      const conn = await pool.getConnection();
+      try {
+        await conn.query('INSERT INTO mmx_seq(name,value) VALUES(?,LAST_INSERT_ID(1)) ON DUPLICATE KEY UPDATE value=LAST_INSERT_ID(value+1)', [name]);
+        const [rows] = await conn.query('SELECT LAST_INSERT_ID() AS v');
+        return Number(rows[0].v);
+      } finally { conn.release(); }
+    },
+  };
+}
+
 module.exports = function createStore() {
-  if (process.env.DATABASE_URL) return createPgStore(process.env.DATABASE_URL);
-  return createFileStore(process.env.DATA_FILE || path.join(__dirname, '..', 'data', 'db.json'));
+  const url = process.env.DATABASE_URL || '';
+  if (url.startsWith('mysql://')) return createMysqlStore({ uri: url });
+  if (process.env.MYSQL_DATABASE) {
+    return createMysqlStore({ host: process.env.MYSQL_HOST || 'localhost', port: Number(process.env.MYSQL_PORT) || 3306, user: process.env.MYSQL_USER, password: process.env.MYSQL_PASSWORD, database: process.env.MYSQL_DATABASE });
+  }
+  if (url) return createPgStore(url);
+  const dir = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
+  return createFileStore(process.env.DATA_FILE || path.join(dir, 'db.json'));
 };

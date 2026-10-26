@@ -4,10 +4,12 @@ const fs = require('fs');
 const nodemailer = require('nodemailer');
 const MailComposer = require('nodemailer/lib/mail-composer');
 const { encrypt, decrypt } = require('./security');
+const media = require('./media');
 
 const ROOT = path.join(__dirname, '..');
-const BROCHURE = path.join(ROOT, 'assets', 'Motamax-Company-Profile.pdf');
-const LOGO = path.join(ROOT, 'assets', 'motamax-logo.png');
+// admin-uploaded replacements (Media page) take priority over the files in the repository
+const BROCHURE = () => media.resolveFile('assets/Motamax-Company-Profile.pdf');
+const LOGO = () => media.resolveFile('assets/motamax-logo.png');
 
 const DEFAULTS = {
   smtp: { host: '', port: 587, secure: false, user: '', pass: '', fromName: 'Motamax India', fromEmail: '', replyTo: '' },
@@ -93,8 +95,8 @@ async function send(store, { to, subject, text, attachBrochure, senderName, repl
   const s = await loadSettings(store);
   if (!isConfigured(s)) { const e = new Error('Email is not set up yet. Ask an admin to add SMTP details in Mail settings.'); e.status = 400; throw e; }
   const from = { name: s.smtp.fromName || 'Motamax India', address: s.smtp.fromEmail || s.smtp.user };
-  const attachments = [{ filename: 'motamax-logo.png', path: LOGO, cid: 'mmx-logo' }];
-  if (attachBrochure && fs.existsSync(BROCHURE)) attachments.push({ filename: 'Motamax-Company-Profile.pdf', path: BROCHURE, contentType: 'application/pdf' });
+  const attachments = [{ filename: 'motamax-logo.png', path: LOGO(), cid: 'mmx-logo' }];
+  if (attachBrochure && fs.existsSync(BROCHURE())) attachments.push({ filename: 'Motamax-Company-Profile.pdf', path: BROCHURE(), contentType: 'application/pdf' });
   const mail = { from, to, subject, text, html: renderHtml(text, senderName), attachments, replyTo: replyTo || s.smtp.replyTo || undefined };
 
   const info = await transportFor(s).sendMail(mail);

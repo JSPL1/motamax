@@ -24,6 +24,7 @@ const express = require('express');
 const createStore = require('./store');
 const sec = require('./security');
 const mailer = require('./mailer');
+const media = require('./media');
 
 const ROOT = path.join(__dirname, '..');
 const PROD = process.env.NODE_ENV === 'production';
@@ -52,7 +53,11 @@ app.use((req, res, next) => {
 
 /* ---------------- static website (whitelist) ---------------- */
 const PAGES = new Set(['index', 'about', 'services', 'industries', 'stories', 'clients', 'work', 'contact', 'login']);
-for (const dir of ['assets', 'css', 'js']) app.use('/' + dir, express.static(path.join(ROOT, dir), { maxAge: '7d' }));
+// admin-uploaded replacement images / brochure are served in place of the originals
+app.use(media.serveOverrides);
+app.use('/assets', express.static(path.join(ROOT, 'assets'), { maxAge: 0, etag: true }));
+for (const dir of ['css', 'js']) app.use('/' + dir, express.static(path.join(ROOT, dir), { maxAge: '7d' }));
+app.use('/brochure', express.static(path.join(ROOT, 'brochure'), { maxAge: 0, index: 'brochure.html' }));
 app.use('/portal', express.static(path.join(ROOT, 'portal'), { maxAge: 0 }));
 app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 app.get('/:page.html', (req, res, next) => (PAGES.has(req.params.page) ? res.sendFile(path.join(ROOT, req.params.page + '.html')) : next()));
@@ -64,6 +69,11 @@ app.use('/api', express.json({ limit: '64kb' }));
 // CSRF guard: state-changing API calls must be JSON and same-origin
 app.use('/api', (req, res, next) => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  if (req.path === '/media' && req.method === 'PUT') {
+    // binary upload: require an explicit same-origin Origin header instead of a JSON body
+    try { if (new URL(req.get('origin') || '').host === req.get('host')) return next(); } catch { /* fall through */ }
+    return res.status(403).json({ error: 'Cross-origin upload blocked' });
+  }
   if (!req.is('application/json')) return res.status(415).json({ error: 'JSON body required' });
   const origin = req.get('origin');
   if (origin) {
@@ -437,6 +447,22 @@ app.patch('/api/users/:id', requireUser, requireAdmin, wrap(async (req, res) => 
   }
   res.json({ user: publicUser(doc), released });
 }));
+
+/* ---------------- media (admin) ---------------- */
+app.get('/api/media', requireUser, requireAdmin, (req, res) => res.json({ slots: media.registry().map(media.describe) }));
+app.put('/api/media', requireUser, requireAdmin, express.raw({ type: () => true, limit: '25mb' }), (req, res, next) => {
+  try {
+    const slot = media.findSlot(req.query.path);
+    if (!slot) throw fail(404, 'Unknown media item');
+    if (!req.body?.length) throw fail(400, 'Empty file');
+    res.json({ slot: media.save(slot, req.body) });
+  } catch (e) { next(e); }
+});
+app.delete('/api/media', requireUser, requireAdmin, (req, res, next) => {
+  const slot = media.findSlot(req.query.path);
+  if (!slot) return next(fail(404, 'Unknown media item'));
+  res.json({ slot: media.restore(slot) });
+});
 
 /* ---------------- mail settings (admin) ---------------- */
 app.get('/api/settings/mail', requireUser, wrap(async (req, res) => {

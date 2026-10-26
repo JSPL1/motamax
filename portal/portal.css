@@ -204,3 +204,28 @@ body.portal { min-height: 100vh; }
 .p-table tr.is-suspended td:last-child { opacity: 1; }
 .p-team td:nth-child(3) { white-space: normal; word-break: break-all; min-width: 140px; }
 .p-team th, .p-team td { padding: 10px 8px; }
+
+/* media manager */
+.p-media-intro { display: grid; gap: 12px; }
+.p-media-intro h3 { margin-bottom: 6px; }
+.p-media-intro p { margin: 0; font-size: 14px; }
+.p-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.p-tabs a { padding: 9px 16px; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--text-2); background: var(--glass-strong); border: 1px solid var(--glass-border); }
+.p-tabs a.on { color: #fff; background: linear-gradient(135deg, #3436A8, #1A9BD7); border-color: transparent; }
+.p-tabs small { opacity: .7; margin-left: 4px; }
+.p-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.p-media { display: flex; flex-direction: column; border-radius: 18px; overflow: hidden; background: var(--glass-strong); border: 1px solid var(--glass-border); box-shadow: var(--shadow); transition: opacity .2s; }
+.p-media.busy { opacity: .5; pointer-events: none; }
+.p-media-img { position: relative; height: 150px; background: #0B1030; }
+.p-media-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.p-media-img.contain { background: #fff; }
+.p-media-img.contain img { object-fit: contain; padding: 14px; }
+.p-media-flag { position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 800; color: #fff; background: #8E5CF5; }
+.p-pdf { height: 100%; display: grid; place-content: center; text-align: center; color: #fff; font-size: 34px; font-weight: 900; background: linear-gradient(135deg, #23246E, #E3342F); }
+.p-pdf small { display: block; font-size: 13px; font-weight: 600; opacity: .85; }
+.p-media-body { padding: 12px 14px 4px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.p-media-body b { font-size: 14.5px; }
+.p-media-body small { color: var(--text-3); font-size: 12.5px; }
+.p-media-actions { display: flex; gap: 6px; padding: 10px 14px 14px; margin-top: auto; flex-wrap: wrap; }
+.p-media-actions label { cursor: pointer; }
+.p-brochure ol.p-steps { margin: 6px 0 16px; padding-left: 20px; display: grid; gap: 6px; color: var(--text-2); font-size: 14px; }
