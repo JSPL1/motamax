@@ -1,4 +1,6 @@
-# Render Blueprint — website + enquiry portal (Node) with a Postgres database.
+# Render Blueprint — website + enquiry portal (Node).
+# Trial setup: no database, so data lives in data/db.json and resets when the free instance restarts.
+# For permanent data on Render add a Postgres database and set DATABASE_URL (see the commented block).
 # Render dashboard → New → Blueprint → pick this repo. You will be asked for ADMIN_EMAIL and ADMIN_PASSWORD.
 services:
   - type: web
@@ -14,10 +16,10 @@ services:
         value: production
       - key: SESSION_SECRET
         generateValue: true
-      - key: DATABASE_URL
-        fromDatabase:
-          name: motamax-db
-          property: connectionString
+      # - key: DATABASE_URL
+      #   fromDatabase:
+      #     name: motamax-db
+      #     property: connectionString
       - key: ADMIN_NAME
         value: Administrator
       - key: ADMIN_EMAIL
@@ -25,7 +27,7 @@ services:
       - key: ADMIN_PASSWORD
         sync: false
 
-databases:
-  - name: motamax-db
-    plan: free               # free Postgres expires after 30 days; use "basic-256mb" to keep data
-    region: singapore
+# databases:
+#   - name: motamax-db
+#     plan: basic-256mb
+#     region: singapore
