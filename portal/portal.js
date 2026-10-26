@@ -36,6 +36,10 @@
   const fmtDate = (iso, withTime = true) => iso ? new Date(iso).toLocaleString('en-IN', withTime ? { dateStyle: 'medium', timeStyle: 'short' } : { dateStyle: 'medium' }) : '—';
   const ago = (iso) => { if (!iso) return '—'; const m = Math.round((Date.now() - new Date(iso)) / 60000); if (m < 1) return 'just now'; if (m < 60) return m + ' min ago'; const h = Math.round(m / 60); if (h < 24) return h + ' h ago'; const d = Math.round(h / 24); return d < 30 ? d + ' d ago' : fmtDate(iso, false); };
   const isAdmin = () => ME?.role === 'admin';
+  const isSuper = () => Boolean(ME?.superAdmin);
+  const roleLabel = (u) => (u.superAdmin ? 'Super admin' : u.role === 'admin' ? 'Admin' : 'Tele-caller');
+  // mirrors the server rule: super admin manages anyone; admins manage tele-callers; the super admin account only itself
+  const canManage = (u) => (u.superAdmin ? u.id === ME.id : isSuper() || u.role === 'telecaller' || u.id === ME.id);
   const initials = (n) => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const due = (e) => e.followUpAt && !['won', 'lost'].includes(e.status) && new Date(e.followUpAt) <= new Date();
   const waLink = (phone) => { const d = String(phone || '').replace(/\D/g, ''); return d ? 'https://wa.me/' + (d.length === 10 ? '91' + d : d) : null; };
@@ -68,7 +72,7 @@
     ];
     $('#nav').innerHTML = items.map(([h, i, t, c]) => `<a href="${h}" data-route="${h}">${icon(i)}<span>${t}</span>${c ? `<b class="p-count">${c}</b>` : ''}</a>`).join('');
     highlightNav();
-    $('#me').innerHTML = `<span class="p-avatar">${esc(initials(ME.name))}</span><div><b>${esc(ME.name)}</b><small>${ME.role === 'admin' ? 'Administrator' : 'Tele-caller'}</small></div><button class="p-icon" id="logout" title="Log out" aria-label="Log out">${icon('p-out')}</button>`;
+    $('#me').innerHTML = `<span class="p-avatar">${esc(initials(ME.name))}</span><div><b>${esc(ME.name)}</b><small>${ME.superAdmin ? 'Super admin' : ME.role === 'admin' ? 'Administrator' : 'Tele-caller'}</small></div><button class="p-icon" id="logout" title="Log out" aria-label="Log out">${icon('p-out')}</button>`;
     $('#logout').addEventListener('click', async () => { await fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); location.href = '/login.html'; });
   }
   function highlightNav() {
@@ -365,13 +369,14 @@
         <div class="p-table-wrap"><table class="p-table p-team"><thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Open enquiries</th><th>Last login</th><th></th></tr></thead><tbody>
         ${users.map((u) => `<tr class="${u.active ? '' : 'is-suspended'}"><td><span class="p-avatar sm">${esc(initials(u.name))}</span> ${esc(u.name)}${u.id === ME.id ? ' <small class="p-muted">(you)</small>' : ''}</td>
           <td>${u.username ? esc(u.username) : '<span class="p-muted">—</span>'}</td><td>${u.email ? esc(u.email) : '<span class="p-muted">—</span>'}</td>
-          <td>${u.role === 'admin' ? 'Admin' : 'Tele-caller'}</td>
+          <td>${u.superAdmin ? '<span class="p-badge" style="--bc:#8E5CF5">★ Super admin</span>' : u.role === 'admin' ? 'Admin' : 'Tele-caller'}</td>
           <td>${u.active ? '<span class="p-badge" style="--bc:#22B45A">Active</span>' : `<span class="p-badge" style="--bc:#E3342F">Suspended</span>${u.suspendedAt ? `<br><small class="p-muted">${fmtDate(u.suspendedAt, false)}</small>` : ''}`}</td>
           <td>${openOf(u.id)}</td><td>${u.lastLoginAt ? ago(u.lastLoginAt) : '—'}</td>
-          <td class="p-actions-cell"><button class="p-btn sm" data-edit="${u.id}">Edit</button>
-            ${u.id === ME.id ? '' : u.active ? `<button class="p-btn sm p-btn-danger" data-suspend="${u.id}">Suspend</button>` : `<button class="p-btn sm p-btn-ok" data-activate="${u.id}">Reactivate</button>`}</td></tr>`).join('')}
+          <td class="p-actions-cell">${canManage(u) ? `<button class="p-btn sm" data-edit="${u.id}">Edit</button>` : '<small class="p-muted">Protected</small>'}
+            ${u.id === ME.id || u.superAdmin || !canManage(u) ? '' : u.active ? `<button class="p-btn sm p-btn-danger" data-suspend="${u.id}">Suspend</button>` : `<button class="p-btn sm p-btn-ok" data-activate="${u.id}">Reactivate</button>`}
+            ${isSuper() && !u.superAdmin && u.id !== ME.id ? `<button class="p-btn sm p-btn-ghost-danger" data-delete="${u.id}">Delete</button>` : ''}</td></tr>`).join('')}
         </tbody></table></div>
-        <p class="p-hint" style="margin-top:12px">Suspended users cannot log in and are signed out immediately. Their history is kept, and you can reactivate them at any time.</p>
+        <p class="p-hint" style="margin-top:12px">Suspended users cannot log in and are signed out immediately; their history is kept and they can be reactivated. ${isSuper() ? 'As <b>super admin</b> you can manage and delete any user. Your own account is protected and cannot be suspended or deleted.' : 'Admins manage tele-callers. Admin accounts and the super admin are managed by the super admin.'}</p>
       </div>`;
     const form = (u = {}) => `<h2>${u.id ? 'Edit user' : 'Create user'}</h2>
       <p class="p-muted">Users can log in with their username or their email.</p>
@@ -379,7 +384,7 @@
         <div class="p-form-row"><label>Full name*<input name="name" value="${esc(u.name || '')}" required></label><label>Phone<input name="phone" value="${esc(u.phone || '')}"></label></div>
         <div class="p-form-row"><label>Username<input name="username" value="${esc(u.username || '')}" autocomplete="off" placeholder="e.g. rashmi" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,31}"></label>
           <label>Email<input name="email" type="email" value="${esc(u.email || '')}" autocomplete="off"></label></div>
-        <div class="p-form-row"><label>Role<select name="role" ${u.id === ME.id ? 'disabled' : ''}><option value="telecaller" ${u.role !== 'admin' ? 'selected' : ''}>Tele-caller</option><option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option></select></label>
+        <div class="p-form-row"><label>Role<select name="role" ${u.id === ME.id || u.superAdmin ? 'disabled' : ''}>${u.superAdmin ? '<option>Super admin</option>' : `<option value="telecaller" ${u.role !== 'admin' ? 'selected' : ''}>Tele-caller</option>${isSuper() || u.role === 'admin' ? `<option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>` : ''}`}</select></label>
           <label>${u.id ? 'New password <small>(leave empty to keep)</small>' : 'Password* <small>(min 8 characters)</small>'}<input name="password" type="password" autocomplete="new-password" ${u.id ? '' : 'required minlength="8"'}></label></div>
         <button class="p-btn p-btn-primary" type="submit">${u.id ? 'Save changes' : 'Create user'}</button>
       </form>`;
@@ -390,7 +395,7 @@
       try {
         if (u?.id) {
           const body = { name: d.name, phone: d.phone, username: d.username, email: d.email };
-          if (u.id !== ME.id) body.role = d.role;
+          if (u.id !== ME.id && !u.superAdmin) body.role = d.role;
           if (d.password) body.password = d.password;
           await api('/users/' + u.id, { method: 'PATCH', body });
         } else await api('/users', { method: 'POST', body: d });
@@ -416,6 +421,19 @@
     $$('[data-activate]').forEach((b) => b.addEventListener('click', async () => {
       const u = users.find((x) => x.id === b.dataset.activate);
       try { await api('/users/' + u.id, { method: 'PATCH', body: { active: true } }); toast(`${u.name} reactivated`); route(); } catch (err) { toast(err.message, 'err'); }
+    }));
+    $$('[data-delete]').forEach((b) => b.addEventListener('click', () => {
+      const u = users.find((x) => x.id === b.dataset.delete); const open = openOf(u.id);
+      openModal(`<h2>Delete ${esc(u.name)}?</h2>
+        <p class="p-muted">This permanently removes the account. ${open ? `Their ${open} open ${open === 1 ? 'enquiry goes' : 'enquiries go'} back to the open pool. ` : ''}Enquiry history and notes they wrote are kept. If you may need the account again, <b>Suspend</b> instead.</p>
+        <label class="p-block" style="margin-top:14px">Type <b>${esc(u.name)}</b> to confirm<input id="delConfirm" autocomplete="off"></label>
+        <div style="display:flex;gap:10px;margin-top:6px"><button class="p-btn p-btn-danger" id="doDelete" disabled>Delete permanently</button><button class="p-btn" id="cancelDelete">Cancel</button></div>`);
+      $('#delConfirm').addEventListener('input', (e) => { $('#doDelete').disabled = e.target.value.trim() !== u.name; });
+      $('#cancelDelete').addEventListener('click', closeModal);
+      $('#doDelete').addEventListener('click', async () => {
+        try { const r = await api('/users/' + u.id, { method: 'DELETE', body: {} }); closeModal(); toast(`${u.name} deleted${r.released ? ` · ${r.released} enquiries returned to the pool` : ''}`); USERS = []; refreshCounts(); route(); }
+        catch (err) { toast(err.message, 'err'); }
+      });
     }));
   }
 
@@ -543,7 +561,7 @@
   function viewAccount() {
     setTitle('My account');
     view.innerHTML = `<div class="p-card" style="max-width:560px">
-      <div class="p-owner"><span class="p-avatar">${esc(initials(ME.name))}</span><div><b>${esc(ME.name)}</b><small>${esc([ME.username && '@' + ME.username, ME.email].filter(Boolean).join(' · '))} · ${ME.role === 'admin' ? 'Administrator' : 'Tele-caller'}</small></div></div>
+      <div class="p-owner"><span class="p-avatar">${esc(initials(ME.name))}</span><div><b>${esc(ME.name)}</b><small>${esc([ME.username && '@' + ME.username, ME.email].filter(Boolean).join(' · '))} · ${roleLabel(ME)}</small></div></div>
       <h3 style="margin-top:22px">Change password</h3>
       <form id="pwForm" class="p-form"><label class="p-block">Current password<input name="current" type="password" autocomplete="current-password" required></label>
       <label class="p-block">New password (min 8 characters)<input name="next" type="password" autocomplete="new-password" minlength="8" required></label>

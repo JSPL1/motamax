@@ -229,3 +229,6 @@ body.portal { min-height: 100vh; }
 .p-media-actions { display: flex; gap: 6px; padding: 10px 14px 14px; margin-top: auto; flex-wrap: wrap; }
 .p-media-actions label { cursor: pointer; }
 .p-brochure ol.p-steps { margin: 6px 0 16px; padding-left: 20px; display: grid; gap: 6px; color: var(--text-2); font-size: 14px; }
+
+.p-btn-ghost-danger { color: #E3342F; border-color: color-mix(in srgb, #E3342F 45%, transparent); background: transparent; }
+.p-btn-ghost-danger:hover { background: #E3342F; color: #fff; }

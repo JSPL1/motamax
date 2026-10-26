@@ -84,6 +84,7 @@ def body():
 def public_user(u):
     return {'id': u['id'], 'name': u['name'], 'username': u.get('username') or '', 'email': u.get('email') or '',
             'suspendedAt': u.get('suspendedAt'), 'phone': u.get('phone') or '', 'role': u['role'], 'active': u['active'],
+            'superAdmin': bool(u.get('superAdmin')),
             'createdAt': u.get('createdAt'), 'lastLoginAt': u.get('lastLoginAt')}
 
 
@@ -702,9 +703,33 @@ def list_users():
     return jsonify(users=[{'id': x['id'], 'name': x['name'], 'role': x['role']} for x in users if x.get('active')])
 
 
+def can_manage(actor, target):
+    """Super admin: anyone. Admin: tele-callers only. The super admin account can only be managed by itself."""
+    if target.get('superAdmin'):
+        return actor['id'] == target['id']
+    if actor.get('superAdmin'):
+        return True
+    return target['role'] == 'telecaller' or actor['id'] == target['id']
+
+
+def release_open_enquiries(user_doc, actor, reason):
+    released = 0
+    for e in store.all('enquiries'):
+        if e.get('assigneeId') != user_doc['id'] or e['status'] in CLOSED:
+            continue
+
+        def rel(d):
+            d['history'].append({'at': now(), 'by': actor['id'], 'byName': actor['name'], 'action': 'released', 'note': f"Returned to open pool - {user_doc['name']} {reason}"})
+            d.update(assigneeId=None, assigneeName=None, claimedAt=None, updatedAt=now())
+            return d
+        store.update('enquiries', e['id'], rel)
+        released += 1
+    return released
+
+
 @app.post('/api/users')
 def create_user():
-    require_admin()
+    actor = require_admin()
     b = body()
     email = clean(b.get('email'), 160).lower()
     username = clean_username(b.get('username'))
@@ -718,6 +743,8 @@ def create_user():
         raise ApiError(400, 'Please enter a valid email address.')
     if len(str(b.get('password') or '')) < 8:
         raise ApiError(400, 'Password must be at least 8 characters.')
+    if b.get('role') == 'admin' and not actor.get('superAdmin'):
+        raise ApiError(403, 'Only the super admin can create admin accounts.')
     allu = store.all('users')
     if username and any(x.get('username') == username or x.get('email') == username for x in allu):
         raise ApiError(409, 'This username is already taken.')
@@ -733,8 +760,17 @@ def create_user():
 def update_user(uid):
     admin = require_admin()
     b = body()
+    target = store.get('users', uid)
+    if not target:
+        raise ApiError(404, 'User not found')
+    if not can_manage(admin, target):
+        raise ApiError(403, 'The super admin account can only be changed by the super admin.' if target.get('superAdmin') else 'Only the super admin can manage admin accounts.')
+    if target.get('superAdmin') and (b.get('active') is False or (b.get('role') and b['role'] != 'admin')):
+        raise ApiError(400, 'The super admin cannot be suspended or demoted.')
     if uid == admin['id'] and (b.get('active') is False or (b.get('role') and b['role'] != 'admin')):
         raise ApiError(400, 'You cannot deactivate or demote your own account.')
+    if b.get('role') == 'admin' and target['role'] != 'admin' and not admin.get('superAdmin'):
+        raise ApiError(403, 'Only the super admin can make someone an admin.')
     if b.get('password') is not None and len(str(b['password'])) < 8:
         raise ApiError(400, 'Password must be at least 8 characters.')
     lc = lambda v: clean(v, 160).lower()  # noqa: E731
@@ -759,9 +795,9 @@ def update_user(uid):
             u['email'] = lc(b['email'])
         if not u.get('username') and not u.get('email'):
             return None
-        if b.get('role') in ('admin', 'telecaller'):
+        if b.get('role') in ('admin', 'telecaller') and not u.get('superAdmin'):
             u['role'] = b['role']
-        if isinstance(b.get('active'), bool) and b['active'] != u['active']:
+        if isinstance(b.get('active'), bool) and b['active'] != u['active'] and not u.get('superAdmin'):
             u['active'] = b['active']
             u['suspendedAt'] = None if b['active'] else now()
             u['suspendedBy'] = None if b['active'] else admin['name']
@@ -770,20 +806,24 @@ def update_user(uid):
         return u
     doc = store.update('users', uid, fn)
     if not doc:
-        raise ApiError(400, 'User not found, or it would be left without a username or email.')
-    released = 0
-    if b.get('active') is False and b.get('releaseOpen'):
-        for e in store.all('enquiries'):
-            if e.get('assigneeId') != doc['id'] or e['status'] in CLOSED:
-                continue
-
-            def rel(d):
-                d['history'].append({'at': now(), 'by': admin['id'], 'byName': admin['name'], 'action': 'released', 'note': f"Returned to open pool - {doc['name']} was suspended"})
-                d.update(assigneeId=None, assigneeName=None, claimedAt=None, updatedAt=now())
-                return d
-            store.update('enquiries', e['id'], rel)
-            released += 1
+        raise ApiError(400, 'The user would be left without a username or email.')
+    released = release_open_enquiries(doc, admin, 'was suspended') if b.get('active') is False and b.get('releaseOpen') else 0
     return jsonify(user=public_user(doc), released=released)
+
+
+@app.delete('/api/users/<uid>')
+def delete_user(uid):
+    actor = require_admin()
+    if not actor.get('superAdmin'):
+        raise ApiError(403, 'Only the super admin can delete users.')
+    target = store.get('users', uid)
+    if not target:
+        raise ApiError(404, 'User not found')
+    if target.get('superAdmin') or uid == actor['id']:
+        raise ApiError(400, 'The super admin account cannot be deleted.')
+    released = release_open_enquiries(target, actor, 'was deleted')
+    store.remove('users', uid)
+    return jsonify(ok=True, released=released)
 
 
 # ---------------- media ----------------
@@ -850,14 +890,22 @@ def bootstrap_admin():
     username = clean_username(os.environ.get('ADMIN_USERNAME'))
     email = (os.environ.get('ADMIN_EMAIL') or '').strip().lower()
     password = os.environ.get('ADMIN_PASSWORD')
+    if (username or email) and not password:
+        existing = next((u for u in users if (username and u.get('username') == username) or (email and u.get('email') == email)), None)
+        if existing and not existing.get('superAdmin'):
+            store.update('users', existing['id'], lambda d: {**d, 'superAdmin': True, 'role': 'admin', 'active': True, 'suspendedAt': None})
     if (not username and not email) or not password:
         if not users:
             app.logger.warning('No users yet. Set ADMIN_USERNAME (or ADMIN_EMAIL) and ADMIN_PASSWORD to create the first admin account.')
         return
-    if any((username and u.get('username') == username) or (email and u.get('email') == email) for u in users):
+    existing = next((u for u in users if (username and u.get('username') == username) or (email and u.get('email') == email)), None)
+    if existing:
+        # the environment-defined admin is always the super admin (never changes the password)
+        if not existing.get('superAdmin') or existing['role'] != 'admin' or not existing.get('active'):
+            store.update('users', existing['id'], lambda d: {**d, 'superAdmin': True, 'role': 'admin', 'active': True, 'suspendedAt': None})
         return
     store.insert('users', {'id': sec.new_id(), 'name': os.environ.get('ADMIN_NAME') or 'Administrator', 'username': username, 'email': email,
-                           'phone': '', 'role': 'admin', 'active': True, 'passHash': sec.hash_password(password), 'createdAt': now()})
+                           'phone': '', 'role': 'admin', 'superAdmin': True, 'active': True, 'passHash': sec.hash_password(password), 'createdAt': now()})
 
 
 bootstrap_admin()

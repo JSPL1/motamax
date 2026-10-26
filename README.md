@@ -58,4 +58,6 @@ The same site and portal also run as a Python/Flask app (`pyserver/`, `passenger
 
 `render.yaml` defines the Node web service. In Render set `ADMIN_NAME`, `ADMIN_USERNAME` (or `ADMIN_EMAIL`) and `ADMIN_PASSWORD`: that admin is created at start-up if missing (never overwritten). `SESSION_SECRET` is generated automatically.
 
+The admin named in the environment (`ADMIN_USERNAME`) is the **super admin**: only they can create/suspend/delete admins and delete any user, and no one can suspend, demote or delete the super admin. Regular admins manage tele-callers.
+
 Admins manage the team under **Team**: create users (username and/or email), edit, reset passwords, and **suspend / reactivate** (suspended users are signed out immediately; their open enquiries can be returned to the pool).

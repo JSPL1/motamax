@@ -101,7 +101,7 @@ const requireUser = wrap(async (req, res, next) => {
   req.user = u; next();
 });
 const requireAdmin = (req, res, next) => (req.user?.role === 'admin' ? next() : next(fail(403, 'Admins only')));
-const publicUser = (u) => ({ id: u.id, name: u.name, username: u.username || '', email: u.email || '', suspendedAt: u.suspendedAt || null, phone: u.phone || '', role: u.role, active: u.active, createdAt: u.createdAt, lastLoginAt: u.lastLoginAt || null });
+const publicUser = (u) => ({ id: u.id, name: u.name, username: u.username || '', email: u.email || '', suspendedAt: u.suspendedAt || null, phone: u.phone || '', role: u.role, active: u.active, superAdmin: Boolean(u.superAdmin), createdAt: u.createdAt, lastLoginAt: u.lastLoginAt || null });
 
 /* simple in-memory rate limiter */
 function limiter(max, windowMs) {
@@ -390,6 +390,26 @@ app.get('/api/users', requireUser, wrap(async (req, res) => {
   // telecallers see only names (for display); admins get full records
   res.json({ users: req.user.role === 'admin' ? users.map(publicUser) : users.filter((u) => u.active).map((u) => ({ id: u.id, name: u.name, role: u.role })) });
 }));
+// Super admin: anyone. Admin: tele-callers only. The super admin account can only be managed by itself.
+const canManage = (actor, target) => {
+  if (target.superAdmin) return actor.id === target.id;
+  if (actor.superAdmin) return true;
+  return target.role === 'telecaller' || actor.id === target.id;
+};
+async function releaseOpenEnquiries(userDoc, actor, reason) {
+  let released = 0;
+  for (const e of await store.all('enquiries')) {
+    if (e.assigneeId !== userDoc.id || CLOSED.has(e.status)) continue;
+    await store.update('enquiries', e.id, (d) => {
+      d.history.push({ at: now(), by: actor.id, byName: actor.name, action: 'released', note: `Returned to open pool - ${userDoc.name} ${reason}` });
+      d.assigneeId = null; d.assigneeName = null; d.claimedAt = null; d.updatedAt = now();
+      return d;
+    });
+    released++;
+  }
+  return released;
+}
+
 app.post('/api/users', requireUser, requireAdmin, wrap(async (req, res) => {
   const b = req.body || {};
   const email = clean(b.email, 160).toLowerCase();
@@ -399,6 +419,7 @@ app.post('/api/users', requireUser, requireAdmin, wrap(async (req, res) => {
   if (username && !isUsername(username)) throw fail(400, 'Username: 3-32 characters, letters, numbers, dot, dash or underscore.');
   if (email && !isEmail(email)) throw fail(400, 'Please enter a valid email address.');
   if (String(b.password || '').length < 8) throw fail(400, 'Password must be at least 8 characters.');
+  if (b.role === 'admin' && !req.user.superAdmin) throw fail(403, 'Only the super admin can create admin accounts.');
   const all = await store.all('users');
   if (username && all.some((u) => u.username === username || u.email === username)) throw fail(409, 'This username is already taken.');
   if (email && all.some((u) => u.email === email || u.username === email)) throw fail(409, 'A user with this email already exists.');
@@ -408,7 +429,12 @@ app.post('/api/users', requireUser, requireAdmin, wrap(async (req, res) => {
 }));
 app.patch('/api/users/:id', requireUser, requireAdmin, wrap(async (req, res) => {
   const b = req.body || {};
+  const target = await store.get('users', req.params.id);
+  if (!target) throw fail(404, 'User not found');
+  if (!canManage(req.user, target)) throw fail(403, target.superAdmin ? 'The super admin account can only be changed by the super admin.' : 'Only the super admin can manage admin accounts.');
+  if (target.superAdmin && (b.active === false || (b.role && b.role !== 'admin'))) throw fail(400, 'The super admin cannot be suspended or demoted.');
   if (req.params.id === req.user.id && (b.active === false || (b.role && b.role !== 'admin'))) throw fail(400, 'You cannot deactivate or demote your own account.');
+  if (b.role === 'admin' && target.role !== 'admin' && !req.user.superAdmin) throw fail(403, 'Only the super admin can make someone an admin.');
   if (b.password !== undefined && String(b.password).length < 8) throw fail(400, 'Password must be at least 8 characters.');
   const lc = (v) => clean(v, 160).toLowerCase();
   if (b.email && !isEmail(lc(b.email))) throw fail(400, 'Please enter a valid email address.');
@@ -422,8 +448,8 @@ app.patch('/api/users/:id', requireUser, requireAdmin, wrap(async (req, res) => 
     if (b.username !== undefined) u.username = cleanUsername(b.username);
     if (b.email !== undefined) u.email = lc(b.email);
     if (!u.username && !u.email) return null;
-    if (b.role && ['admin', 'telecaller'].includes(b.role)) u.role = b.role;
-    if (typeof b.active === 'boolean' && b.active !== u.active) {
+    if (b.role && ['admin', 'telecaller'].includes(b.role) && !u.superAdmin) u.role = b.role;
+    if (typeof b.active === 'boolean' && b.active !== u.active && !u.superAdmin) {
       u.active = b.active;
       u.suspendedAt = b.active ? null : now();
       u.suspendedBy = b.active ? null : req.user.name;
@@ -431,21 +457,18 @@ app.patch('/api/users/:id', requireUser, requireAdmin, wrap(async (req, res) => 
     if (b.password) u.passHash = sec.hashPassword(b.password);
     return u;
   });
-  if (!doc) throw fail(400, 'User not found, or it would be left without a username or email.');
-  // optionally hand a suspended user's open enquiries back to the pool
-  let released = 0;
-  if (b.active === false && b.releaseOpen) {
-    for (const e of await store.all('enquiries')) {
-      if (e.assigneeId !== doc.id || CLOSED.has(e.status)) continue;
-      await store.update('enquiries', e.id, (d) => {
-        d.history.push({ at: now(), by: req.user.id, byName: req.user.name, action: 'released', note: `Returned to open pool - ${doc.name} was suspended` });
-        d.assigneeId = null; d.assigneeName = null; d.claimedAt = null; d.updatedAt = now();
-        return d;
-      });
-      released++;
-    }
-  }
+  if (!doc) throw fail(400, 'The user would be left without a username or email.');
+  const released = b.active === false && b.releaseOpen ? await releaseOpenEnquiries(doc, req.user, 'was suspended') : 0;
   res.json({ user: publicUser(doc), released });
+}));
+app.delete('/api/users/:id', requireUser, requireAdmin, wrap(async (req, res) => {
+  if (!req.user.superAdmin) throw fail(403, 'Only the super admin can delete users.');
+  const target = await store.get('users', req.params.id);
+  if (!target) throw fail(404, 'User not found');
+  if (target.superAdmin || target.id === req.user.id) throw fail(400, 'The super admin account cannot be deleted.');
+  const released = await releaseOpenEnquiries(target, req.user, 'was deleted');
+  await store.remove('users', target.id);
+  res.json({ ok: true, released });
 }));
 
 /* ---------------- media (admin) ---------------- */
@@ -499,12 +522,19 @@ async function bootstrapAdmin() {
   const username = cleanUsername(process.env.ADMIN_USERNAME);
   const email = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
   const password = process.env.ADMIN_PASSWORD;
+  // the environment-defined admin is always the super admin (password is never overwritten)
+  const existing = users.find((u) => (username && u.username === username) || (email && u.email === email));
+  if (existing) {
+    if (!existing.superAdmin || existing.role !== 'admin' || !existing.active) {
+      await store.update('users', existing.id, (d) => ({ ...d, superAdmin: true, role: 'admin', active: true, suspendedAt: null }));
+    }
+    return;
+  }
   if ((!username && !email) || !password) {
     if (!users.length) console.warn('[setup] No users yet. Set ADMIN_USERNAME (or ADMIN_EMAIL) and ADMIN_PASSWORD to create the first admin account.');
     return;
   }
-  if (users.some((u) => (username && u.username === username) || (email && u.email === email))) return;
-  await store.insert('users', { id: sec.newId(), name: process.env.ADMIN_NAME || 'Administrator', username, email, phone: '', role: 'admin', active: true, passHash: sec.hashPassword(password), createdAt: now() });
+  await store.insert('users', { id: sec.newId(), name: process.env.ADMIN_NAME || 'Administrator', username, email, phone: '', role: 'admin', superAdmin: true, active: true, passHash: sec.hashPassword(password), createdAt: now() });
   console.log(`[setup] Created admin account ${username || email}`);
 }
 
