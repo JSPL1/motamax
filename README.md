@@ -51,7 +51,7 @@ The same site and portal also run as a Python/Flask app (`pyserver/`, `passenger
 
 1. cPanel → **Setup Python App** → Python 3.11, application root e.g. `motamax_app`, URL = the domain root, startup file `passenger_wsgi.py`, entry point `application`.
 2. Upload and extract the repository into the application root, then **Run Pip Install** (`requirements.txt`).
-3. Environment variables: `ADMIN_NAME`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` (first admin, created if missing). Data, uploads and the session secret are kept in `data/` inside the application root.
+3. Environment variables: `ADMIN_NAME`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` (first admin, created if missing) and `FORCE_HTTPS=1`. Data, uploads and the session secret are kept in `data/` inside the application root.
 4. Restart the app. Let's Encrypt renewals keep working: `/.well-known/acme-challenge/` is served from `~/public_html`.
 
 ## Deploy (Render)

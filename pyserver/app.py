@@ -107,6 +107,17 @@ def same_origin():
 
 
 @app.before_request
+def force_https():
+    # FORCE_HTTPS=1 on the live host: send http:// visitors to https:// (but keep Let's Encrypt challenges on http)
+    if os.environ.get('FORCE_HTTPS') != '1' or request.path.startswith('/.well-known/acme-challenge/'):
+        return None
+    proto = request.headers.get('X-Forwarded-Proto', request.scheme)
+    if proto == 'https' or request.is_secure:
+        return None
+    return redirect(request.url.replace('http://', 'https://', 1), code=301)
+
+
+@app.before_request
 def csrf_guard():
     if not request.path.startswith('/api') or request.method in ('GET', 'HEAD', 'OPTIONS'):
         return None
