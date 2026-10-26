@@ -477,11 +477,12 @@ app.delete('/api/users/:id', requireUser, requireAdmin, wrap(async (req, res) =>
 const LOADER_STYLES = ['orbit', 'pulse', 'curtain', 'progress', 'ripple', 'flip', 'typewriter', 'tiles', 'particles', 'spotlight', 'zoom-nav'];
 const LOGO_ANIMS = ['spin-in', 'bounce', 'flip-y', 'heartbeat', 'glow', 'swing', 'blur-in', 'float', 'shimmer', 'elastic'];
 const FREQUENCIES = ['always', 'session', 'off'];
-const BADGE_POSITIONS = ['hero', 'footer', 'float-left', 'float-right', 'banner', 'contact', 'hidden'];
+const BADGE_POSITIONS = ['cta', 'footer', 'contact', 'float-left', 'float-right', 'hidden'];
+const LEGACY_POSITIONS = { hero: 'cta', banner: 'cta' };
 const DEFAULT_SITE = {
   loader: { style: 'zoom-nav', logoAnim: 'elastic', frequency: 'session', minMs: 1400 },
   badges: [
-    { id: 'badge-1', label: 'Services emblem (gold)', position: 'hero', source: 'badge', enabled: true },
+    { id: 'badge-1', label: 'Services emblem (gold)', position: 'cta', source: 'badge', enabled: true },
     { id: 'badge-2', label: 'Solution Architect badge', position: 'footer', source: 'badge', enabled: true },
   ],
   showVisitors: true,
@@ -491,7 +492,9 @@ async function loadSite() {
   const saved = Object.fromEntries((doc.badges || []).filter((b) => b && b.id).map((b) => [b.id, b]));
   const badges = DEFAULT_SITE.badges.map((b) => {
     const s = saved[b.id] || {};
-    return { ...b, ...Object.fromEntries(Object.entries(s).filter(([k]) => ['position', 'source', 'enabled'].includes(k))) };
+    const merged = { ...b, ...Object.fromEntries(Object.entries(s).filter(([k]) => ['position', 'source', 'enabled'].includes(k))) };
+    merged.position = LEGACY_POSITIONS[merged.position] || merged.position;
+    return merged;
   });
   return { loader: { ...DEFAULT_SITE.loader, ...(doc.loader || {}) }, badges, showVisitors: doc.showVisitors ?? DEFAULT_SITE.showVisitors };
 }

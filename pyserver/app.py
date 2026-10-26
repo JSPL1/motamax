@@ -871,11 +871,12 @@ def restore_media():
 LOADER_STYLES = ['orbit', 'pulse', 'curtain', 'progress', 'ripple', 'flip', 'typewriter', 'tiles', 'particles', 'spotlight', 'zoom-nav']
 LOGO_ANIMS = ['spin-in', 'bounce', 'flip-y', 'heartbeat', 'glow', 'swing', 'blur-in', 'float', 'shimmer', 'elastic']
 FREQUENCIES = ['always', 'session', 'off']
-BADGE_POSITIONS = ['hero', 'footer', 'float-left', 'float-right', 'banner', 'contact', 'hidden']
+BADGE_POSITIONS = ['cta', 'footer', 'contact', 'float-left', 'float-right', 'hidden']
+LEGACY_POSITIONS = {'hero': 'cta', 'banner': 'cta'}
 DEFAULT_SITE = {
     'loader': {'style': 'zoom-nav', 'logoAnim': 'elastic', 'frequency': 'session', 'minMs': 1400},
     'badges': [
-        {'id': 'badge-1', 'label': 'Services emblem (gold)', 'position': 'hero', 'source': 'badge', 'enabled': True},
+        {'id': 'badge-1', 'label': 'Services emblem (gold)', 'position': 'cta', 'source': 'badge', 'enabled': True},
         {'id': 'badge-2', 'label': 'Solution Architect badge', 'position': 'footer', 'source': 'badge', 'enabled': True},
     ],
     'showVisitors': True,
@@ -887,6 +888,8 @@ def load_site():
     loader = {**DEFAULT_SITE['loader'], **(doc.get('loader') or {})}
     saved = {b['id']: b for b in (doc.get('badges') or []) if isinstance(b, dict) and b.get('id')}
     badges = [{**b, **{k: v for k, v in saved.get(b['id'], {}).items() if k in ('position', 'source', 'enabled')}} for b in DEFAULT_SITE['badges']]
+    for b in badges:
+        b['position'] = LEGACY_POSITIONS.get(b['position'], b['position'])
     return {'loader': loader, 'badges': badges, 'showVisitors': doc.get('showVisitors', DEFAULT_SITE['showVisitors'])}
 
 

@@ -79,6 +79,19 @@
     const base = '#/' + (location.hash.replace(/^#\//, '').split('?')[0].split('/')[0] || 'dashboard');
     $$('#nav a').forEach((a) => a.classList.toggle('active', a.dataset.route === base || (base === '#/enquiry' && a.dataset.route === '#/mine')));
   }
+  async function refreshTraffic() {
+    try {
+      const s = await api('/site');
+      const v = s.visitors;
+      const host = $('#traffic');
+      if (!v) { host.innerHTML = ''; return; }
+      const n = (x) => Number(x || 0).toLocaleString('en-IN');
+      host.innerHTML = `<small>Website traffic</small>
+        <div class="p-tr" style="--tc:#1A9BD7"><span>Unique visitors</span><b>${n(v.total)}</b></div>
+        <div class="p-tr" style="--tc:#22B45A"><span>Visitors today</span><b>${n(v.today)}</b></div>
+        <div class="p-tr" style="--tc:#8E5CF5"><span>Page views</span><b>${n(v.pageviews)}</b></div>`;
+    } catch { /* ignore */ }
+  }
   async function refreshCounts() {
     try {
       const [pool, mine] = await Promise.all([api('/enquiries?scope=pool'), api('/enquiries?scope=mine')]);
@@ -519,7 +532,7 @@
     'spin-in': 'Spin-in', bounce: 'Bounce drop', 'flip-y': '3D flip', heartbeat: 'Heartbeat', glow: '5-colour glow',
     swing: 'Pendulum swing', 'blur-in': 'Blur to focus', float: 'Floating', shimmer: 'Shimmer sweep', elastic: 'Elastic pop',
   };
-  const POS_INFO = { hero: 'Home hero (spinning)', banner: 'Page banners (corner)', footer: 'Footer', contact: 'Contact page', 'float-left': 'Floating — bottom left', 'float-right': 'Floating — right side', hidden: 'Hidden' };
+  const POS_INFO = { cta: 'Seal on the “Give us a chance” banner', footer: 'Footer', contact: 'Contact page (side panel)', 'float-left': 'Floating — bottom left', 'float-right': 'Floating — right side', hidden: 'Hidden' };
 
   async function viewSite() {
     setTitle('Site settings');
@@ -528,11 +541,6 @@
     const L = s.loader;
     const preview = (style, anim) => `/?loader=${encodeURIComponent(style)}&logoAnim=${encodeURIComponent(anim)}&preview=1`;
     view.innerHTML = `
-      <div class="p-kpis" style="grid-template-columns:repeat(3,1fr)">
-        <div class="p-kpi" style="--kc:#1A9BD7;--i:0"><small>Unique visitors</small><b>${(s.visitors?.total ?? 0).toLocaleString('en-IN')}</b><i></i></div>
-        <div class="p-kpi" style="--kc:#22B45A;--i:1"><small>Visitors today</small><b>${(s.visitors?.today ?? 0).toLocaleString('en-IN')}</b><i></i></div>
-        <div class="p-kpi" style="--kc:#8E5CF5;--i:2"><small>Page views</small><b>${(s.visitors?.pageviews ?? 0).toLocaleString('en-IN')}</b><i></i></div>
-      </div>
 
       <div class="p-card">
         <div class="p-card-head"><h3>Page loading animation</h3><a class="p-btn" id="pvBtn" target="_blank" rel="noopener" href="${preview(L.style, L.logoAnim)}">Preview selection ↗</a></div>
@@ -568,6 +576,7 @@
       <div class="p-card">
         <h3>Visitor counter</h3>
         <label class="p-check"><input type="checkbox" id="showVisitors" ${s.showVisitors ? 'checked' : ''}> Show “visitors / today” in the website footer and on the login page</label>
+        <p class="p-muted" style="margin:0;font-size:13px">Live numbers are always shown in the left sidebar.</p>
       </div>
       <div style="display:flex;justify-content:flex-end"><button class="p-btn p-btn-primary" id="saveSite">Save site settings</button></div>`;
 
@@ -670,9 +679,9 @@
       return;
     }
     $('#boot').remove(); $('#shell').hidden = false;
-    syncTheme(); renderNav(); refreshCounts();
+    syncTheme(); renderNav(); refreshCounts(); refreshTraffic();
     if (!location.hash) location.hash = isAdmin() ? '#/dashboard' : '#/pool';
     route();
-    setInterval(refreshCounts, 60000);
+    setInterval(() => { refreshCounts(); refreshTraffic(); }, 60000);
   })();
 })();

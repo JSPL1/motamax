@@ -32,17 +32,20 @@
   function placeBadges(badges) {
     document.querySelectorAll('.mmx-badge').forEach(function (n) { n.remove(); });
     if (isLogin) return;
+    var ctaSide = ['right', 'left'], footerCount = 0;
     (badges || []).forEach(function (b) {
       if (!b.enabled || b.position === 'hidden') return;
-      var host = null, pos = b.position;
-      if (pos === 'banner') host = $('.page-hero-inner') || $('.hero .hero-grid > div');
-      if (pos === 'hero') host = $('.hero .hero-grid > div') || $('.page-hero-inner');
-      if (pos === 'footer') host = $('.footer-inner > div');
-      if (pos === 'contact') host = $('.enq-side') || $('.footer-inner > div');
+      var pos = { hero: 'cta', banner: 'cta' }[b.position] || b.position;
+      var host = null;
+      if (pos === 'cta') host = $('.cta-band');
+      if (pos === 'contact') host = $('.enq-side');
+      if (pos === 'footer' || !host && (pos === 'cta' || pos === 'contact')) { pos = 'footer'; host = $('.footer-inner > div'); }
       if (pos === 'float-left' || pos === 'float-right') host = document.body;
       if (!host) return;
       var el = badgeEl(b);
-      if (pos === 'banner' && !$('.page-hero-inner')) el.className = el.className.replace('pos-banner', 'pos-hero');
+      el.className = el.className.replace(/pos-[\w-]+/, 'pos-' + pos);
+      if (pos === 'cta') el.classList.add('cta-' + (ctaSide.shift() || 'right'));
+      if (pos === 'footer' && footerCount++) el.classList.add('second');
       host.appendChild(el);
     });
   }
