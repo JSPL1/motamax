@@ -29,6 +29,9 @@ def registry():
     slots = [
         {'path': 'assets/motamax-logo.png', 'group': 'brand', 'label': 'Website logo', 'kind': 'image', 'usedIn': 'Menu, footer, login, emails'},
         {'path': 'brochure/motamax-logo@4x.png', 'group': 'brand', 'label': 'Brochure logo (print)', 'kind': 'image', 'usedIn': 'Every brochure page'},
+        {'path': 'assets/badges/badge-1.webp', 'group': 'brand', 'label': 'Badge 1 — services emblem', 'kind': 'image', 'usedIn': 'Floating brand badge (position set in Site settings)'},
+        {'path': 'assets/badges/badge-2.webp', 'group': 'brand', 'label': 'Badge 2 — solution architect', 'kind': 'image', 'usedIn': 'Floating brand badge (position set in Site settings)'},
+        {'path': 'assets/icons/mark.png', 'group': 'brand', 'label': 'Logo mark (loader & favicon art)', 'kind': 'image', 'usedIn': 'Page loading animation'},
         {'path': 'assets/Motamax-Company-Profile.pdf', 'group': 'brochure', 'label': 'Company profile (PDF)', 'kind': 'pdf', 'usedIn': 'Download buttons, brochure emails'},
     ]
 

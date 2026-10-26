@@ -67,7 +67,7 @@
       ['#/dashboard', 'p-dash', 'Dashboard'],
       ['#/pool', 'p-inbox', 'Open pool', counts.pool],
       ['#/mine', 'p-bucket', 'My bucket', counts.mine],
-      ...(isAdmin() ? [['#/all', 'p-list', 'All enquiries'], ['#/users', 'p-users', 'Team'], ['#/media', 'p-image', 'Media'], ['#/mail', 'p-mail', 'Mail settings']] : []),
+      ...(isAdmin() ? [['#/all', 'p-list', 'All enquiries'], ['#/users', 'p-users', 'Team'], ['#/media', 'p-image', 'Media'], ...(isSuper() ? [['#/site', 'p-sliders', 'Site settings']] : []), ['#/mail', 'p-mail', 'Mail settings']] : []),
       ['#/account', 'p-key', 'My account'],
     ];
     $('#nav').innerHTML = items.map(([h, i, t, c]) => `<a href="${h}" data-route="${h}">${icon(i)}<span>${t}</span>${c ? `<b class="p-count">${c}</b>` : ''}</a>`).join('');
@@ -115,6 +115,7 @@
         case 'users': return isAdmin() ? await viewUsers() : (location.hash = '#/dashboard');
         case 'mail': return isAdmin() ? await viewMail() : (location.hash = '#/dashboard');
         case 'media': return isAdmin() ? await viewMedia() : (location.hash = '#/dashboard');
+        case 'site': return isAdmin() ? await viewSite() : (location.hash = '#/dashboard');
         case 'account': return viewAccount();
         default: location.hash = '#/dashboard';
       }
@@ -502,6 +503,99 @@
         if (!confirm('Restore the original file for this slot?')) return;
         try { await api('/media?path=' + encodeURIComponent(p), { method: 'DELETE', body: {} }); toast('Original restored'); route(); } catch (err) { toast(err.message, 'err'); }
       });
+    });
+  }
+
+  /* ---------------- site settings (super admin) ---------------- */
+  const LOADER_INFO = {
+    orbit: ['Orbit', 'Coloured satellites circle the logo'], pulse: ['Pulse halo', 'Logo-shaped halos breathe outwards'],
+    curtain: ['Curtain reveal', 'Two panels split open to show the page'], progress: ['Progress bar', 'Logo with a 5-colour loading bar and %'],
+    ripple: ['Ripple', '5-colour rings ripple from the centre'], flip: ['3D flip card', 'Logo card spins in 3D with a reflection'],
+    typewriter: ['Typewriter', '“MOTAMAX INDIA” types itself under the logo'], tiles: ['Tile wall', 'A wall of tiles flips away to reveal the site'],
+    particles: ['Particle swirl', 'Hundreds of coloured particles swirl into orbit'], spotlight: ['Spotlight iris', 'Moving spotlight, then an iris-out reveal'],
+    'zoom-nav': ['Zoom to menu ★', 'Giant logo animates, then flies into its place in the menu bar'],
+  };
+  const ANIM_INFO = {
+    'spin-in': 'Spin-in', bounce: 'Bounce drop', 'flip-y': '3D flip', heartbeat: 'Heartbeat', glow: '5-colour glow',
+    swing: 'Pendulum swing', 'blur-in': 'Blur to focus', float: 'Floating', shimmer: 'Shimmer sweep', elastic: 'Elastic pop',
+  };
+  const POS_INFO = { hero: 'Home hero (spinning)', banner: 'Page banners (corner)', footer: 'Footer', contact: 'Contact page', 'float-left': 'Floating — bottom left', 'float-right': 'Floating — right side', hidden: 'Hidden' };
+
+  async function viewSite() {
+    setTitle('Site settings');
+    if (!isSuper()) { view.innerHTML = '<div class="p-card p-empty">Only the super admin can change the site appearance.</div>'; return; }
+    const s = await api('/site');
+    const L = s.loader;
+    const preview = (style, anim) => `/?loader=${encodeURIComponent(style)}&logoAnim=${encodeURIComponent(anim)}&preview=1`;
+    view.innerHTML = `
+      <div class="p-kpis" style="grid-template-columns:repeat(3,1fr)">
+        <div class="p-kpi" style="--kc:#1A9BD7;--i:0"><small>Unique visitors</small><b>${(s.visitors?.total ?? 0).toLocaleString('en-IN')}</b><i></i></div>
+        <div class="p-kpi" style="--kc:#22B45A;--i:1"><small>Visitors today</small><b>${(s.visitors?.today ?? 0).toLocaleString('en-IN')}</b><i></i></div>
+        <div class="p-kpi" style="--kc:#8E5CF5;--i:2"><small>Page views</small><b>${(s.visitors?.pageviews ?? 0).toLocaleString('en-IN')}</b><i></i></div>
+      </div>
+
+      <div class="p-card">
+        <div class="p-card-head"><h3>Page loading animation</h3><a class="p-btn" id="pvBtn" target="_blank" rel="noopener" href="${preview(L.style, L.logoAnim)}">Preview selection ↗</a></div>
+        <p class="p-muted" style="margin:0 0 14px">Shown when the website opens. Pick a style and a logo animation — every combination works. Click a card's ▶ to preview it.</p>
+        <div class="p-choice-grid" id="styleGrid">${Object.entries(LOADER_INFO).map(([k, [t, d]]) => `
+          <label class="p-choice ${k === L.style ? 'on' : ''}"><input type="radio" name="style" value="${k}" ${k === L.style ? 'checked' : ''}>
+            <b>${t}</b><small>${d}</small><a class="p-choice-pv" href="${preview(k, L.logoAnim)}" target="_blank" rel="noopener" title="Preview">▶</a></label>`).join('')}</div>
+        <h3 style="margin-top:22px">Logo animation</h3>
+        <div class="p-chips" id="animGrid">${Object.entries(ANIM_INFO).map(([k, t]) => `<label class="p-chip ${k === L.logoAnim ? 'on' : ''}"><input type="radio" name="logoAnim" value="${k}" ${k === L.logoAnim ? 'checked' : ''}>${t}</label>`).join('')}</div>
+        <div class="p-form-row" style="margin-top:18px">
+          <label>Show the loader<select id="freq">
+            <option value="session" ${L.frequency === 'session' ? 'selected' : ''}>Once per visit (recommended)</option>
+            <option value="always" ${L.frequency === 'always' ? 'selected' : ''}>Every page open / refresh</option>
+            <option value="off" ${L.frequency === 'off' ? 'selected' : ''}>Off</option></select></label>
+          <label>Minimum duration <small>(${(L.minMs / 1000).toFixed(1)} s)</small><input id="minMs" type="range" min="600" max="4000" step="100" value="${L.minMs}"></label>
+        </div>
+      </div>
+
+      <div class="p-card">
+        <h3>Brand badges</h3>
+        <p class="p-muted" style="margin:0 0 14px">Choose where each badge appears, or show the original company logo in its place. Replace the artwork itself on the <a href="#/media?tab=brand">Media</a> page.</p>
+        <div class="p-badge-grid">${s.badges.map((b) => `
+          <div class="p-badge-card" data-id="${b.id}">
+            <div class="p-badge-img"><img src="/${b.source === 'logo' ? 'assets/motamax-logo.png' : 'assets/badges/' + b.id + '.webp'}?t=${Date.now()}" alt=""></div>
+            <div class="p-badge-body"><b>${esc(b.label)}</b>
+              <label class="p-check"><input type="checkbox" data-k="enabled" ${b.enabled ? 'checked' : ''}> Show on the website</label>
+              <label class="p-block">Position<select data-k="position">${s.options.positions.map((p) => `<option value="${p}" ${p === b.position ? 'selected' : ''}>${POS_INFO[p] || p}</option>`).join('')}</select></label>
+              <label class="p-block">Image<select data-k="source"><option value="badge" ${b.source === 'badge' ? 'selected' : ''}>This badge</option><option value="logo" ${b.source === 'logo' ? 'selected' : ''}>Original company logo</option></select></label>
+            </div>
+          </div>`).join('')}</div>
+      </div>
+
+      <div class="p-card">
+        <h3>Visitor counter</h3>
+        <label class="p-check"><input type="checkbox" id="showVisitors" ${s.showVisitors ? 'checked' : ''}> Show “visitors / today” in the website footer and on the login page</label>
+      </div>
+      <div style="display:flex;justify-content:flex-end"><button class="p-btn p-btn-primary" id="saveSite">Save site settings</button></div>`;
+
+    const cur = () => ({ style: $('input[name=style]:checked').value, anim: $('input[name=logoAnim]:checked').value });
+    const sync = () => {
+      const { style, anim } = cur();
+      $$('#styleGrid .p-choice').forEach((c) => { c.classList.toggle('on', $('input', c).checked); $('.p-choice-pv', c).href = preview($('input', c).value, anim); });
+      $$('#animGrid .p-chip').forEach((c) => c.classList.toggle('on', $('input', c).checked));
+      $('#pvBtn').href = preview(style, anim);
+    };
+    $$('input[name=style], input[name=logoAnim]').forEach((i) => i.addEventListener('change', sync));
+    $('#minMs').addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `(${(e.target.value / 1000).toFixed(1)} s)`; });
+    $$('.p-badge-card select[data-k=source]').forEach((sel) => sel.addEventListener('change', () => {
+      const card = sel.closest('.p-badge-card');
+      $('img', card).src = sel.value === 'logo' ? '/assets/motamax-logo.png' : `/assets/badges/${card.dataset.id}.webp?t=${Date.now()}`;
+    }));
+    $('#saveSite').addEventListener('click', async () => {
+      const { style, anim } = cur();
+      const body = {
+        loader: { style, logoAnim: anim, frequency: $('#freq').value, minMs: +$('#minMs').value },
+        badges: $$('.p-badge-card').map((c) => ({ id: c.dataset.id, enabled: $('[data-k=enabled]', c).checked, position: $('[data-k=position]', c).value, source: $('[data-k=source]', c).value })),
+        showVisitors: $('#showVisitors').checked,
+      };
+      try {
+        const saved = await api('/site', { method: 'PUT', body });
+        try { localStorage.setItem('mmx-site', JSON.stringify({ loader: saved.loader, badges: saved.badges, showVisitors: saved.showVisitors })); sessionStorage.removeItem('mmx-loader-seen'); } catch { /* storage unavailable */ }
+        toast('Site settings saved — visitors see them on their next visit');
+      } catch (err) { toast(err.message, 'err'); }
     });
   }
 

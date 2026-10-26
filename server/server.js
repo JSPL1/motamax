@@ -48,6 +48,7 @@ app.use((req, res, next) => {
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.set('X-Frame-Options', 'SAMEORIGIN');
+  if (PROD && req.secure) res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   next();
 });
 
@@ -60,6 +61,7 @@ for (const dir of ['css', 'js']) app.use('/' + dir, express.static(path.join(ROO
 app.use('/brochure', express.static(path.join(ROOT, 'brochure'), { maxAge: 0, index: 'brochure.html' }));
 app.use('/portal', express.static(path.join(ROOT, 'portal'), { maxAge: 0 }));
 app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(ROOT, 'favicon.ico'), { maxAge: '7d' }));
 app.get('/:page.html', (req, res, next) => (PAGES.has(req.params.page) ? res.sendFile(path.join(ROOT, req.params.page + '.html')) : next()));
 app.get('/brochure', (req, res) => res.redirect('/assets/Motamax-Company-Profile.pdf'));
 
@@ -469,6 +471,83 @@ app.delete('/api/users/:id', requireUser, requireAdmin, wrap(async (req, res) =>
   const released = await releaseOpenEnquiries(target, req.user, 'was deleted');
   await store.remove('users', target.id);
   res.json({ ok: true, released });
+}));
+
+/* ---------------- site settings (loader, badges) + visitor counter ---------------- */
+const LOADER_STYLES = ['orbit', 'pulse', 'curtain', 'progress', 'ripple', 'flip', 'typewriter', 'tiles', 'particles', 'spotlight', 'zoom-nav'];
+const LOGO_ANIMS = ['spin-in', 'bounce', 'flip-y', 'heartbeat', 'glow', 'swing', 'blur-in', 'float', 'shimmer', 'elastic'];
+const FREQUENCIES = ['always', 'session', 'off'];
+const BADGE_POSITIONS = ['hero', 'footer', 'float-left', 'float-right', 'banner', 'contact', 'hidden'];
+const DEFAULT_SITE = {
+  loader: { style: 'zoom-nav', logoAnim: 'elastic', frequency: 'session', minMs: 1400 },
+  badges: [
+    { id: 'badge-1', label: 'Services emblem (gold)', position: 'hero', source: 'badge', enabled: true },
+    { id: 'badge-2', label: 'Solution Architect badge', position: 'footer', source: 'badge', enabled: true },
+  ],
+  showVisitors: true,
+};
+async function loadSite() {
+  const doc = (await store.get('settings', 'site')) || {};
+  const saved = Object.fromEntries((doc.badges || []).filter((b) => b && b.id).map((b) => [b.id, b]));
+  const badges = DEFAULT_SITE.badges.map((b) => {
+    const s = saved[b.id] || {};
+    return { ...b, ...Object.fromEntries(Object.entries(s).filter(([k]) => ['position', 'source', 'enabled'].includes(k))) };
+  });
+  return { loader: { ...DEFAULT_SITE.loader, ...(doc.loader || {}) }, badges, showVisitors: doc.showVisitors ?? DEFAULT_SITE.showVisitors };
+}
+const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+async function visitorCounts() {
+  const v = (await store.get('settings', 'visitors')) || {};
+  return { total: v.unique || 0, pageviews: v.pageviews || 0, today: (v.days || {})[todayKey()] || 0 };
+}
+app.get('/api/site', wrap(async (req, res) => {
+  const s = await loadSite();
+  res.set('Cache-Control', 'no-cache');
+  res.json({ ...s, visitors: s.showVisitors ? await visitorCounts() : null, options: { styles: LOADER_STYLES, logoAnims: LOGO_ANIMS, frequencies: FREQUENCIES, positions: BADGE_POSITIONS } });
+}));
+app.put('/api/site', requireUser, requireAdmin, wrap(async (req, res) => {
+  if (!req.user.superAdmin) throw fail(403, 'Only the super admin can change site appearance.');
+  const b = req.body || {};
+  const cur = await loadSite();
+  const loader = { ...cur.loader };
+  const lb = b.loader || {};
+  if (LOADER_STYLES.includes(lb.style)) loader.style = lb.style;
+  if (LOGO_ANIMS.includes(lb.logoAnim)) loader.logoAnim = lb.logoAnim;
+  if (FREQUENCIES.includes(lb.frequency)) loader.frequency = lb.frequency;
+  if (lb.minMs !== undefined && Number.isFinite(+lb.minMs)) loader.minMs = Math.max(600, Math.min(6000, Math.round(+lb.minMs)));
+  const incoming = Object.fromEntries((b.badges || []).filter((x) => x && x.id).map((x) => [x.id, x]));
+  const badges = cur.badges.map((bd) => {
+    const x = incoming[bd.id] || {};
+    return {
+      id: bd.id,
+      position: BADGE_POSITIONS.includes(x.position) ? x.position : bd.position,
+      source: ['badge', 'logo'].includes(x.source) ? x.source : bd.source,
+      enabled: typeof x.enabled === 'boolean' ? x.enabled : bd.enabled,
+    };
+  });
+  const doc = { id: 'site', loader, badges, showVisitors: b.showVisitors !== undefined ? Boolean(b.showVisitors) : cur.showVisitors };
+  if (await store.get('settings', 'site')) await store.update('settings', 'site', () => doc); else await store.insert('settings', doc);
+  res.json(await loadSite());
+}));
+const BOT_RE = /bot|crawl|spider|slurp|preview|monitor|headless|lighthouse|curl|wget|python-requests/i;
+app.post('/api/visit', limiter(60, 60 * 1000), wrap(async (req, res) => {
+  const ua = req.get('user-agent') || '';
+  if (!ua || BOT_RE.test(ua)) return res.json(await visitorCounts());
+  const isNew = !cookies(req).mmx_vid;
+  const day = todayKey();
+  if (!(await store.get('settings', 'visitors'))) await store.insert('settings', { id: 'visitors', unique: 0, pageviews: 0, days: {} }).catch(() => {});
+  await store.update('settings', 'visitors', (d) => {
+    d.pageviews = (d.pageviews || 0) + 1;
+    if (isNew) {
+      d.unique = (d.unique || 0) + 1;
+      d.days = d.days || {};
+      d.days[day] = (d.days[day] || 0) + 1;
+      for (const k of Object.keys(d.days).sort().slice(0, -90)) delete d.days[k];
+    }
+    return d;
+  });
+  if (isNew) res.cookie('mmx_vid', sec.newId(), { httpOnly: true, sameSite: 'lax', secure: PROD, maxAge: 1000 * 60 * 60 * 24 * 365, path: '/' });
+  res.json(await visitorCounts());
 }));
 
 /* ---------------- media (admin) ---------------- */

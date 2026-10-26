@@ -1,0 +1,36 @@
+/* Brand badges + visitor counter */
+.mmx-badge { border: 0; padding: 0; background: none; cursor: zoom-in; display: block; border-radius: 50%; filter: drop-shadow(0 18px 30px rgba(11,16,48,.35)); transition: transform .4s cubic-bezier(.3,1.5,.5,1); }
+.mmx-badge img { width: 100%; height: auto; display: block; border-radius: 50%; }
+.mmx-badge:hover { transform: scale(1.06) rotate(-4deg); }
+.mmx-badge.is-logo { background: #fff; padding: 18% 8%; }
+.mmx-badge.is-logo img { border-radius: 0; }
+
+.mmx-badge.pos-hero { width: 150px; margin-top: 26px; animation: mmxBadgeSpin 26s linear infinite; }
+.mmx-badge.pos-hero:hover { animation-play-state: paused; }
+.mmx-badge.pos-banner { position: absolute; right: 26px; bottom: 22px; width: 104px; z-index: 2; animation: mmxBadgeBob 5s ease-in-out infinite; }
+.mmx-badge.pos-footer { width: 120px; margin-top: 18px; }
+.mmx-badge.pos-contact { width: 170px; margin: 6px auto 0; }
+.mmx-badge.pos-float-left, .mmx-badge.pos-float-right { position: fixed; z-index: 110; width: 86px; bottom: 18px; animation: mmxBadgeBob 5s ease-in-out infinite; }
+.mmx-badge.pos-float-left { left: 18px; }
+.mmx-badge.pos-float-right { right: 18px; bottom: 150px; }
+.mmx-badge.is-logo.pos-hero { width: 190px; border-radius: 999px; animation: none; }
+@keyframes mmxBadgeSpin { to { transform: rotate(360deg); } }
+@keyframes mmxBadgeBob { 50% { transform: translateY(-8px); } }
+
+.mmx-badge-view { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; padding: 24px; background: rgba(5,8,25,.6); opacity: 0; transition: opacity .3s ease; cursor: zoom-out; }
+.mmx-badge-view.open { opacity: 1; }
+.mmx-badge-view img { width: min(560px, 86vw); height: auto; border-radius: 50%; transform: scale(.7) rotate(-20deg); transition: transform .5s cubic-bezier(.3,1.5,.5,1); box-shadow: 0 30px 90px rgba(0,0,0,.5); }
+.mmx-badge-view.open img { transform: none; }
+.mmx-badge-view button { position: absolute; top: 18px; right: 18px; width: 44px; height: 44px; border-radius: 50%; border: 0; font-size: 24px; cursor: pointer; background: rgba(255,255,255,.9); }
+
+.mmx-visitors { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-3); }
+.mmx-visitors svg { color: var(--c1, #1A9BD7); }
+.mmx-visitors b { color: var(--text); font-variant-numeric: tabular-nums; }
+.login-foot .mmx-visitors { margin-top: 6px; }
+
+@media (max-width: 720px) {
+  .mmx-badge.pos-banner { display: none; }
+  .mmx-badge.pos-hero { width: 120px; }
+  .mmx-badge.pos-float-left, .mmx-badge.pos-float-right { width: 64px; }
+}
+@media (prefers-reduced-motion: reduce) { .mmx-badge { animation: none !important; } }

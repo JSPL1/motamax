@@ -232,3 +232,23 @@ body.portal { min-height: 100vh; }
 
 .p-btn-ghost-danger { color: #E3342F; border-color: color-mix(in srgb, #E3342F 45%, transparent); background: transparent; }
 .p-btn-ghost-danger:hover { background: #E3342F; color: #fff; }
+
+/* site settings */
+.p-choice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.p-choice { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 14px 40px 14px 14px; border-radius: 16px; cursor: pointer; background: var(--glass); border: 1.5px solid var(--glass-border); transition: border-color .2s, transform .2s; }
+.p-choice:hover { transform: translateY(-2px); }
+.p-choice.on { border-color: #1A9BD7; box-shadow: 0 0 0 3px rgba(26,155,215,.18); }
+.p-choice input, .p-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.p-choice b { font-size: 14.5px; } .p-choice small { color: var(--text-3); font-size: 12.5px; line-height: 1.35; }
+.p-choice-pv { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; color: #fff; background: linear-gradient(135deg, #3436A8, #1A9BD7); }
+.p-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.p-chip { position: relative; padding: 8px 14px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 13.5px; background: var(--glass); border: 1.5px solid var(--glass-border); }
+.p-chip.on { color: #fff; background: linear-gradient(135deg, #3436A8, #1A9BD7); border-color: transparent; }
+.p-badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.p-badge-card { display: grid; grid-template-columns: 130px 1fr; gap: 16px; align-items: start; padding: 14px; border-radius: 18px; background: var(--glass); border: 1px solid var(--glass-border); }
+.p-badge-img { width: 130px; height: 130px; border-radius: 50%; background: #fff; display: grid; place-items: center; overflow: hidden; box-shadow: var(--shadow); }
+.p-badge-img img { width: 100%; height: 100%; object-fit: contain; }
+.p-badge-body { display: flex; flex-direction: column; gap: 6px; }
+.p-badge-body .p-block { margin-bottom: 4px; }
+input[type=range] { padding: 0 !important; accent-color: #1A9BD7; }
+@media (max-width: 720px) { .p-badge-card { grid-template-columns: 1fr; } .p-badge-img { margin: 0 auto; } }

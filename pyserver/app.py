@@ -8,6 +8,7 @@ Env: DATA_DIR, SESSION_SECRET (optional; generated into DATA_DIR/.secret otherwi
 """
 import csv
 import io
+import mimetypes
 import os
 import re
 import threading
@@ -36,6 +37,11 @@ TYPES = {
     'support': 'AMC / service support', 'brochure': 'Brochure request', 'partner': 'Vendor / partner', 'general': 'General enquiry',
 }
 PAGES = {'index', 'about', 'services', 'industries', 'stories', 'clients', 'work', 'contact', 'login'}
+
+# some hosts lack these in their mime tables; nosniff would then block the images
+mimetypes.add_type('image/webp', '.webp')
+mimetypes.add_type('image/x-icon', '.ico')
+mimetypes.add_type('application/manifest+json', '.webmanifest')
 
 store = create_store()
 store.init()
@@ -94,6 +100,8 @@ def headers(resp):
     resp.headers['X-Content-Type-Options'] = 'nosniff'
     resp.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     resp.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    if os.environ.get('FORCE_HTTPS') == '1' and (request.is_secure or request.headers.get('X-Forwarded-Proto') == 'https'):
+        resp.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     return resp
 
 
@@ -231,6 +239,11 @@ def send_static(folder, sub, max_age=0):
 @app.route('/')
 def home():
     return send_static('', 'index.html')
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_static('', 'favicon.ico', 7 * 86400)
 
 
 @app.route('/<page>.html')
@@ -852,6 +865,119 @@ def restore_media():
     if not slot:
         raise ApiError(404, 'Unknown media item')
     return jsonify(slot=media.restore(slot))
+
+
+# ---------------- site settings (loader, badges) + visitor counter ----------------
+LOADER_STYLES = ['orbit', 'pulse', 'curtain', 'progress', 'ripple', 'flip', 'typewriter', 'tiles', 'particles', 'spotlight', 'zoom-nav']
+LOGO_ANIMS = ['spin-in', 'bounce', 'flip-y', 'heartbeat', 'glow', 'swing', 'blur-in', 'float', 'shimmer', 'elastic']
+FREQUENCIES = ['always', 'session', 'off']
+BADGE_POSITIONS = ['hero', 'footer', 'float-left', 'float-right', 'banner', 'contact', 'hidden']
+DEFAULT_SITE = {
+    'loader': {'style': 'zoom-nav', 'logoAnim': 'elastic', 'frequency': 'session', 'minMs': 1400},
+    'badges': [
+        {'id': 'badge-1', 'label': 'Services emblem (gold)', 'position': 'hero', 'source': 'badge', 'enabled': True},
+        {'id': 'badge-2', 'label': 'Solution Architect badge', 'position': 'footer', 'source': 'badge', 'enabled': True},
+    ],
+    'showVisitors': True,
+}
+
+
+def load_site():
+    doc = store.get('settings', 'site') or {}
+    loader = {**DEFAULT_SITE['loader'], **(doc.get('loader') or {})}
+    saved = {b['id']: b for b in (doc.get('badges') or []) if isinstance(b, dict) and b.get('id')}
+    badges = [{**b, **{k: v for k, v in saved.get(b['id'], {}).items() if k in ('position', 'source', 'enabled')}} for b in DEFAULT_SITE['badges']]
+    return {'loader': loader, 'badges': badges, 'showVisitors': doc.get('showVisitors', DEFAULT_SITE['showVisitors'])}
+
+
+def visitor_counts():
+    v = store.get('settings', 'visitors') or {}
+    today = datetime.now().strftime('%Y-%m-%d')
+    return {'total': v.get('unique', 0), 'pageviews': v.get('pageviews', 0), 'today': (v.get('days') or {}).get(today, 0)}
+
+
+@app.get('/api/site')
+def get_site():
+    s = load_site()
+    resp = jsonify({**s, 'visitors': visitor_counts() if s['showVisitors'] else None,
+                    'options': {'styles': LOADER_STYLES, 'logoAnims': LOGO_ANIMS, 'frequencies': FREQUENCIES, 'positions': BADGE_POSITIONS}})
+    resp.headers['Cache-Control'] = 'no-cache'
+    return resp
+
+
+@app.put('/api/site')
+def put_site():
+    u = require_admin()
+    if not u.get('superAdmin'):
+        raise ApiError(403, 'Only the super admin can change site appearance.')
+    b = body()
+    cur = load_site()
+    loader = dict(cur['loader'])
+    lb = b.get('loader') or {}
+    if lb.get('style') in LOADER_STYLES:
+        loader['style'] = lb['style']
+    if lb.get('logoAnim') in LOGO_ANIMS:
+        loader['logoAnim'] = lb['logoAnim']
+    if lb.get('frequency') in FREQUENCIES:
+        loader['frequency'] = lb['frequency']
+    if 'minMs' in lb:
+        try:
+            loader['minMs'] = max(600, min(6000, int(lb['minMs'])))
+        except (TypeError, ValueError):
+            pass
+    badges = []
+    incoming = {x.get('id'): x for x in (b.get('badges') or []) if isinstance(x, dict)}
+    for bd in cur['badges']:
+        nb = dict(bd)
+        x = incoming.get(bd['id'], {})
+        if x.get('position') in BADGE_POSITIONS:
+            nb['position'] = x['position']
+        if x.get('source') in ('badge', 'logo'):
+            nb['source'] = x['source']
+        if isinstance(x.get('enabled'), bool):
+            nb['enabled'] = x['enabled']
+        badges.append(nb)
+    doc = {'id': 'site', 'loader': loader, 'badges': [{k: v for k, v in x.items() if k in ('id', 'position', 'source', 'enabled')} for x in badges],
+           'showVisitors': bool(b.get('showVisitors', cur['showVisitors']))}
+    if store.get('settings', 'site'):
+        store.update('settings', 'site', lambda _: doc)
+    else:
+        store.insert('settings', doc)
+    return jsonify(load_site())
+
+
+BOT_RE = re.compile(r'bot|crawl|spider|slurp|preview|monitor|headless|lighthouse|curl|wget|python-requests', re.I)
+
+
+@app.post('/api/visit')
+def visit():
+    rate_limit('visit', 60, 60)
+    ua = request.headers.get('User-Agent', '')
+    if not ua or BOT_RE.search(ua):
+        return jsonify(visitor_counts())
+    new_visitor = not request.cookies.get('mmx_vid')
+    today = datetime.now().strftime('%Y-%m-%d')
+
+    def bump(d):
+        d['pageviews'] = d.get('pageviews', 0) + 1
+        if new_visitor:
+            d['unique'] = d.get('unique', 0) + 1
+            days = d.setdefault('days', {})
+            days[today] = days.get(today, 0) + 1
+            for k in sorted(days)[:-90]:  # keep 90 days
+                days.pop(k, None)
+        return d
+    if not store.get('settings', 'visitors'):
+        try:
+            store.insert('settings', {'id': 'visitors', 'unique': 0, 'pageviews': 0, 'days': {}})
+        except Exception:  # noqa: BLE001 - created concurrently
+            pass
+    store.update('settings', 'visitors', bump)
+    resp = make_response(jsonify(visitor_counts()))
+    if new_visitor:
+        resp.set_cookie('mmx_vid', sec.new_id(), max_age=60 * 60 * 24 * 365, httponly=True, samesite='Lax',
+                        secure=request.is_secure or request.headers.get('X-Forwarded-Proto') == 'https', path='/')
+    return resp
 
 
 # ---------------- mail settings ----------------
