@@ -169,7 +169,7 @@
     ['OHPC', 'Hydro Power', 'ohpc'], ['Siksha ‘O’ Anusandhan', 'Education', 'soa'], ['LIC of India', 'Insurance', 'lic'], ['Odisha TV (OTV)', 'Media', 'otv'],
     ['Toshali', 'Hospitality', 'toshali'], ['UltraTech Cement', 'Cement', 'ultratech'], ['Indian Railways', 'Railways', 'indian-railways'], ['NLC India', 'Ministry of Coal', 'nlc-india'],
     ['Hindustan Copper', 'Mining PSU', 'hindustan-copper'], ['IMFA', 'Ferro Alloys', 'imfa'], ['Manikstu', 'Agro', 'manikstu'], ['Jindal Stainless', 'Steel', 'jindal-stainless'],
-    ['AG Office Bhubaneswar', 'Government', 'ag-office'], ['OEYE MEP Engineers', 'MEP', 'oeye-mep'], ['Tata Power', 'Power', 'tata-power'], ['OMC', 'Mining PSU', null]
+    ['AG Office Bhubaneswar', 'Government', 'ag-office'], ['OEYE MEP Engineers', 'MEP', 'oeye-mep'], ['Tata Power', 'Power', 'tata-power'], ['OMC', 'Mining PSU', 'omc']
   ];
 
 

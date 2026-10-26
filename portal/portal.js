@@ -456,9 +456,11 @@
     setTitle('Media');
     const { slots } = await api('/media');
     const tab = new URLSearchParams(location.hash.split('?')[1] || '').get('tab') || 'site';
-    const GROUPS = [['site', 'Site photos'], ['clients', 'Client logos'], ['brand', 'Logo'], ['brochure', 'Brochure']];
+    const GROUPS = [['site', 'Site photos'], ['clients', 'Client logos'], ['brand', 'Logo & icons'], ['brochure', 'Brochure']];
     const quality = (s) => {
       if (s.kind !== 'image' || !s.width) return '';
+      // tab / home-screen icons have a fixed size, so only show it
+      if (/assets\/icons\/(icon-|apple-)/.test(s.path)) return `<span class="p-badge" style="--bc:#8E5CF5">${s.width}×${s.height}</span>`;
       const need = s.group === 'site' ? [1200, 1920] : [500, 1000];
       const [label, color] = s.width >= need[1] ? ['HD', '#22B45A'] : s.width >= need[0] ? ['Good', '#1A9BD7'] : ['Low-res', '#E3342F'];
       return `<span class="p-badge" style="--bc:${color}">${label} · ${s.width}×${s.height}</span>`;

@@ -30,6 +30,10 @@ function registry() {
     { path: 'assets/badges/badge-1.webp', group: 'brand', label: 'Badge 1 — services emblem', kind: 'image', usedIn: 'Floating brand badge (position set in Site settings)' },
     { path: 'assets/badges/badge-2.webp', group: 'brand', label: 'Badge 2 — solution architect', kind: 'image', usedIn: 'Floating brand badge (position set in Site settings)' },
     { path: 'assets/icons/mark.png', group: 'brand', label: 'Logo mark (loader & favicon art)', kind: 'image', usedIn: 'Page loading animation' },
+    { path: 'assets/icons/icon-32.png', group: 'brand', label: 'Browser tab icon (32×32)', kind: 'image', usedIn: 'Browser tab (favicon)' },
+    { path: 'assets/icons/icon-192.png', group: 'brand', label: 'App icon (192×192)', kind: 'image', usedIn: 'Android home screen, bookmarks' },
+    { path: 'assets/icons/icon-512.png', group: 'brand', label: 'App icon (512×512)', kind: 'image', usedIn: 'Install / splash icon' },
+    { path: 'assets/icons/apple-touch-icon.png', group: 'brand', label: 'iPhone home-screen icon (180×180)', kind: 'image', usedIn: 'iOS home screen' },
     { path: 'assets/Motamax-Company-Profile.pdf', group: 'brochure', label: 'Company profile (PDF)', kind: 'pdf', usedIn: 'Download buttons, brochure emails' },
   ];
   const list = (dir) => (fs.existsSync(path.join(ROOT, dir)) ? fs.readdirSync(path.join(ROOT, dir)) : []);
