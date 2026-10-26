@@ -10,9 +10,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=027412">
-  <link rel="stylesheet" href="css/motion.css?v=027412">
-  <link rel="stylesheet" href="css/pages.css?v=027412">
+  <link rel="stylesheet" href="css/style.css?v=028083">
+  <link rel="stylesheet" href="css/motion.css?v=028083">
+  <link rel="stylesheet" href="css/pages.css?v=028083">
   <script>try{var t=localStorage.getItem('mmx-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
   <style>
     body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
@@ -91,12 +91,12 @@
     <p class="sub">Enquiry portal for the Motamax team.</p>
 
     <div class="field" id="f-user">
-      <label for="username">Email</label>
+      <label for="username">Username or email</label>
       <div class="input-wrap">
         <svg class="lead-ico"><use href="#i-user"/></svg>
-        <input id="username" name="username" type="email" autocomplete="username" required>
+        <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
       </div>
-      <span class="err" id="e-user">Please enter your email.</span>
+      <span class="err" id="e-user">Please enter your username or email.</span>
     </div>
 
     <div class="field" id="f-pass">
@@ -194,12 +194,12 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ email: u, password: p, remember: !!this.remember.checked })
+      body: JSON.stringify({ login: u, password: p, remember: !!this.remember.checked })
     }).then(function (r) {
       done();
       if (r.ok) { location.href = DEST; return; }
       if (r.status === 404 || r.status === 405) { say('Login is not available on this server.'); return; }
-      return r.json().then(function (j) { say(j.error || 'Incorrect email or password.'); }, function () { say('Incorrect email or password.'); });
+      return r.json().then(function (j) { say(j.error || 'Incorrect username/email or password.'); }, function () { say('Incorrect username/email or password.'); });
     }).catch(function () {
       done();
       say('Unable to reach the server. Please try again.');

@@ -290,7 +290,7 @@
             <label class="p-block">Subject<input id="mSubj"></label>
             <label class="p-block">Message<textarea id="mBody" rows="9"></textarea></label>
             <label class="p-check"><input type="checkbox" id="mAttach"> Attach company brochure (PDF)</label>
-            <div class="p-compose-foot"><small class="p-muted">Sent from the company mailbox with your name in the signature; replies come to ${esc(ME.email)}.</small><button class="p-btn p-btn-primary" id="sendBtn" ${MAIL.configured ? '' : 'disabled'}>${icon('p-mail')}<span>Send email</span></button></div>
+            <div class="p-compose-foot"><small class="p-muted">Sent from the company mailbox with your name in the signature${ME.email ? `; replies come to ${esc(ME.email)}` : ''}.</small><button class="p-btn p-btn-primary" id="sendBtn" ${MAIL.configured ? '' : 'disabled'}>${icon('p-mail')}<span>Send email</span></button></div>
           </div>` : ''}
 
           <div class="p-card">
@@ -349,35 +349,73 @@
   /* ---------------- team (admin) ---------------- */
   async function viewUsers() {
     setTitle('Team');
-    const { users } = await api('/users'); USERS = users;
+    const [{ users }, stats] = await Promise.all([api('/users'), api('/stats')]);
+    USERS = users;
+    const openOf = (id) => stats.byUser.find((u) => u.id === id)?.open || 0;
+    const active = users.filter((u) => u.active).length;
     view.innerHTML = `
+      <div class="p-kpis" style="grid-template-columns:repeat(3,1fr)">
+        <div class="p-kpi" style="--kc:#1A9BD7;--i:0"><small>Team members</small><b>${users.length}</b><i></i></div>
+        <div class="p-kpi" style="--kc:#22B45A;--i:1"><small>Active</small><b>${active}</b><i></i></div>
+        <div class="p-kpi" style="--kc:#E3342F;--i:2"><small>Suspended</small><b>${users.length - active}</b><i></i></div>
+      </div>
       <div class="p-card">
-        <div class="p-card-head"><h3>Team members</h3><button class="p-btn p-btn-primary" id="addUser">${icon('p-plus')}<span>Add member</span></button></div>
-        <div class="p-table-wrap"><table class="p-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last login</th><th></th></tr></thead><tbody>
-        ${users.map((u) => `<tr><td><span class="p-avatar sm">${esc(initials(u.name))}</span> ${esc(u.name)}</td><td>${esc(u.email)}</td><td>${u.role === 'admin' ? 'Admin' : 'Tele-caller'}</td><td>${u.active ? '<span class="p-badge" style="--bc:#22B45A">Active</span>' : '<span class="p-badge" style="--bc:#888">Inactive</span>'}</td><td>${u.lastLoginAt ? ago(u.lastLoginAt) : '—'}</td>
-          <td class="p-actions-cell"><button class="p-btn sm" data-edit="${u.id}">Edit</button></td></tr>`).join('')}
+        <div class="p-card-head"><h3>Team members</h3><button class="p-btn p-btn-primary" id="addUser">${icon('p-plus')}<span>Create user</span></button></div>
+        <div class="p-table-wrap"><table class="p-table p-team"><thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Open enquiries</th><th>Last login</th><th></th></tr></thead><tbody>
+        ${users.map((u) => `<tr class="${u.active ? '' : 'is-suspended'}"><td><span class="p-avatar sm">${esc(initials(u.name))}</span> ${esc(u.name)}${u.id === ME.id ? ' <small class="p-muted">(you)</small>' : ''}</td>
+          <td>${u.username ? esc(u.username) : '<span class="p-muted">—</span>'}</td><td>${u.email ? esc(u.email) : '<span class="p-muted">—</span>'}</td>
+          <td>${u.role === 'admin' ? 'Admin' : 'Tele-caller'}</td>
+          <td>${u.active ? '<span class="p-badge" style="--bc:#22B45A">Active</span>' : `<span class="p-badge" style="--bc:#E3342F">Suspended</span>${u.suspendedAt ? `<br><small class="p-muted">${fmtDate(u.suspendedAt, false)}</small>` : ''}`}</td>
+          <td>${openOf(u.id)}</td><td>${u.lastLoginAt ? ago(u.lastLoginAt) : '—'}</td>
+          <td class="p-actions-cell"><button class="p-btn sm" data-edit="${u.id}">Edit</button>
+            ${u.id === ME.id ? '' : u.active ? `<button class="p-btn sm p-btn-danger" data-suspend="${u.id}">Suspend</button>` : `<button class="p-btn sm p-btn-ok" data-activate="${u.id}">Reactivate</button>`}</td></tr>`).join('')}
         </tbody></table></div>
+        <p class="p-hint" style="margin-top:12px">Suspended users cannot log in and are signed out immediately. Their history is kept, and you can reactivate them at any time.</p>
       </div>`;
-    const form = (u = {}) => `<h2>${u.id ? 'Edit member' : 'Add team member'}</h2>
+    const form = (u = {}) => `<h2>${u.id ? 'Edit user' : 'Create user'}</h2>
+      <p class="p-muted">Users can log in with their username or their email.</p>
       <form id="uForm" class="p-form">
-        <div class="p-form-row"><label>Name*<input name="name" value="${esc(u.name || '')}" required></label><label>Phone<input name="phone" value="${esc(u.phone || '')}"></label></div>
-        <div class="p-form-row"><label>Email*<input name="email" type="email" value="${esc(u.email || '')}" ${u.id ? 'disabled' : 'required'}></label>
-          <label>Role<select name="role"><option value="telecaller" ${u.role !== 'admin' ? 'selected' : ''}>Tele-caller</option><option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option></select></label></div>
-        <label class="p-block">${u.id ? 'New password (leave empty to keep)' : 'Password* (min 8 characters)'}<input name="password" type="password" autocomplete="new-password" ${u.id ? '' : 'required minlength="8"'}></label>
-        ${u.id ? `<label class="p-check"><input type="checkbox" name="active" ${u.active ? 'checked' : ''}> Active (can log in)</label>` : ''}
-        <button class="p-btn p-btn-primary" type="submit">${u.id ? 'Save changes' : 'Add member'}</button>
+        <div class="p-form-row"><label>Full name*<input name="name" value="${esc(u.name || '')}" required></label><label>Phone<input name="phone" value="${esc(u.phone || '')}"></label></div>
+        <div class="p-form-row"><label>Username<input name="username" value="${esc(u.username || '')}" autocomplete="off" placeholder="e.g. rashmi" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,31}"></label>
+          <label>Email<input name="email" type="email" value="${esc(u.email || '')}" autocomplete="off"></label></div>
+        <div class="p-form-row"><label>Role<select name="role" ${u.id === ME.id ? 'disabled' : ''}><option value="telecaller" ${u.role !== 'admin' ? 'selected' : ''}>Tele-caller</option><option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option></select></label>
+          <label>${u.id ? 'New password <small>(leave empty to keep)</small>' : 'Password* <small>(min 8 characters)</small>'}<input name="password" type="password" autocomplete="new-password" ${u.id ? '' : 'required minlength="8"'}></label></div>
+        <button class="p-btn p-btn-primary" type="submit">${u.id ? 'Save changes' : 'Create user'}</button>
       </form>`;
     const bind = (u) => $('#uForm').addEventListener('submit', async (ev) => {
       ev.preventDefault();
       const d = Object.fromEntries(new FormData(ev.target));
+      if (!d.username && !d.email) { toast('Give the user a username or an email.', 'err'); return; }
       try {
-        if (u?.id) { const body = { name: d.name, phone: d.phone, role: d.role, active: Boolean(d.active) }; if (d.password) body.password = d.password; await api('/users/' + u.id, { method: 'PATCH', body }); }
-        else await api('/users', { method: 'POST', body: d });
-        closeModal(); toast('Saved'); USERS = []; route();
+        if (u?.id) {
+          const body = { name: d.name, phone: d.phone, username: d.username, email: d.email };
+          if (u.id !== ME.id) body.role = d.role;
+          if (d.password) body.password = d.password;
+          await api('/users/' + u.id, { method: 'PATCH', body });
+        } else await api('/users', { method: 'POST', body: d });
+        closeModal(); toast(u?.id ? 'User updated' : 'User created'); USERS = []; route();
       } catch (err) { toast(err.message, 'err'); }
     });
     $('#addUser').addEventListener('click', () => { openModal(form()); bind(); });
     $$('[data-edit]').forEach((b) => b.addEventListener('click', () => { const u = users.find((x) => x.id === b.dataset.edit); openModal(form(u)); bind(u); }));
+    $$('[data-suspend]').forEach((b) => b.addEventListener('click', () => {
+      const u = users.find((x) => x.id === b.dataset.suspend); const open = openOf(u.id);
+      openModal(`<h2>Suspend ${esc(u.name)}?</h2>
+        <p class="p-muted">They will be signed out and cannot log in until reactivated. Their enquiry history is kept.</p>
+        ${open ? `<label class="p-check" style="margin-top:14px"><input type="checkbox" id="relOpen" checked> Return their ${open} open ${open === 1 ? 'enquiry' : 'enquiries'} to the open pool</label>` : ''}
+        <div style="display:flex;gap:10px;margin-top:18px"><button class="p-btn p-btn-danger" id="doSuspend">Suspend user</button><button class="p-btn" id="cancelSuspend">Cancel</button></div>`);
+      $('#cancelSuspend').addEventListener('click', closeModal);
+      $('#doSuspend').addEventListener('click', async () => {
+        try {
+          const r = await api('/users/' + u.id, { method: 'PATCH', body: { active: false, releaseOpen: Boolean($('#relOpen')?.checked) } });
+          closeModal(); toast(`${u.name} suspended${r.released ? ` · ${r.released} enquiries returned to the pool` : ''}`); refreshCounts(); route();
+        } catch (err) { toast(err.message, 'err'); }
+      });
+    }));
+    $$('[data-activate]').forEach((b) => b.addEventListener('click', async () => {
+      const u = users.find((x) => x.id === b.dataset.activate);
+      try { await api('/users/' + u.id, { method: 'PATCH', body: { active: true } }); toast(`${u.name} reactivated`); route(); } catch (err) { toast(err.message, 'err'); }
+    }));
   }
 
   /* ---------------- mail settings (admin) ---------------- */
@@ -436,7 +474,7 @@
   function viewAccount() {
     setTitle('My account');
     view.innerHTML = `<div class="p-card" style="max-width:560px">
-      <div class="p-owner"><span class="p-avatar">${esc(initials(ME.name))}</span><div><b>${esc(ME.name)}</b><small>${esc(ME.email)} · ${ME.role === 'admin' ? 'Administrator' : 'Tele-caller'}</small></div></div>
+      <div class="p-owner"><span class="p-avatar">${esc(initials(ME.name))}</span><div><b>${esc(ME.name)}</b><small>${esc([ME.username && '@' + ME.username, ME.email].filter(Boolean).join(' · '))} · ${ME.role === 'admin' ? 'Administrator' : 'Tele-caller'}</small></div></div>
       <h3 style="margin-top:22px">Change password</h3>
       <form id="pwForm" class="p-form"><label class="p-block">Current password<input name="current" type="password" autocomplete="current-password" required></label>
       <label class="p-block">New password (min 8 characters)<input name="next" type="password" autocomplete="new-password" minlength="8" required></label>

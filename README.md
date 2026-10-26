@@ -43,4 +43,6 @@ npm run brochure       # -> assets/Motamax-Company-Profile.pdf
 
 ## Deploy (Render)
 
-`render.yaml` defines a Node web service + Postgres database. In Render: **New → Blueprint**, select this repo, and enter `ADMIN_EMAIL` / `ADMIN_PASSWORD` for the first admin account. `SESSION_SECRET` is generated automatically.
+`render.yaml` defines the Node web service. In Render set `ADMIN_NAME`, `ADMIN_USERNAME` (or `ADMIN_EMAIL`) and `ADMIN_PASSWORD`: that admin is created at start-up if missing (never overwritten). `SESSION_SECRET` is generated automatically.
+
+Admins manage the team under **Team**: create users (username and/or email), edit, reset passwords, and **suspend / reactivate** (suspended users are signed out immediately; their open enquiries can be returned to the pool).

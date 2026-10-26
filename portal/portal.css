@@ -196,3 +196,11 @@ body.portal { min-height: 100vh; }
   .p-due-row span, .p-due-row em { display: none; }
   .p-mail-actions .p-form-row { flex-wrap: wrap; } .p-mail-actions .p-form-row input { width: 100%; }
 }
+
+.p-btn-danger { color: #fff; border: 0; background: #E3342F; }
+.p-btn-ok { color: #fff; border: 0; background: #22B45A; }
+.p-actions-cell .p-btn + .p-btn { margin-left: 6px; }
+.p-table tr.is-suspended td { opacity: .6; }
+.p-table tr.is-suspended td:last-child { opacity: 1; }
+.p-team td:nth-child(3) { white-space: normal; word-break: break-all; min-width: 140px; }
+.p-team th, .p-team td { padding: 10px 8px; }

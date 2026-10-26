@@ -91,7 +91,7 @@ const requireUser = wrap(async (req, res, next) => {
   req.user = u; next();
 });
 const requireAdmin = (req, res, next) => (req.user?.role === 'admin' ? next() : next(fail(403, 'Admins only')));
-const publicUser = (u) => ({ id: u.id, name: u.name, email: u.email, phone: u.phone || '', role: u.role, active: u.active, createdAt: u.createdAt, lastLoginAt: u.lastLoginAt || null });
+const publicUser = (u) => ({ id: u.id, name: u.name, username: u.username || '', email: u.email || '', suspendedAt: u.suspendedAt || null, phone: u.phone || '', role: u.role, active: u.active, createdAt: u.createdAt, lastLoginAt: u.lastLoginAt || null });
 
 /* simple in-memory rate limiter */
 function limiter(max, windowMs) {
@@ -107,6 +107,8 @@ function limiter(max, windowMs) {
 const clean = (v, max = 200) => String(v ?? '').replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, max);
 const cleanMultiline = (v, max = 4000) => String(v ?? '').replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, ' ').trim().slice(0, max);
 const isEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+const cleanUsername = (v) => String(v ?? '').trim().toLowerCase();
+const isUsername = (v) => /^[a-z0-9][a-z0-9._-]{2,31}$/.test(v);
 const now = () => new Date().toISOString();
 
 /* ---------------- public: enquiries ---------------- */
@@ -166,11 +168,12 @@ async function logEmail(id, entry) {
 
 /* ---------------- auth ---------------- */
 app.post('/api/auth/login', limiter(10, 5 * 60 * 1000), wrap(async (req, res) => {
-  const email = clean(req.body?.email, 160).toLowerCase();
+  const login = clean(req.body?.login ?? req.body?.email, 160).toLowerCase();
   const password = String(req.body?.password || '');
   const users = await store.all('users');
-  const u = users.find((x) => x.email === email);
-  if (!u || !u.active || !sec.verifyPassword(password, u.passHash)) throw fail(401, 'Incorrect email or password.');
+  const u = login && users.find((x) => x.email === login || x.username === login);
+  if (!u || !sec.verifyPassword(password, u.passHash)) throw fail(401, 'Incorrect username/email or password.');
+  if (!u.active) throw fail(403, 'This account is suspended. Please contact your administrator.');
   await store.update('users', u.id, (d) => { d.lastLoginAt = now(); return d; });
   const ttl = req.body?.remember ? SESSION_TTL * 14 : SESSION_TTL;
   setSession(res, sec.signSession({ uid: u.id }, ttl), ttl);
@@ -380,10 +383,16 @@ app.get('/api/users', requireUser, wrap(async (req, res) => {
 app.post('/api/users', requireUser, requireAdmin, wrap(async (req, res) => {
   const b = req.body || {};
   const email = clean(b.email, 160).toLowerCase();
-  if (!clean(b.name) || !isEmail(email)) throw fail(400, 'Name and a valid email are required.');
+  const username = cleanUsername(b.username);
+  if (!clean(b.name)) throw fail(400, 'Name is required.');
+  if (!username && !email) throw fail(400, 'Give the user a username or an email to log in with.');
+  if (username && !isUsername(username)) throw fail(400, 'Username: 3-32 characters, letters, numbers, dot, dash or underscore.');
+  if (email && !isEmail(email)) throw fail(400, 'Please enter a valid email address.');
   if (String(b.password || '').length < 8) throw fail(400, 'Password must be at least 8 characters.');
-  if ((await store.all('users')).some((u) => u.email === email)) throw fail(409, 'A user with this email already exists.');
-  const u = { id: sec.newId(), name: clean(b.name, 120), email, phone: clean(b.phone, 40), role: b.role === 'admin' ? 'admin' : 'telecaller', active: true, passHash: sec.hashPassword(b.password), createdAt: now() };
+  const all = await store.all('users');
+  if (username && all.some((u) => u.username === username || u.email === username)) throw fail(409, 'This username is already taken.');
+  if (email && all.some((u) => u.email === email || u.username === email)) throw fail(409, 'A user with this email already exists.');
+  const u = { id: sec.newId(), name: clean(b.name, 120), username, email, phone: clean(b.phone, 40), role: b.role === 'admin' ? 'admin' : 'telecaller', active: true, passHash: sec.hashPassword(b.password), createdAt: now() };
   await store.insert('users', u);
   res.status(201).json({ user: publicUser(u) });
 }));
@@ -391,16 +400,42 @@ app.patch('/api/users/:id', requireUser, requireAdmin, wrap(async (req, res) => 
   const b = req.body || {};
   if (req.params.id === req.user.id && (b.active === false || (b.role && b.role !== 'admin'))) throw fail(400, 'You cannot deactivate or demote your own account.');
   if (b.password !== undefined && String(b.password).length < 8) throw fail(400, 'Password must be at least 8 characters.');
+  const lc = (v) => clean(v, 160).toLowerCase();
+  if (b.email && !isEmail(lc(b.email))) throw fail(400, 'Please enter a valid email address.');
+  if (b.username && !isUsername(cleanUsername(b.username))) throw fail(400, 'Username: 3-32 characters, letters, numbers, dot, dash or underscore.');
+  const others = (await store.all('users')).filter((u) => u.id !== req.params.id);
+  if (b.username && others.some((u) => u.username === cleanUsername(b.username) || u.email === cleanUsername(b.username))) throw fail(409, 'This username is already taken.');
+  if (b.email && others.some((u) => u.email === lc(b.email) || u.username === lc(b.email))) throw fail(409, 'A user with this email already exists.');
   const doc = await store.update('users', req.params.id, (u) => {
     if (b.name) u.name = clean(b.name, 120);
     if (b.phone !== undefined) u.phone = clean(b.phone, 40);
+    if (b.username !== undefined) u.username = cleanUsername(b.username);
+    if (b.email !== undefined) u.email = lc(b.email);
+    if (!u.username && !u.email) return null;
     if (b.role && ['admin', 'telecaller'].includes(b.role)) u.role = b.role;
-    if (typeof b.active === 'boolean') u.active = b.active;
+    if (typeof b.active === 'boolean' && b.active !== u.active) {
+      u.active = b.active;
+      u.suspendedAt = b.active ? null : now();
+      u.suspendedBy = b.active ? null : req.user.name;
+    }
     if (b.password) u.passHash = sec.hashPassword(b.password);
     return u;
   });
-  if (!doc) throw fail(404, 'User not found');
-  res.json({ user: publicUser(doc) });
+  if (!doc) throw fail(400, 'User not found, or it would be left without a username or email.');
+  // optionally hand a suspended user's open enquiries back to the pool
+  let released = 0;
+  if (b.active === false && b.releaseOpen) {
+    for (const e of await store.all('enquiries')) {
+      if (e.assigneeId !== doc.id || CLOSED.has(e.status)) continue;
+      await store.update('enquiries', e.id, (d) => {
+        d.history.push({ at: now(), by: req.user.id, byName: req.user.name, action: 'released', note: `Returned to open pool - ${doc.name} was suspended` });
+        d.assigneeId = null; d.assigneeName = null; d.claimedAt = null; d.updatedAt = now();
+        return d;
+      });
+      released++;
+    }
+  }
+  res.json({ user: publicUser(doc), released });
 }));
 
 /* ---------------- mail settings (admin) ---------------- */
@@ -431,16 +466,20 @@ app.use((err, req, res, next) => {
 app.use((req, res) => res.status(404).sendFile(path.join(ROOT, 'index.html')));
 
 /* ---------------- start ---------------- */
+/* Creates the admin account named in the environment if it doesn't exist yet.
+   It never overwrites an existing account, so a password changed in the portal is kept. */
 async function bootstrapAdmin() {
   const users = await store.all('users');
-  if (users.length) return;
-  const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME } = process.env;
-  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-    console.warn('[setup] No users yet. Set ADMIN_EMAIL and ADMIN_PASSWORD to create the first admin account.');
+  const username = cleanUsername(process.env.ADMIN_USERNAME);
+  const email = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD;
+  if ((!username && !email) || !password) {
+    if (!users.length) console.warn('[setup] No users yet. Set ADMIN_USERNAME (or ADMIN_EMAIL) and ADMIN_PASSWORD to create the first admin account.');
     return;
   }
-  await store.insert('users', { id: sec.newId(), name: ADMIN_NAME || 'Administrator', email: ADMIN_EMAIL.toLowerCase(), phone: '', role: 'admin', active: true, passHash: sec.hashPassword(ADMIN_PASSWORD), createdAt: now() });
-  console.log(`[setup] Created admin account ${ADMIN_EMAIL}`);
+  if (users.some((u) => (username && u.username === username) || (email && u.email === email))) return;
+  await store.insert('users', { id: sec.newId(), name: process.env.ADMIN_NAME || 'Administrator', username, email, phone: '', role: 'admin', active: true, passHash: sec.hashPassword(password), createdAt: now() });
+  console.log(`[setup] Created admin account ${username || email}`);
 }
 
 (async () => {
