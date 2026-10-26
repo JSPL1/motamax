@@ -1,0 +1,21 @@
+{
+  "name": "motamax-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Motamax India website, enquiry portal and brochure",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js",
+    "brochure": "node tools/build-brochure.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.22.3",
+    "imapflow": "^2.9.1",
+    "nodemailer": "^10.2.1",
+    "pg": "^8.23.1"
+  }
+}

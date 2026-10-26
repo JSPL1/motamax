@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motamax India - Company Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+@page { size: A4; margin: 0; }
+:root {
+  --navy: #23246E; --ink: #0B1030; --ink2: #3D4766; --ink3: #6B7591; --line: #E3E8F2; --soft: #F4F6FB;
+  --sky: #1A9BD7; --violet: #8E5CF5; --red: #E3342F; --amber: #FF9F0A; --green: #22B45A; --teal: #14B8A6;
+}
+* { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html, body { margin: 0; background: #888; font-family: Inter, "Segoe UI", Arial, sans-serif; color: var(--ink); }
+.page { width: 210mm; height: 297mm; position: relative; overflow: hidden; background: #fff; page-break-after: always; break-after: page; margin: 0 auto; }
+@media screen { .page { margin: 10mm auto; box-shadow: 0 4px 30px rgba(0,0,0,.3); } }
+.inner { position: absolute; inset: 30mm 15mm 20mm; }
+h1, h2, h3, h4 { margin: 0; letter-spacing: -0.02em; line-height: 1.1; }
+p { margin: 0; }
+svg.i { width: 100%; height: 100%; }
+
+/* running header / footer */
+.ph { position: absolute; top: 0; left: 0; right: 0; height: 22mm; display: flex; align-items: center; justify-content: space-between; padding: 0 15mm; }
+.ph img { height: 11mm; }
+.ph .sec { font-size: 7.5pt; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--ink3); display: flex; align-items: center; gap: 3mm; }
+.ph .sec b { color: var(--navy); }
+.band { position: absolute; left: 0; right: 0; top: 22mm; height: 1.2mm; background: linear-gradient(90deg, var(--sky), var(--violet), var(--red), var(--amber), var(--green)); }
+.pf { position: absolute; left: 15mm; right: 15mm; bottom: 8mm; display: flex; justify-content: space-between; align-items: center; font-size: 7pt; color: var(--ink3); border-top: .3mm solid var(--line); padding-top: 3mm; }
+.pf b { color: var(--navy); }
+.pf .num { width: 8mm; height: 8mm; border-radius: 50%; background: var(--navy); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 7.5pt; }
+
+/* type */
+.eyebrow { display: inline-flex; align-items: center; gap: 2mm; font-size: 7.5pt; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--sky); }
+.eyebrow::before { content: ""; width: 6mm; height: .8mm; border-radius: 1mm; background: linear-gradient(90deg, var(--sky), var(--violet)); }
+.h1 { font-size: 26pt; font-weight: 900; margin: 3mm 0 3mm; }
+.h1 em, .grad { font-style: normal; color: var(--sky); }
+.lead { font-size: 10pt; line-height: 1.55; color: var(--ink2); }
+.small { font-size: 8pt; line-height: 1.5; color: var(--ink2); }
+
+/* building blocks */
+.card { border: .3mm solid var(--line); border-radius: 4mm; padding: 5mm; background: #fff; position: relative; }
+.card.soft { background: var(--soft); border-color: transparent; }
+.ic { width: 11mm; height: 11mm; border-radius: 3mm; display: grid; place-items: center; color: #fff; flex: none; }
+.ic svg { width: 6mm; height: 6mm; }
+.c-navy { background: linear-gradient(135deg, #3A3CB0, var(--navy)); } .c-sky { background: linear-gradient(135deg, #5CC8FF, #1A7FD7); }
+.c-red { background: linear-gradient(135deg, #FF6B5E, #D92A2A); } .c-green { background: linear-gradient(135deg, #5EE08A, #22A04B); }
+.c-amber { background: linear-gradient(135deg, #FFC04D, #F58A07); } .c-violet { background: linear-gradient(135deg, #B593FF, #7342E8); }
+.c-teal { background: linear-gradient(135deg, #4FE3D1, #0E9E9E); } .c-pink { background: linear-gradient(135deg, #FF8EC6, #E2437F); }
+ul.tick { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.2mm; }
+ul.tick li { display: flex; gap: 2mm; font-size: 8pt; line-height: 1.35; color: var(--ink2); }
+ul.tick li::before { content: ""; flex: none; width: 3.4mm; height: 3.4mm; margin-top: .4mm; border-radius: 50%; background: var(--sky) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M6 10.5l2.6 2.6L14.2 7.5' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat; }
+.chips { display: flex; flex-wrap: wrap; gap: 1.8mm; }
+.chip { font-size: 7.6pt; font-weight: 700; padding: 1.4mm 3mm; border-radius: 10mm; background: var(--soft); color: var(--navy); border: .3mm solid var(--line); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+
+/* cover */
+.cover { background: radial-gradient(90mm 80mm at 85% 20%, rgba(142,92,245,.55), transparent 70%), radial-gradient(110mm 90mm at 10% 85%, rgba(26,155,215,.55), transparent 70%), linear-gradient(160deg, #0E1A4A 0%, #10226A 50%, #23146B 100%); color: #fff; }
+.cover .grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(143,180,255,.10) .3mm, transparent .3mm), linear-gradient(90deg, rgba(143,180,255,.10) .3mm, transparent .3mm); background-size: 12mm 12mm; }
+.cover .logo { position: absolute; top: 14mm; left: 15mm; background: #fff; border-radius: 30mm; padding: 2.5mm 7mm; }
+.cover .logo img { height: 17mm; display: block; }
+.cover .iso { position: absolute; top: 15mm; right: 15mm; width: 26mm; height: 26mm; border-radius: 50%; border: .6mm solid rgba(255,255,255,.7); display: grid; place-items: center; text-align: center; font-weight: 900; font-size: 9pt; line-height: 1.15; }
+.cover .iso small { display: block; font-size: 6pt; font-weight: 700; letter-spacing: .12em; opacity: .85; }
+.cover .title { position: absolute; left: 15mm; right: 15mm; top: 52mm; }
+.cover .title .k { font-size: 9pt; font-weight: 800; letter-spacing: .3em; color: #7FD3FF; }
+.cover .title h1 { font-size: 38pt; font-weight: 900; margin-top: 4mm; line-height: 1.02; }
+.cover .title h1 em { font-style: normal; color: #6FD0FF; }
+.cover .title p { margin-top: 5mm; font-size: 11pt; line-height: 1.5; color: #C9D6FF; max-width: 150mm; }
+.cover .map { position: absolute; left: 22mm; right: 22mm; top: 128mm; height: 112mm; }
+.cover .creds { position: absolute; left: 15mm; right: 15mm; bottom: 34mm; display: flex; flex-wrap: wrap; gap: 2mm; justify-content: center; }
+.cover .creds span { font-size: 7.5pt; font-weight: 700; padding: 1.6mm 3.4mm; border-radius: 10mm; border: .3mm solid rgba(255,255,255,.35); background: rgba(255,255,255,.08); }
+.cover .strip { position: absolute; left: 0; right: 0; bottom: 0; height: 24mm; background: rgba(5,8,30,.55); display: flex; align-items: center; justify-content: space-around; font-size: 8.5pt; font-weight: 600; color: #DCE6FF; }
+.cover .strip b { color: #7FD3FF; margin-right: 1.5mm; }
+.cover .band { top: auto; bottom: 24mm; }
+
+/* about */
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-top: 5mm; }
+.kpi { border-radius: 4mm; padding: 4mm; color: #fff; }
+.kpi b { display: block; font-size: 22pt; font-weight: 900; line-height: 1; }
+.kpi span { font-size: 7.5pt; font-weight: 600; opacity: .92; }
+.quote { font-size: 13pt; font-weight: 800; line-height: 1.3; color: var(--navy); }
+.pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+.pillar { text-align: center; padding: 4mm 2mm; border-radius: 4mm; background: var(--soft); }
+.pillar .ic { margin: 0 auto 2mm; }
+.pillar b { display: block; font-size: 9pt; } .pillar span { font-size: 7.5pt; color: var(--ink3); }
+
+/* domains */
+.domain { display: grid; grid-template-columns: 52mm 1fr; gap: 5mm; padding: 5mm; border-radius: 5mm; border: .3mm solid var(--line); margin-bottom: 4mm; position: relative; overflow: hidden; }
+.domain::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 1.6mm; background: var(--dc); }
+.domain .num { font-size: 30pt; font-weight: 900; color: transparent; -webkit-text-stroke: .35mm var(--dc); line-height: 1; }
+.domain h3 { font-size: 14pt; font-weight: 900; margin: 2mm 0 1.5mm; }
+.svc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 4mm; align-content: start; }
+.svc-list span { display: flex; align-items: center; gap: 2mm; font-size: 8.3pt; font-weight: 600; color: var(--ink2); padding: 1.6mm 2.4mm; border-radius: 2mm; background: var(--soft); }
+.svc-list span i { width: 2mm; height: 2mm; border-radius: 50%; background: var(--dc); flex: none; }
+.lifecycle { display: grid; grid-template-columns: repeat(8, 1fr); gap: 1.5mm; margin-top: 2mm; }
+.lifecycle div { text-align: center; padding: 3mm 1mm; border-radius: 3mm; color: #fff; font-size: 7pt; font-weight: 700; }
+.lifecycle b { display: block; font-size: 11pt; font-weight: 900; }
+
+/* expertise */
+.exp { display: flex; flex-direction: column; gap: 2.5mm; }
+.exp-head { display: flex; align-items: center; gap: 3mm; }
+.exp-head h3 { font-size: 11.5pt; font-weight: 800; }
+.exp-head small { display: block; font-size: 7pt; color: var(--ink3); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2mm; }
+.photos img { width: 100%; height: 19mm; object-fit: cover; border-radius: 2.5mm; display: block; }
+
+/* process */
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3.5mm; }
+.step { border-radius: 4mm; padding: 4mm; background: var(--soft); position: relative; min-height: 44mm; }
+.step .n { font-size: 20pt; font-weight: 900; color: transparent; -webkit-text-stroke: .35mm var(--sc); line-height: 1; }
+.step b { display: block; font-size: 9.5pt; margin: 2mm 0 1mm; }
+.step p { font-size: 7.6pt; line-height: 1.45; color: var(--ink2); }
+.step .bar { position: absolute; left: 4mm; right: 4mm; bottom: 3mm; height: 1mm; border-radius: 1mm; background: var(--sc); }
+.why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.5mm; }
+.why .card { padding: 4mm; }
+.why b { display: block; font-size: 9pt; margin: 2.5mm 0 1mm; }
+.why p { font-size: 7.6pt; line-height: 1.45; color: var(--ink2); }
+
+/* industries */
+.ind { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+.ind .card { padding: 3.6mm; }
+.ind h4 { font-size: 9.5pt; font-weight: 800; display: flex; align-items: center; gap: 2mm; margin-bottom: 1.5mm; }
+.ind h4 i { width: 2.6mm; height: 2.6mm; border-radius: 50%; background: var(--dc); }
+.ind p { font-size: 7.3pt; line-height: 1.4; color: var(--ink2); }
+.ind .served { margin-top: 2mm; font-size: 7pt; font-weight: 700; color: var(--navy); }
+
+/* stories */
+.featured { display: grid; grid-template-columns: 1fr 1.15fr; border-radius: 5mm; overflow: hidden; border: .3mm solid var(--line); margin-bottom: 4mm; }
+.featured .mosaic { display: grid; grid-template-columns: 1fr 1fr; gap: 1mm; background: var(--navy); }
+.featured .mosaic img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 30mm; }
+.featured .body { padding: 5mm; }
+.tag { display: inline-block; font-size: 6.8pt; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #fff; padding: 1.2mm 2.6mm; border-radius: 10mm; }
+.stories { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.5mm; }
+.story { border-radius: 4mm; overflow: hidden; border: .3mm solid var(--line); display: flex; flex-direction: column; }
+.story img { width: 100%; height: 24mm; object-fit: cover; display: block; }
+.story .b { padding: 3.4mm; display: flex; flex-direction: column; gap: 1.4mm; }
+.story h4 { font-size: 8.8pt; font-weight: 800; line-height: 1.25; }
+.story .cl { font-size: 7pt; font-weight: 700; color: var(--sky); }
+.story p { font-size: 7.2pt; line-height: 1.42; color: var(--ink2); }
+
+/* clients */
+.logos { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2.6mm; }
+.logo-tile { height: 25mm; border-radius: 3mm; border: .3mm solid var(--line); background: #fff; display: grid; place-items: center; padding: 1.8mm; box-shadow: 0 .6mm 2mm rgba(11,16,48,.06); }
+.logo-tile img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.logo-tile.txt { font-weight: 900; color: var(--navy); font-size: 10pt; }
+
+/* gallery */
+.gal { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2.2mm; }
+.gal figure { margin: 0; position: relative; border-radius: 2.6mm; overflow: hidden; }
+.gal img { width: 100%; height: 34mm; object-fit: cover; display: block; }
+.gal figcaption { position: absolute; left: 1.2mm; right: 1.2mm; bottom: 1.2mm; padding: .9mm 1.6mm; border-radius: 1.6mm; background: rgba(11,16,48,.72); color: #fff; font-size: 5.8pt; font-weight: 600; }
+.legend { display: flex; gap: 3mm; flex-wrap: wrap; margin: 3mm 0 4mm; }
+.legend span { display: inline-flex; align-items: center; gap: 1.5mm; font-size: 7.5pt; font-weight: 700; color: var(--ink2); }
+.legend i { width: 2.6mm; height: 2.6mm; border-radius: 50%; }
+
+/* back cover */
+.back { background: radial-gradient(100mm 90mm at 15% 15%, rgba(26,155,215,.5), transparent 70%), radial-gradient(100mm 90mm at 90% 90%, rgba(142,92,245,.5), transparent 70%), linear-gradient(160deg, #0E1A4A, #1A1660); color: #fff; }
+.back .grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(143,180,255,.08) .3mm, transparent .3mm), linear-gradient(90deg, rgba(143,180,255,.08) .3mm, transparent .3mm); background-size: 12mm 12mm; }
+.back .logo { display: inline-block; background: #fff; border-radius: 30mm; padding: 3mm 8mm; }
+.back .logo img { height: 20mm; display: block; }
+.back .tagline { font-size: 22pt; font-weight: 900; line-height: 1.2; margin: 10mm 0 4mm; font-style: italic; }
+.back .tagline em { font-style: italic; color: #6FD0FF; }
+.back .contact { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-top: 10mm; }
+.back .ci { display: flex; gap: 3mm; align-items: flex-start; padding: 4mm; border-radius: 4mm; background: rgba(255,255,255,.08); border: .3mm solid rgba(255,255,255,.18); }
+.back .ci small { display: block; font-size: 6.8pt; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #7FD3FF; margin-bottom: 1mm; }
+.back .ci b { font-size: 9pt; line-height: 1.45; font-weight: 600; }
+.back .services-sum { margin-top: 8mm; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+.back .services-sum div { padding: 4mm; border-radius: 4mm; background: rgba(5,8,30,.35); }
+.back .services-sum h4 { font-size: 9pt; color: #7FD3FF; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2mm; }
+.back .services-sum p { font-size: 7.6pt; line-height: 1.5; color: #DCE6FF; }
+/* static styles for the shared website illustrations */
+.illus svg { width: 100%; height: auto; display: block; }
+.il-ground { stroke: #9AA6C8; stroke-width: 3; stroke-linecap: round; fill: none; }
+.il-grid { stroke: #9AA6C8; stroke-width: 1.5; stroke-dasharray: 4 8; opacity: .5; fill: none; }
+.il-stroke { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.il-flow, .il-wave, .il-dash { fill: none; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 8 10; }
+.il-draw { fill: none; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="server" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.01M7 17.5h.01M11 6.5h6M11 17.5h6"/></symbol>
+  <symbol id="cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+  <symbol id="build" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21h20M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6"/></symbol>
+  <symbol id="bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="cam" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l13-3 2 6-13 3z"/><path d="M18 10l3 1M8 13l1 5M5 21h8"/></symbol>
+  <symbol id="ai" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></symbol>
+  <symbol id="phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.4 1.8.7 2.7a2 2 0 01-.5 2.1L8 9.8a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.6 2.7.7a2 2 0 011.7 2z"/></symbol>
+  <symbol id="radio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="8" width="12" height="14" rx="2"/><path d="M9 8V2M10 13h4M10 17h4"/></symbol>
+  <symbol id="display" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="class" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></symbol>
+  <symbol id="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="tools" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></symbol>
+  <symbol id="target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 20A7 7 0 014 13c0-6 7-10 16-10 0 9-4 16-10 16"/><path d="M4 21c4-6 8-9 12-11"/></symbol>
+  <symbol id="users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="4"/><path d="M1 21v-1a6 6 0 016-6h4a6 6 0 016 6v1M17 4a4 4 0 010 8M23 21v-1a6 6 0 00-4-5.7"/></symbol>
+  <symbol id="chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/></symbol>
+  <symbol id="shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="award" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.2 13.2L7 22l5-3 5 3-1.2-8.8"/></symbol>
+  <symbol id="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></symbol>
+  <symbol id="globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></symbol>
+  <symbol id="heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 000-7.8z"/></symbol>
+</defs></svg>
+
+<div id="doc"></div>
+<script src="../js/illustrations.js" defer></script>
+
+<script>
+(function () {
+  const LOGO = 'motamax-logo@4x.png';
+  const A = '../assets/';
+  const ic = (id, c) => `<span class="ic ${c}"><svg><use href="#${id}"/></svg></span>`;
+  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  let pageNo = 0;
+  const page = (section, body, cls = '') => {
+    pageNo++;
+    const chrome = section ? `<div class="ph"><img src="${LOGO}" alt="Motamax India"><div class="sec"><b>${String(pageNo).padStart(2, '0')}</b> ${section}</div></div><div class="band"></div>
+      <div class="pf"><span><b>Motamax India Private Limited</b> · ISO 9001:2015 · www.motamaxindia.com · +91 99380 41356</span><span class="num">${pageNo}</span></div>` : '';
+    return `<section class="page ${cls}">${chrome}${body}</section>`;
+  };
+
+  /* ---------- capability map for the cover (static SVG) ---------- */
+  const CAPS = ['Electrical', 'IT', 'Networking', 'CCTV', 'Security', 'Telecom', 'Communication', 'Automation', 'AV', 'Displays', 'Solar', 'Infrastructure'];
+  const PAL = ['#1A9BD7', '#8E5CF5', '#E3342F', '#22B45A', '#FF9F0A'];
+  const capMap = () => {
+    const CX = 300, CY = 230, R = 165, LR = 190;
+    let s = `<svg viewBox="0 0 600 460" class="i"><defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2B2D8A"/><stop offset="1" stop-color="#4A2BA8"/></linearGradient>
+      <linearGradient id="cb" x1="0" y1="0" x2="1" y2="0">${PAL.map((c, i) => `<stop offset="${i / 4}" stop-color="${c}"/>`).join('')}</linearGradient></defs>
+      <circle cx="${CX}" cy="${CY}" r="${R + 48}" fill="none" stroke="rgba(143,180,255,.25)" stroke-width="1.2"/>
+      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="rgba(143,180,255,.6)" stroke-width="2" stroke-dasharray="2 9" stroke-linecap="round"/>
+      <circle cx="${CX}" cy="${CY}" r="${R + 26}" fill="none" stroke="rgba(181,147,255,.45)" stroke-width="1.4" stroke-dasharray="30 14"/>
+      <circle cx="${CX}" cy="${CY}" r="98" fill="none" stroke="rgba(143,180,255,.22)" stroke-width="1.2"/>`;
+    CAPS.forEach((c, i) => {
+      const a = (-90 + i * 30) * Math.PI / 180, col = PAL[i % 5];
+      const x = CX + R * Math.cos(a), y = CY + R * Math.sin(a);
+      const lx = CX + LR * Math.cos(a), ly = CY + LR * Math.sin(a);
+      const cos = Math.cos(a), anchor = cos > .2 ? 'start' : cos < -.2 ? 'end' : 'middle';
+      const oy = Math.sin(a) < -.9 ? -4 : Math.sin(a) > .9 ? 12 : 4;
+      s += `<line x1="${x}" y1="${y}" x2="${CX}" y2="${CY}" stroke="${col}" stroke-width="1.6" opacity=".7"/>
+        <circle cx="${x}" cy="${y}" r="16" fill="${col}" opacity=".18"/><circle cx="${x}" cy="${y}" r="8" fill="#0E1A4A" stroke="${col}" stroke-width="2.6"/>
+        <text x="${lx}" y="${ly + oy}" text-anchor="${anchor}" fill="${col}" font-family="Inter" font-weight="800" font-size="12.5" letter-spacing="1.6">${c.toUpperCase()}</text>`;
+    });
+    s += `<rect x="${CX - 92}" y="${CY - 38}" width="184" height="76" rx="13" fill="url(#cg)" stroke="url(#cb)" stroke-width="2.4"/>
+      <text x="${CX}" y="${CY - 8}" text-anchor="middle" fill="#7FD3FF" font-family="Inter" font-weight="800" font-size="11" letter-spacing="3">INTEGRATED</text>
+      <text x="${CX}" y="${CY + 20}" text-anchor="middle" fill="#fff" font-family="Inter" font-weight="900" font-size="21">Project Delivery</text></svg>`;
+    return s;
+  };
+
+  const out = [];
+
+  /* 1 ---------- cover ---------- */
+  out.push(page('', `
+    <div class="grid-bg"></div>
+    <div class="logo"><img src="${LOGO}" alt="Motamax India Private Limited"></div>
+    <div class="iso"><div>ISO<small>9001:2015</small><small>CERTIFIED</small></div></div>
+    <div class="title">
+      <div class="k">COMPANY PROFILE · 2026</div>
+      <h1>Engineering the <em>connected, secure &amp; powered</em> enterprise.</h1>
+      <p>End-to-end Solution Architecture, Automation and Infrastructure Development — from requirement analysis, supply and installation to testing, commissioning, training, handover and operational maintenance.</p>
+    </div>
+    <div class="map">${capMap()}</div>
+    <div class="creds"><span>ISO 9001:2015</span><span>MSME Registered</span><span>GeM Seller</span><span>DPIIT #startupindia</span><span>GST · EPFO · ESIC</span></div>
+    <div class="band"></div>
+    <div class="strip"><span><b>☎</b>+91 99380 41356</span><span><b>✉</b>info@motamaxindia.com</span><span><b>⌂</b>www.motamaxindia.com</span><span><b>◉</b>Bhubaneswar, Odisha</span></div>`, 'cover'));
+
+  /* 2 ---------- about ---------- */
+  out.push(page('Company Profile', `<div class="inner">
+    <span class="eyebrow">Who we are</span>
+    <h2 class="h1">Latest technology. Cost‑effective architecture. <em>Committed timelines.</em></h2>
+    <p class="lead">Motamax India Pvt. Ltd.'s business model is built on sustainability — responding to an organisation's core needs through the provision of the latest technology, cost‑effective solution architecture, infrastructure development and quality of service, delivered on a committed timeline.</p>
+    <p class="lead" style="margin-top:3mm">With commitment to sustainable development at the core of our business, we provide solutions to the critical needs of organisations and generate value beyond shareholders' earnings — based on three pillars: <b>environmental protection</b>, <b>social progress</b> and <b>economic growth</b>.</p>
+    <div class="kpis">
+      <div class="kpi c-sky"><b>3</b><span>Core business domains</span></div>
+      <div class="kpi c-violet"><b>25+</b><span>Solution lines</span></div>
+      <div class="kpi c-red"><b>40+</b><span>Reputed corporate &amp; Govt. clients</span></div>
+      <div class="kpi c-green"><b>11</b><span>Industries served</span></div>
+    </div>
+    <div class="grid2" style="margin-top:6mm">
+      <div class="card"><div style="display:flex;gap:3mm;align-items:center">${ic('target', 'c-navy')}<h3 style="font-size:13pt">Our Mission</h3></div>
+        <p class="small" style="margin:3mm 0">To be the leader in Solution Architecture of ICT, Electrical Infrastructure, Renewable Energies and best QoS services — sustainable development and value creation for stakeholders. We build our reputation for integrity, excellence and leadership by:</p>
+        <ul class="tick"><li>Continuously improving the standards and quality of our solutions</li><li>Constantly striving to exceed each customer's expectations</li><li>Upholding the highest moral principles and a challenging, secure environment for our people</li><li>Maintaining a high &amp; committed service standard through relationships, expertise and experience</li></ul></div>
+      <div style="display:flex;flex-direction:column;gap:5mm">
+        <div class="card"><div style="display:flex;gap:3mm;align-items:center">${ic('eye', 'c-sky')}<h3 style="font-size:13pt">Our Vision</h3></div>
+          <p class="small" style="margin-top:3mm">To achieve sustainable development in every area of activity, for the betterment of customers and society — both in the present and in the future.</p></div>
+        <div class="pillars"><div class="pillar">${ic('leaf', 'c-green')}<b>Environmental</b><span>Protection</span></div><div class="pillar">${ic('users', 'c-violet')}<b>Social</b><span>Progress</span></div><div class="pillar">${ic('chart', 'c-amber')}<b>Economic</b><span>Growth</span></div></div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:5mm;grid-template-columns:1.3fr 1fr">
+      <div class="card soft"><div style="display:flex;gap:3mm;align-items:center;margin-bottom:3mm">${ic('heart', 'c-red')}<h3 style="font-size:13pt">Our Values</h3></div>
+        <div class="chips">${['Honesty', 'Social Responsibility', 'Leadership', 'Long-term Focus', 'Innovation', 'Financial Soundness', 'Care for People', 'Customer Orientation', 'Concern for the Environment'].map((v) => `<span class="chip">${v}</span>`).join('')}</div></div>
+      <div class="card" style="background:linear-gradient(135deg,#23246E,#3B1F8F);border:0;color:#fff"><small style="font-size:7pt;font-weight:800;letter-spacing:.2em;color:#7FD3FF">COMPANY ETHOS</small>
+        <p style="font-size:12.5pt;font-weight:800;line-height:1.3;margin-top:3mm">“To be regarded by all of our stakeholders as honourable and conscientious.”</p></div>
+    </div></div>`));
+
+  /* 3 ---------- what we do ---------- */
+  const DOM = [
+    ['01', 'Solution Architecture', '#1A9BD7', 'server', 'c-sky', 'Designing the right combination of IT, security, communication and audio-visual systems for every site.', ['IT Infrastructure', 'Structured Cabling', 'CCTV & Security Solutions', 'Time-lapse Systems', 'Telecom Solutions', 'PA Systems', 'AVSI & Conferencing', 'Indoor & Outdoor Displays', 'Data Centre Infrastructure', 'Critical Walkie-Talkie Comms']],
+    ['02', 'Automation', '#8E5CF5', 'cpu', 'c-violet', 'Automating weighing, switching and business processes, with AI and analytics on top.', ['Electrical Switch Automation', 'Weighbridge Automation', 'Business Process Automation', 'AI & Analytics', 'Video Analytics (CCTV + AI)', 'Fleet & Vehicle Tracking', 'HRMS, CLMS & Office Mgmt.', 'Smart Classrooms']],
+    ['03', 'Infrastructure Development', '#E3342F', 'build', 'c-red', 'Building the physical backbone — networks, fibre, power and site facilities.', ['Wired & Wireless Networking', 'Structured Cabling', 'OFC & FTTx Solutions', 'Street Lighting Systems', 'Electrical Works (HT & LT)', 'Solar Solutions', 'Power Backup Systems', 'Industrial Tools & Equipment']],
+  ];
+  const STAGES = [['Consult', '#1A9BD7'], ['Design', '#4F46E5'], ['Engineer', '#8E5CF5'], ['Supply', '#E3342F'], ['Install', '#FF9F0A'], ['Commission', '#22B45A'], ['Train', '#14B8A6'], ['Maintain', '#23246E']];
+  out.push(page('What We Do', `<div class="inner">
+    <span class="eyebrow">Our services</span>
+    <h2 class="h1">Three domains. <em>One accountable partner.</em></h2>
+    <p class="lead" style="margin-bottom:5mm">Motamax is a specialist in industrial projects with high technological content — Industrial Infrastructure, Projects and Services — covering every aspect of electrical and IT processes: consulting, solution making, engineering, procurement, building and maintenance.</p>
+    ${DOM.map(([n, t, c, i, cls, d, items]) => `<div class="domain" style="--dc:${c}">
+      <div><div style="display:flex;justify-content:space-between;align-items:flex-start">${ic(i, cls)}<span class="num">${n}</span></div><h3>${t}</h3><p class="small">${d}</p></div>
+      <div class="svc-list">${items.map((x) => `<span><i></i>${x}</span>`).join('')}</div></div>`).join('')}
+    <h3 style="font-size:11pt;margin:4mm 0 2mm">End‑to‑end lifecycle — one team from survey to maintenance</h3>
+    <div class="lifecycle">${STAGES.map(([s, c], k) => `<div style="background:${c}"><b>${String(k + 1).padStart(2, '0')}</b>${s}</div>`).join('')}</div>
+  </div>`));
+
+  /* 4 ---------- expertise I ---------- */
+  const EXP1 = [
+    ['bolt', 'c-red', 'Electrical Services', 'HT · LT · Power', ['Complete process: application & liaisoning with DISCOM, inspection and charging', 'HT & LT construction', 'Electrical transformation — single pole, double pole and plinth-mounted substations from 16 kVA, overhead & underground cabling and civil foundations', 'Electrical lighting solutions for industries', 'All types of electrical panels and distribution boards', 'Industrial HT & LT motors', 'Compliance inspection consultancy — new and renewal', 'DG supply, hiring, inspection and swapping in the telecom sector', 'HVAC — equipment, filters, AHU, ducting, clean rooms, modular OT', 'Online / offline UPS, battery systems and telecom ODC electrical activities'], ['e1', 'e4', 'e7']],
+    ['server', 'c-navy', 'Information Technology', 'Hardware · Network · Data centre', ['IT hardware — desktops, laptops, multifunction printers and servers', 'Office automation products', 'Complete wired & wireless network infrastructure — indoor/outdoor access points, P2P links, RF devices', 'Active devices — switches, routers, firewalls and IT security solutions', 'Passive infrastructure — OFC (UG / overhead) and UTP cabling', 'Racks, splicing and OTDR; Panduit and Fluke networks', 'Complete data-centre infrastructure build-up', 'IT operation and support services'], ['i11', 'i13', 'i14']],
+    ['cam', 'c-sky', 'CCTV Surveillance & Security', 'Surveillance · Access · Safety', ['Solution architecture and project build-up of CCTV for industries, plants and corporates', 'CCTV analytics solutions', 'Access control & biometric attendance systems', 'Fire detection systems, boom barriers, flap and turnstile barriers', 'Drones — from idea forge to civil and security applications', 'HD cameras & monitoring for schools, colleges, corporate, industrial and home segments', 'Digital, wired, wireless, GSM SIM-based and solar-based CCTV'], ['i7', 'i5', 'i3']],
+  ];
+  out.push(page('Core Expertise', `<div class="inner">
+    <span class="eyebrow">Core expertise · I</span>
+    <h2 class="h1">Power, IT and <em>security</em> — engineered together.</h2>
+    <div style="display:flex;flex-direction:column;gap:3.5mm;margin-top:3mm">
+    ${EXP1.map(([i, c, t, s, items, ph]) => `<div class="card exp" style="padding:4mm"><div style="display:grid;grid-template-columns:1fr 50mm;gap:4mm">
+      <div><div class="exp-head">${ic(i, c)}<div><small>${s}</small><h3>${t}</h3></div></div>
+      <ul class="tick" style="margin-top:2.5mm">${items.map((x) => `<li>${x}</li>`).join('')}</ul></div>
+      <div class="photos" style="grid-template-columns:1fr;align-content:start">${ph.slice(0, 2).map((p) => `<img src="${A}site/${p}.jpg" alt="">`).join('')}</div></div></div>`).join('')}
+    </div></div>`));
+
+  /* 5 ---------- expertise II ---------- */
+  const EXP2 = [
+    ['ai', 'c-violet', 'AI & Business Process Automation', ['Computer vision', 'Time-lapse solutions', 'Video analytics using CCTV & AI', 'Process optimisation for time and resources', 'Fleet and vehicle tracking', 'Weighbridge automation', 'Electrical switch automation', 'HRMS, CLMS & office management']],
+    ['phone', 'c-green', 'Communication Engineering', ['Telecom infrastructure build-up', 'EPABX / IPPBX / SIP & VoIP', 'FTTx / IBD project construction', 'NLD-OFC by HDD', 'PA & VA systems', 'Audio & video conferencing', 'AVSI (audio-video system integration)', 'Telepresence systems']],
+    ['radio', 'c-amber', 'Walkie‑Talkie Services', ['Emergency & critical communications', 'MCX', 'DMR', 'TETRA', '4G / 5G public and private networks']],
+    ['display', 'c-pink', 'Display Solutions', ['Video walls', 'All-in-one systems', 'Indoor & outdoor LED / LCD', 'Interactive panels', 'Control room solutions', 'Industrial monitors']],
+    ['class', 'c-teal', 'Smart Classroom Solutions', ['Interactive board solutions', 'Complete integrated solutions', 'Digital classrooms']],
+    ['sun', 'c-green', 'Solar', ['Solar panels', 'Inverters', 'Batteries', 'Lighting & other industrial applications']],
+    ['tools', 'c-navy', 'Industrial Project Requirements', ['All types of tools & equipment', 'Measuring instruments', 'Environmental (Bio & Agri) solutions', 'Dust suppression systems', 'Utilities — air and gas services']],
+    ['build', 'c-red', 'One‑Stop Construction Solution', ['EPC services', 'Temporary facilities & site preparation', 'Design, installation, testing & commissioning of IT, electrical, telecom, CCTV, fire-fighting & security works']],
+  ];
+  out.push(page('Core Expertise', `<div class="inner">
+    <span class="eyebrow">Core expertise · II</span>
+    <h2 class="h1">Automation, communication and <em>site solutions.</em></h2>
+    <div class="grid2" style="margin-top:3mm;gap:3.2mm">
+    ${EXP2.map(([i, c, t, items]) => `<div class="card exp" style="padding:3.6mm"><div class="exp-head">${ic(i, c)}<h3>${t}</h3></div>
+      <ul class="tick">${items.map((x) => `<li>${x}</li>`).join('')}</ul></div>`).join('')}
+    </div></div>`));
+
+  /* 6 ---------- process + why ---------- */
+  const STEPS = [
+    ['Requirement analysis', 'Site survey and discussion with your team to understand operational needs, constraints and compliance.'],
+    ['Solution architecture', 'Selecting the right mix of IT, electrical, security, communication and automation systems for the site.'],
+    ['Engineering & approvals', 'Detailed design, drawings and BOQ — including statutory liaisoning such as DISCOM applications.'],
+    ['Procurement & supply', 'Sourcing and supplying specified equipment, materials, tools and instruments.'],
+    ['Installation', 'Site execution — civil foundations, cabling, mounting and system integration.'],
+    ['Testing & commissioning', 'Inspection, testing and charging through to go-live, with results documented.'],
+    ['Training & handover', 'Training for operators and handover of systems and documentation.'],
+    ['Operational maintenance', 'Ongoing operation, AMC and support to keep systems running after handover.'],
+  ];
+  const WHY = [
+    ['shield', 'c-navy', 'Single point of accountability', 'One team owns design, supply, installation and maintenance — nothing falls between vendors.'],
+    ['award', 'c-amber', 'Certified & compliant', 'ISO 9001:2015 quality management; MSME, GeM, DPIIT, GST, EPFO & ESIC registered.'],
+    ['users', 'c-violet', 'Trusted by leaders', 'Serving JSW, JSPL, Reliance, Airtel, DRDO, IIT, NLC India, Indian Railways and more.'],
+    ['clock', 'c-sky', 'Committed timelines', 'Planned execution with documented testing and on-time commissioning.'],
+    ['tools', 'c-green', 'Field-proven teams', 'Experience across plants, mines, ports, townships and Government campuses.'],
+    ['heart', 'c-red', 'Long-term partnership', 'Training, AMC and responsive support long after go-live.'],
+  ];
+  out.push(page('How We Deliver', `<div class="inner">
+    <span class="eyebrow">How we deliver</span>
+    <h2 class="h1">From the first survey <em>to years of uptime.</em></h2>
+    <p class="lead" style="margin-bottom:5mm">We provide end‑to‑end solutions — requirement analysis, supply, installation, testing, commissioning, training, handover and operational maintenance.</p>
+    <div class="steps">${STEPS.map(([t, d], k) => `<div class="step" style="--sc:${STAGES[k][1]}"><span class="n">${String(k + 1).padStart(2, '0')}</span><b>${t}</b><p>${d}</p><span class="bar"></span></div>`).join('')}</div>
+    <h2 class="h1" style="font-size:18pt;margin-top:8mm">Why <em>Motamax?</em></h2>
+    <div class="why" style="margin-top:3mm">${WHY.map(([i, c, t, d]) => `<div class="card">${ic(i, c)}<b>${t}</b><p>${d}</p></div>`).join('')}</div>
+  </div>`));
+
+  /* 7 ---------- industries ---------- */
+  const IND = [
+    ['Steel & Metals', '#1A9BD7', 'Continuous-process plants where networks, surveillance and power run without interruption.', 'JSW · JSPL · Jindal Stainless · IMFA · Hindalco'],
+    ['Mining', '#FF9F0A', 'Remote operations that depend on reliable communication, surveillance and power.', 'Hindustan Copper · NLC India · OMC · Mines in Odisha, Rajasthan, MP'],
+    ['Manufacturing', '#8E5CF5', 'IT, automation and electrical systems engineered to work together.', 'Reliance · Aditya Birla · UltraTech · MP Birla'],
+    ['Construction', '#E3342F', 'Systems installed while the site is still being built — townships, towers, terminals.', 'AMSB Infra · DN Group · Vaterland · Falcon Crest · OEYE MEP'],
+    ['Government & PSU', '#23246E', 'Facilities with defined specifications and documentation requirements.', 'CPWD · AG Office · DRDO · LIC'],
+    ['Telecom', '#22B45A', 'Network build-out and site electrical work for operators.', 'Bharti Airtel · STL'],
+    ['Ports & Logistics', '#14B8A6', 'Large perimeters and heavy vehicle movement.', 'Paradip Port Authority · KICTPL · Mahindra Logistics'],
+    ['Railways & Transport', '#4F46E5', 'Stations, terminals and corridors.', 'Indian Railways · RITES · BMRCL'],
+    ['Education & Research', '#FF9F0A', 'Campuses, labs and smart classrooms.', 'IIT · DRDO · Siksha ‘O’ Anusandhan'],
+    ['Energy & Utilities', '#22B45A', 'Generation, distribution and renewable installations.', 'Tata Power · OHPC · NLC India'],
+    ['Enterprise & Media', '#8E5CF5', 'Corporate offices and broadcast facilities.', 'OTV · Luminous Infoways · Indian Oil · The HHI'],
+  ];
+  out.push(page('Industries', `<div class="inner">
+    <span class="eyebrow">Industries we serve</span>
+    <h2 class="h1">Built for <em>demanding environments.</em></h2>
+    <p class="lead" style="margin-bottom:5mm">Reputed corporates, manufacturing plants, mines, construction areas and Government organisations across Odisha, Rajasthan, Madhya Pradesh and beyond.</p>
+    <div class="ind">${IND.map(([t, c, d, s]) => `<div class="card" style="--dc:${c};border-top:1.2mm solid ${c}"><h4><i></i>${t}</h4><p>${d}</p><div class="served">${s}</div></div>`).join('')}
+      <div class="card" style="background:linear-gradient(135deg,#23246E,#1A9BD7);border:0;color:#fff;display:flex;flex-direction:column;justify-content:center"><b style="font-size:11pt">One partner for every site.</b><p style="font-size:7.6pt;margin-top:2mm;color:#E6EEFF">Survey to AMC — IT, electrical, security, communication and automation from a single accountable team.</p></div>
+    </div>
+    <div class="card soft" style="margin-top:5mm;display:grid;grid-template-columns:1fr 1.1fr;gap:6mm;align-items:center">
+      <div><span class="eyebrow">Where we work</span><h3 style="font-size:14pt;margin:2mm 0">Plants, mines, ports, townships &amp; campuses</h3>
+        <p class="small">Projects delivered across Odisha, Rajasthan and Madhya Pradesh for corporates, PSUs and Government organisations — from greenfield construction sites to running plants.</p>
+        <div class="chips" style="margin-top:3mm"><span class="chip">Odisha</span><span class="chip">Rajasthan</span><span class="chip">Madhya Pradesh</span><span class="chip">Pan-India projects</span></div></div>
+      <div class="illus" data-illus="industries"></div>
+    </div></div>`));
+
+  /* 8 ---------- success stories ---------- */
+  const STO = [
+    ['Industrial', '#23246E', 'i7', 'Surveillance & networks for integrated steel plants', 'JSW Group · Jindal Steel & Power', 'Plant-wide IT and security systems for continuous-process operations — CCTV & analytics, industrial networking, weighbridge automation and control rooms.'],
+    ['Mining', '#FF9F0A', 'i5', 'Connected, secured mines across three states', 'Hindustan Copper · NLC India · Odisha, Rajasthan & MP', 'Communication, surveillance and power for remote mining — including solar-powered CCTV and critical walkie-talkie networks.'],
+    ['Telecom', '#22B45A', 'i20', 'OFC roll-out & telecom site power', 'Bharti Airtel · STL', 'Telecom infrastructure build-up: OFC / FTTx, NLD-OFC by horizontal directional drilling, DG and ODC electrical activities.'],
+    ['Government', '#E3342F', 'i11', 'Secure IT for defence, research & public offices', 'DRDO · IIT · CPWD · AG Office Bhubaneswar', 'IT infrastructure, data-centre components, CCTV and conferencing to defined Government specifications.'],
+    ['Ports', '#1A9BD7', 'i8', 'Perimeter security for ports & terminals', 'Paradip Port Authority · KICTPL', 'Large-perimeter CCTV, weighbridge automation and critical communications for high-traffic environments.'],
+    ['Electrical', '#14B8A6', 'e4', 'Substations & HT/LT electrical works', 'Industrial plants, utilities & OMC', 'From DISCOM application and liaisoning through transformer installation, panels and inspection to charging.'],
+  ];
+  out.push(page('Success Stories', `<div class="inner">
+    <span class="eyebrow">Success stories</span>
+    <h2 class="h1">Delivered on site, <em>trusted by leaders.</em></h2>
+    <div class="featured" style="margin-top:4mm">
+      <div class="mosaic">${['i3', 'i7', 'i8', 'i14'].map((p) => `<img src="${A}site/${p}.jpg" alt="">`).join('')}</div>
+      <div class="body"><span class="tag" style="background:#FF9F0A">Featured · Construction</span>
+        <h3 style="font-size:13pt;margin:3mm 0 2mm">IT, CCTV &amp; security for leading construction groups</h3>
+        <p class="small">Systems installed while the site is still being built, then handed over as a working, documented setup for residents and facility teams.</p>
+        <ul class="tick" style="margin-top:3mm"><li><b>IT</b> — hardware, networking, telecom / intercom</li><li><b>CCTV</b> — perimeter, common areas, lifts and critical areas</li><li><b>Security</b> — boom barriers, biometric attendance, access control</li></ul>
+        <p class="small" style="margin-top:3mm"><b style="color:#23246E">Clients:</b> AMSB Infra (Prestine Green), DN Group, Vaterland Group, Falcon Crest, Shradha Saboori Group (IOCL Township Expansion), OEYE MEP — Baibhav Group, Metro Group, Police Housing, Truck / Bus Terminals.</p></div>
+    </div>
+    <div class="stories">${STO.map(([tg, c, img, t, cl, d]) => `<div class="story"><img src="${A}site/${img}.jpg" alt=""><div class="b"><span class="tag" style="background:${c};align-self:flex-start">${tg}</span><h4>${t}</h4><div class="cl">${cl}</div><p>${d}</p></div></div>`).join('')}</div>
+  </div>`));
+
+  /* 9 ---------- clients ---------- */
+  const CL = [['reliance', 'Reliance Industries'], ['indianoil', 'Indian Oil'], ['cpwd', 'CPWD'], ['hindalco', 'Hindalco'], ['airtel', 'Bharti Airtel'], ['jsw', 'JSW'], ['jspl', 'Jindal Steel & Power'], ['mahindra-logistics', 'Mahindra Logistics'], ['csm', 'CSM'], ['paradip-port', 'Paradip Port Authority'], ['bmrcl', 'BMRCL'], ['mp-birla', 'MP Birla Group'], ['alexis', 'Alexis'], ['luminous', 'Luminous Infoways'], ['kcc', 'KCC'], ['stl', 'STL'], ['power-hf', 'Power HF'], ['rites', 'RITES'], ['vaterland', 'Vaterland'], ['the-hhi', 'The HHI'], ['kictppl', 'KICTPL'], ['ae-commercial', 'AE Commercial'], ['drdo', 'DRDO'], ['iit', 'IIT'], ['ohpc', 'OHPC'], ['soa', 'Siksha O Anusandhan'], ['lic', 'LIC'], ['otv', 'Odisha TV'], ['toshali', 'Toshali'], ['ultratech', 'UltraTech'], ['indian-railways', 'Indian Railways'], ['nlc-india', 'NLC India'], ['hindustan-copper', 'Hindustan Copper'], ['imfa', 'IMFA'], ['manikstu', 'Manikstu'], ['jindal-stainless', 'Jindal Stainless'], ['ag-office', 'AG Office'], ['oeye-mep', 'OEYE MEP'], ['tata-power', 'Tata Power']];
+  out.push(page('Key Clients', `<div class="inner">
+    <span class="eyebrow">Key clients</span>
+    <h2 class="h1">The privilege of serving <em>India's reputed names.</em></h2>
+    <p class="lead" style="margin-bottom:5mm">Corporates, manufacturing plants, mines, construction groups and Government organisations — including NLC India (Ministry of Coal), Indian Railways, DRDO and IIT.</p>
+    <div class="logos">${CL.map(([f, n]) => `<div class="logo-tile"><img src="${A}clients/${f}.png" alt="${esc(n)}"></div>`).join('')}<div class="logo-tile txt">OMC</div><div class="logo-tile txt" style="font-size:8pt;text-align:center;color:#1A9BD7">&amp; many<br>more</div><div class="logo-tile txt" style="background:linear-gradient(135deg,#23246E,#1A9BD7);color:#fff;border:0;font-size:8pt;text-align:center">40+<br>clients</div></div>
+  </div>`));
+
+  /* 10 ---------- gallery ---------- */
+  const G = [['e1', 'Electrical', 'Substation structure'], ['e2', 'Electrical', 'Pole-mounted transformer'], ['e3', 'Electrical', 'Overhead line work'], ['e4', 'Electrical', 'Transformer installation'], ['e5', 'Electrical', 'Site electrical works'],
+    ['e7', 'Electrical', 'Electrical control panel'], ['e8', 'Electrical', 'Distribution panel'], ['e6', 'Electrical', 'Street lighting'], ['i1', 'IT & Networking', 'Fibre splice enclosure'], ['i2', 'IT & Networking', 'Aerial cabling'],
+    ['i10', 'IT & Networking', 'Tower installation'], ['i11', 'IT & Networking', 'Network rack'], ['i13', 'IT & Networking', 'Network cabinet'], ['i14', 'IT & Networking', 'Cable tray routing'], ['i12', 'IT & Networking', 'Network equipment'],
+    ['i3', 'CCTV & Security', 'Biometric terminal'], ['i5', 'CCTV & Security', 'Solar-powered CCTV'], ['i7', 'CCTV & Security', 'Monitoring station'], ['i8', 'CCTV & Security', 'Pole-mounted cameras'], ['i6', 'Automation', 'Weighbridge automation'],
+    ['i9', 'Automation', 'Smart switch panel'], ['i16', 'Civil & OFC', 'Excavation'], ['i17', 'Civil & OFC', 'Trenching'], ['i19', 'Civil & OFC', 'Drilling site'], ['i20', 'Civil & OFC', 'HDD rig']];
+  const GC = { 'Electrical': '#E3342F', 'IT & Networking': '#1A9BD7', 'CCTV & Security': '#8E5CF5', 'Automation': '#FF9F0A', 'Civil & OFC': '#22B45A' };
+  out.push(page('Our Work at Site', `<div class="inner">
+    <span class="eyebrow">Our work at site</span>
+    <h2 class="h1">Real projects. <em>Real sites.</em></h2>
+    <div class="legend">${Object.entries(GC).map(([k, c]) => `<span><i style="background:${c}"></i>${k}</span>`).join('')}</div>
+    <div class="gal">${G.map(([f, cat, cap]) => `<figure style="border-bottom:1mm solid ${GC[cat]}"><img src="${A}site/${f}.jpg" alt=""><figcaption>${cap}</figcaption></figure>`).join('')}</div>
+  </div>`));
+
+  /* 11 ---------- back cover ---------- */
+  out.push(page('', `<div class="grid-bg"></div>
+    <div style="position:absolute;inset:20mm 15mm">
+      <div class="logo"><img src="${LOGO}" alt="Motamax India Private Limited"></div>
+      <p class="tagline">Give us a chance to serve you,<br><em>never get a chance to think for the alternative.</em></p>
+      <p style="font-size:10.5pt;line-height:1.55;color:#C9D6FF;max-width:160mm">Talk to us about your plant, mine, campus or construction site. Our team will visit, understand your requirement and propose the right integrated solution.</p>
+      <div class="services-sum">
+        <div><h4>Solution Architecture</h4><p>IT · CCTV &amp; Security · Time-lapse · Telecom · Audio &amp; Video (AVSI &amp; Conferencing) · Indoor &amp; Outdoor Display · Data Centre · Critical Walkie Communications</p></div>
+        <div><h4>Automation</h4><p>Electrical Switch · Weighbridge · Business Process · AI &amp; Analytics · Smart Classroom</p></div>
+        <div><h4>Infrastructure Build‑up</h4><p>Wired &amp; Wireless Network · Structured Cabling · OFC · FTTx · Street Light · Electrical (HT &amp; LT) · Power Backup · Industrial Tools &amp; Equipment · Solar</p></div>
+      </div>
+      <div class="contact" style="margin-top:8mm">
+        <div class="ci">${ic('pin', 'c-sky')}<div><small>Office</small><b>Plot No-199(P)202/611, Gajapati Nagar,<br>Bhubaneswar, Odisha – 751005</b></div></div>
+        <div class="ci">${ic('pin', 'c-violet')}<div><small>Registered address</small><b>Plot No. 5, Bishal Residency, 4th Floor,<br>Sriram Nagar, Bhubaneswar – 751002</b></div></div>
+        <div class="ci">${ic('phone', 'c-green')}<div><small>Phone / WhatsApp</small><b>+91 99380 41356</b></div></div>
+        <div class="ci">${ic('mail', 'c-red')}<div><small>Email</small><b>info@motamaxindia.com</b></div></div>
+        <div class="ci">${ic('globe', 'c-amber')}<div><small>Website</small><b>www.motamaxindia.com</b></div></div>
+        <div class="ci">${ic('users', 'c-teal')}<div><small>Social</small><b>Facebook: Motamax India<br>X: @Motamax_bbsr</b></div></div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:center;font-size:8pt;color:#C9D6FF">
+        <span><b style="color:#fff">MOTAMAX INDIA PRIVATE LIMITED</b> · ISO 9001:2015 Certified</span><span>MSME · GeM · DPIIT #startupindia · GST · EPFO · ESIC</span></div>
+    </div>
+    <div class="band" style="top:auto;bottom:0;height:2mm"></div>`, 'back'));
+
+  document.getElementById('doc').innerHTML = out.join('');
+  // signal for the build script that layout is complete once images are in
+  Promise.all(Array.from(document.images).map((im) => im.complete ? 1 : new Promise((r) => { im.onload = im.onerror = r; })))
+    .then(() => document.fonts.ready).then(() => { document.body.dataset.ready = '1'; });
+})();
+</script>
+</body>
+</html>

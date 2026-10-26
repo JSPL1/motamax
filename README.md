@@ -15,18 +15,32 @@ Static website for **Motamax India Private Limited** (Bhubaneswar, Odisha) — S
 - `js/main.js` — content data and interactions
 - `assets/` — logo, site photos and the downloadable company profile PDF
 
+## Enquiry portal
+
+- Website visitors choose an enquiry type (quotation, site survey, call-back, AMC/support, brochure, vendor/partner) on **Contact** or via the floating **Enquire** button on every page.
+- Staff log in at `/login.html` → `/portal/`.
+  - **Tele-callers** see the *Open pool*, **take** enquiries into *My bucket*, update status (New → Contacted → Follow-up → Site visit → Quotation sent → Won / Lost), set follow-ups, add call notes and email the customer.
+  - **Admins** also see every enquiry, who took it, team performance graphs, CSV export, team management and mail settings.
+- **Mail settings** (admin): SMTP for sending (with optional IMAP to save a copy in the Sent folder). Emails can attach the company brochure; brochure requests from the website are answered automatically.
+
 ## Run locally
 
 ```bash
-python -m http.server 5510
+npm install
+cp .env.example .env   # set ADMIN_EMAIL / ADMIN_PASSWORD
+npm start              # http://localhost:5510
 ```
 
-Then open http://localhost:5510.
+Without `DATABASE_URL`, data is stored in `data/db.json`.
 
-## Login
+## Brochure
 
-The login page has no backend yet. Set `AUTH_ENDPOINT` in `login.html` to your authentication API to enable sign-in.
+`brochure/brochure.html` is the source of the company profile. Rebuild the PDF (needs Edge or Chrome installed):
 
-## Deploy
+```bash
+npm run brochure       # -> assets/Motamax-Company-Profile.pdf
+```
 
-Works as-is on GitHub Pages (Settings → Pages → deploy from `main`, root).
+## Deploy (Render)
+
+`render.yaml` defines a Node web service + Postgres database. In Render: **New → Blueprint**, select this repo, and enter `ADMIN_EMAIL` / `ADMIN_PASSWORD` for the first admin account. `SESSION_SECRET` is generated automatically.

@@ -1,0 +1,31 @@
+# Render Blueprint — website + enquiry portal (Node) with a Postgres database.
+# Render dashboard → New → Blueprint → pick this repo. You will be asked for ADMIN_EMAIL and ADMIN_PASSWORD.
+services:
+  - type: web
+    name: motamax-app
+    runtime: node
+    plan: starter            # "free" also works but sleeps after 15 min idle (slow first load)
+    region: singapore
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: motamax-db
+          property: connectionString
+      - key: ADMIN_NAME
+        value: Administrator
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: motamax-db
+    plan: basic-256mb        # Render's free Postgres expires after 30 days
+    region: singapore

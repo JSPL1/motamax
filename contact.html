@@ -13,9 +13,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=12222f7x">
-  <link rel="stylesheet" href="css/motion.css?v=12222f7x">
-  <link rel="stylesheet" href="css/pages.css?v=12222f7x">
+  <link rel="stylesheet" href="css/style.css?v=027412">
+  <link rel="stylesheet" href="css/motion.css?v=027412">
+  <link rel="stylesheet" href="css/pages.css?v=027412">
+  <link rel="stylesheet" href="css/enquiry.css?v=027412">
   <script>try{var t=localStorage.getItem('mmx-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 </head>
 <body data-page="contact">
@@ -118,52 +119,41 @@
       <h1 class="page-title">Let’s build <span class="grad-text">something reliable.</span></h1>
       <p class="lead">Call, WhatsApp, email or send an enquiry — we respond within one business day.</p>
     </div>
-    <div class="page-orb" aria-hidden="true">
-      <span class="orb-ring r1"></span><span class="orb-ring r2"></span><span class="orb-ring r3"></span>
-      <span class="orb-core card-icon bg-teal"><svg><use href="#i-phone"/></svg></span>
-      <i style="--a:0deg;--c:var(--c1)"></i><i style="--a:72deg;--c:var(--c2)"></i><i style="--a:144deg;--c:var(--c3)"></i><i style="--a:216deg;--c:var(--c5)"></i><i style="--a:288deg;--c:var(--c4)"></i>
+    <div class="hero-illus" aria-hidden="true"><div class="illus" data-illus="contact"></div></div>
+  </div>
+</section>
+<!-- ============ ENQUIRY OPTIONS ============ -->
+<section id="enquire" class="enquire-section">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">How can we help?</span>
+      <h2 class="title">Choose an <span class="grad-text">enquiry type.</span></h2>
+      <p class="lead">Pick the option that fits — the form adapts, and your enquiry goes straight to our tele‑calling team, who will reach you within one business day.</p>
+    </div>
+    <div class="enq-options" id="enqOptions" role="tablist" aria-label="Enquiry type"></div>
+    <div class="enq-layout">
+      <div class="enq-form-wrap glass reveal" id="enquiryInline"></div>
+      <aside class="enq-side">
+        <div class="ci glass reveal"><span class="card-icon bg-sky"><svg><use href="#i-phone"/></svg></span><div><small>Call us</small><a href="tel:+919938041356">+91 99380 41356</a></div></div>
+        <div class="ci glass reveal"><span class="card-icon bg-green"><svg><use href="#i-whatsapp"/></svg></span><div><small>WhatsApp</small><a href="https://wa.me/919938041356?text=Hello%20Motamax%2C%20I%20have%20an%20enquiry." target="_blank" rel="noopener">Chat with us</a></div></div>
+        <div class="ci glass reveal"><span class="card-icon bg-red"><svg><use href="#i-mail"/></svg></span><div><small>Email</small><a href="mailto:info@motamaxindia.com">info@motamaxindia.com</a></div></div>
+        <div class="ci glass reveal"><span class="card-icon bg-orange"><svg><use href="#i-file"/></svg></span><div><small>Company profile</small><a href="assets/Motamax-Company-Profile.pdf" download>Download brochure (PDF)</a></div></div>
+      </aside>
     </div>
   </div>
 </section>
-<!-- ============ CONTACT ============ -->
-<section id="contact">
-  <div class="container">
-    
-    <div class="contact-grid">
-      <div class="contact-info">
-        <div class="ci glass reveal"><span class="card-icon bg-navy"><svg><use href="#i-pin"/></svg></span><div><small>Office</small><b>Plot No‑199(P)202/611, Gajapati Nagar, Bhubaneswar, Odisha – 751005</b></div></div>
-        <div class="ci glass reveal"><span class="card-icon bg-purple"><svg><use href="#i-pin"/></svg></span><div><small>Registered address</small><b>Plot No. 5, Bishal Residency, 4th Floor, Sriram Nagar, Bhubaneswar – 751002</b></div></div>
-        <div class="ci glass reveal"><span class="card-icon bg-sky"><svg><use href="#i-phone"/></svg></span><div><small>Phone</small><a href="tel:+919938041356">+91 99380 41356</a></div></div>
-        <div class="ci glass reveal"><span class="card-icon bg-green"><svg><use href="#i-whatsapp"/></svg></span><div><small>WhatsApp</small><a href="https://wa.me/919938041356" target="_blank" rel="noopener">Chat with us</a></div></div>
-        <div class="ci glass reveal"><span class="card-icon bg-red"><svg><use href="#i-mail"/></svg></span><div><small>Email</small><a href="mailto:info@motamaxindia.com">info@motamaxindia.com</a></div></div>
-        <div class="ci glass reveal"><span class="card-icon bg-orange"><svg><use href="#i-globe"/></svg></span><div><small>Web</small><a href="https://www.motamaxindia.com" target="_blank" rel="noopener">www.motamaxindia.com</a></div></div>
-      </div>
 
-      <form class="form glass reveal" id="contactForm" novalidate>
-        <h3>Discuss your project</h3>
-        <p>Share a few details and we'll respond within one business day.</p>
-        <div class="field-row">
-          <div class="field"><label for="cf-name">Full name</label><input id="cf-name" name="name" required autocomplete="name"></div>
-          <div class="field"><label for="cf-org">Organisation</label><input id="cf-org" name="org" autocomplete="organization"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label for="cf-email">Email</label><input id="cf-email" name="email" type="email" required autocomplete="email"></div>
-          <div class="field"><label for="cf-phone">Phone</label><input id="cf-phone" name="phone" type="tel" autocomplete="tel"></div>
-        </div>
-        <div class="field"><label for="cf-domain">Area of interest</label>
-          <select id="cf-domain" name="domain">
-            <option>Solution Architecture (IT, CCTV, Telecom, AV, Data Centre)</option>
-            <option>Automation (Switch, Weighbridge, BPA, AI &amp; Analytics)</option>
-            <option>Infrastructure Development (Network, OFC, HT/LT, Solar)</option>
-            <option>Construction site package (IT, CCTV, Security)</option>
-            <option>Annual maintenance / support</option>
-            <option>Other</option>
-          </select>
-        </div>
-        <div class="field"><label for="cf-msg">Project details</label><textarea id="cf-msg" name="message" required placeholder="Site location, scope, timeline…"></textarea></div>
-        <button class="btn btn-primary" type="submit" style="width:100%">Send enquiry <span aria-hidden="true">→</span></button>
-        <p class="form-note">Submitting opens your email app with the details pre‑filled, addressed to info@motamaxindia.com.</p>
-      </form>
+<!-- ============ CONTACT ============ -->
+<section id="contact" style="padding-top:0">
+  <div class="container">
+    <div class="section-head reveal" style="margin-bottom:24px">
+      <span class="eyebrow">Visit us</span>
+      <h2 class="title" style="font-size:clamp(26px,3.2vw,38px)">Our offices in <span class="grad-text">Bhubaneswar</span></h2>
+    </div>
+    <div class="office-grid">
+      <div class="ci glass reveal"><span class="card-icon bg-navy"><svg><use href="#i-pin"/></svg></span><div><small>Office</small><b>Plot No‑199(P)202/611, Gajapati Nagar, Bhubaneswar, Odisha – 751005</b></div></div>
+      <div class="ci glass reveal"><span class="card-icon bg-purple"><svg><use href="#i-pin"/></svg></span><div><small>Registered address</small><b>Plot No. 5, Bishal Residency, 4th Floor, Sriram Nagar, Bhubaneswar – 751002</b></div></div>
+      <div class="ci glass reveal"><span class="card-icon bg-orange"><svg><use href="#i-globe"/></svg></span><div><small>Web</small><a href="https://www.motamaxindia.com" target="_blank" rel="noopener">www.motamaxindia.com</a></div></div>
     </div>
   </div>
 </section>
@@ -202,6 +192,8 @@
 
 <div class="toast glass glass-strong" id="toast" role="status"></div>
 
-<script src="js/main.js?v=12222f7x"></script>
+<script src="js/main.js?v=027412"></script>
+<script src="js/illustrations.js?v=027412"></script>
+<script src="js/enquiry.js?v=027412"></script>
 </body>
 </html>

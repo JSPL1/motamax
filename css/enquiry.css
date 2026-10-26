@@ -1,0 +1,126 @@
+/* =========================================================
+   Enquiry options, form, modal, floating buttons
+   ========================================================= */
+.enquire-section { padding-top: 40px; }
+.enq-options { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 18px; }
+.enq-option {
+  position: relative; text-align: left; cursor: pointer; padding: 18px 16px 16px; border-radius: 22px;
+  display: flex; flex-direction: column; gap: 6px; color: var(--text); font: inherit;
+  transition: transform .25s ease, box-shadow .25s ease; animation: fadeUp .5s ease both; animation-delay: var(--d, 0s);
+}
+.enq-option .card-icon { width: 44px; height: 44px; border-radius: 13px; margin-bottom: 6px; }
+.enq-option .card-icon svg { width: 22px; height: 22px; }
+.enq-option b { font-size: 15px; line-height: 1.25; }
+.enq-option small { color: var(--text-3); font-size: 12.5px; line-height: 1.35; }
+.enq-option .pick { position: absolute; top: 14px; right: 14px; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--glass-edge); background: var(--glass-strong); transition: all .25s ease; }
+.enq-option:hover { transform: translateY(-4px); }
+.enq-option.on { box-shadow: 0 0 0 2px var(--c1), var(--shadow-lg); }
+.enq-option.on .pick { border-color: var(--c1); background: var(--c1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M6 10.5l2.6 2.6L14.2 7.5' stroke='white' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") center/100% no-repeat; }
+
+.enq-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; align-items: start; }
+.enq-side { display: grid; gap: 12px; }
+.enq-form-wrap { padding: clamp(22px, 3vw, 34px); min-height: 420px; }
+.office-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+.enq-form-head { display: flex; gap: 14px; align-items: center; margin-bottom: 18px; }
+.enq-form-head h3 { font-size: 22px; font-weight: 800; margin: 0; }
+.enq-form-head p { margin: 2px 0 0; color: var(--text-3); font-size: 14px; }
+.enq-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.enq-fields .field.full { grid-column: 1 / -1; }
+.enq-form .field i { color: var(--red); font-style: normal; }
+.enq-form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.enq-error { margin: 4px 0 12px; padding: 10px 14px; border-radius: 12px; background: rgba(227,52,47,.12); color: var(--red); font-weight: 600; font-size: 14px; }
+.enq-submit { width: 100%; position: relative; }
+.enq-submit .spinner { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; animation: spin .8s linear infinite; display: none; }
+.enq-submit.loading .spinner { display: inline-block; }
+.enq-submit[disabled] { opacity: .75; cursor: progress; }
+.enq-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 16px; }
+.enq-chips button { border: 1px solid var(--glass-border); background: var(--glass-strong); color: var(--text-2); border-radius: 999px; padding: 7px 12px; font: 600 13px Inter, system-ui, sans-serif; cursor: pointer; }
+.enq-chips button.on { color: #fff; background: linear-gradient(135deg, #3436A8, var(--c1)); border-color: transparent; }
+
+.enq-success { text-align: center; padding: 30px 10px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.enq-success h3 { font-size: 26px; font-weight: 800; margin: 0; }
+.enq-success p { color: var(--text-2); max-width: 420px; margin: 0 0 6px; }
+.enq-success .tick svg { width: 84px; height: 84px; }
+.enq-success .tick circle { fill: none; stroke: var(--c4); stroke-width: 3; stroke-dasharray: 160; stroke-dashoffset: 160; animation: drawTick .6s ease forwards; }
+.enq-success .tick path { fill: none; stroke: var(--c4); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: drawTick .4s ease .5s forwards; }
+@keyframes drawTick { to { stroke-dashoffset: 0; } }
+
+/* floating buttons */
+.fab-wrap { position: fixed; right: 18px; bottom: 18px; z-index: 120; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.fab { display: inline-flex; align-items: center; gap: 10px; border: 0; cursor: pointer; color: #fff; border-radius: 999px; box-shadow: 0 14px 30px -10px rgba(11,16,48,.55); font: 700 15px Inter, system-ui, sans-serif; }
+.fab svg { width: 22px; height: 22px; }
+.fab-wa { width: 52px; height: 52px; justify-content: center; background: #25D366; }
+.fab-main { height: 54px; padding: 0 22px 0 18px; background: linear-gradient(135deg, #3436A8, var(--c1), var(--c2)); background-size: 200% 200%; animation: btnGrad 6s ease infinite; }
+.fab-main::before { content: ""; position: absolute; inset: -4px; border-radius: inherit; border: 2px solid var(--c1); opacity: 0; animation: fabPing 2.8s ease-out infinite; }
+.fab-main { position: relative; }
+@keyframes fabPing { 0% { opacity: .7; transform: scale(1); } 100% { opacity: 0; transform: scale(1.25); } }
+.fab:hover { transform: translateY(-2px); }
+.fab-wrap.on-contact .fab-main { display: none; }
+
+.enq-modal { position: fixed; inset: 0; z-index: 210; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(5,8,25,.55); }
+.enq-modal.open { display: flex; animation: pop .25s ease; }
+.enq-dialog { position: relative; width: min(640px, 100%); max-height: calc(100vh - 32px); overflow: auto; padding: clamp(20px, 3vw, 32px); border-radius: 28px; background: var(--glass-strong); }
+.enq-close { position: absolute; top: 14px; right: 14px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text); font-size: 22px; cursor: pointer; }
+
+/* =========================================================
+   Illustrations
+   ========================================================= */
+.illus-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.il-ground { stroke: #9AA6C8; stroke-width: 3; stroke-linecap: round; }
+.il-grid { stroke: #9AA6C8; stroke-width: 1.5; stroke-dasharray: 4 8; opacity: .5; }
+.il-stroke { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.il-flow { fill: none; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 8 10; animation: ilFlow 2.4s linear infinite; }
+@keyframes ilFlow { to { stroke-dashoffset: -36; } }
+.il-wave { fill: none; stroke-width: 3; stroke-linecap: round; opacity: 0; animation: ilWave 2.2s ease-out infinite; }
+@keyframes ilWave { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
+.il-cam { transform-origin: 152px 167px; animation: ilPan 5s ease-in-out infinite; }
+@keyframes ilPan { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(14deg); } }
+.il-sun { transform-origin: 330px 70px; animation: spin 18s linear infinite; }
+.il-spin-slow { animation: spin 40s linear infinite; }
+.il-smoke { animation: ilSmoke 3s ease-out infinite; }
+@keyframes ilSmoke { 0% { transform: translateY(0) scale(.6); opacity: .7; } 100% { transform: translateY(-50px) scale(1.6); opacity: 0; } }
+.il-smoke { transform-box: fill-box; transform-origin: center; }
+.il-hook { animation: ilHook 5s ease-in-out infinite; }
+@keyframes ilHook { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-46px); } }
+.il-truck { animation: ilTruck 7s ease-in-out infinite; }
+@keyframes ilTruck { 0%, 100% { transform: translateX(-20px); } 50% { transform: translateX(16px); } }
+.il-bar { transform-box: fill-box; transform-origin: bottom; animation: ilBar 1s cubic-bezier(.3,1.4,.5,1) both; }
+@keyframes ilBar { from { transform: scaleY(0); } }
+.il-draw { stroke-dasharray: 400; stroke-dashoffset: 400; animation: drawTick 1.6s ease .6s forwards; }
+.il-pop { transform-box: fill-box; transform-origin: center; animation: ilPop .6s cubic-bezier(.3,1.6,.5,1) both; }
+@keyframes ilPop { from { transform: scale(0); opacity: 0; } }
+.il-float { animation: floaty 6s ease-in-out infinite; }
+.il-ring { transform-box: fill-box; transform-origin: center; animation: ping 2.6s ease-out infinite; }
+.il-dash { animation: ilFlow 1.6s linear infinite reverse; }
+
+.hero-illus { width: 300px; max-width: 100%; justify-self: end; }
+.illus-card { padding: 18px; }
+
+/* home: integrated site */
+.site-section { padding-top: 30px; }
+.site-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 4vw, 56px); align-items: center; }
+.site-art { padding: clamp(18px, 3vw, 32px); }
+.quick-enq { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
+.qe { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; cursor: pointer; font: 700 15px Inter, system-ui, sans-serif; color: var(--text); text-align: left; transition: transform .2s ease; }
+.qe .card-icon { width: 38px; height: 38px; border-radius: 11px; flex: none; }
+.qe .card-icon svg { width: 19px; height: 19px; }
+.qe:hover { transform: translateY(-3px); }
+
+@media (max-width: 1080px) {
+  .enq-options { grid-template-columns: repeat(3, 1fr); }
+  .enq-layout, .site-grid { grid-template-columns: 1fr; }
+  .hero-illus { width: 220px; }
+}
+@media (max-width: 720px) {
+  .enq-options { grid-template-columns: 1fr 1fr; }
+  .enq-fields, .office-grid, .quick-enq { grid-template-columns: 1fr; }
+  .hero-illus { display: none; }
+  .fab-main span { display: none; }
+  .fab-main { width: 54px; padding: 0; justify-content: center; }
+  .enq-dialog { border-radius: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .il-bar, .il-pop { animation: none; }
+  .il-draw { stroke-dashoffset: 0; }
+}

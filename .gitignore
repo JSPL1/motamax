@@ -5,3 +5,7 @@ support.js
 uploads/
 assets/profile/
 .claude/
+
+node_modules/
+data/
+.env
