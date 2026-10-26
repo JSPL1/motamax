@@ -4,7 +4,7 @@ services:
   - type: web
     name: motamax-app
     runtime: node
-    plan: starter            # "free" also works but sleeps after 15 min idle (slow first load)
+    plan: free               # free tier sleeps after 15 min idle; use "starter" for always-on
     region: singapore
     buildCommand: npm ci --omit=dev
     startCommand: npm start
@@ -27,5 +27,5 @@ services:
 
 databases:
   - name: motamax-db
-    plan: basic-256mb        # Render's free Postgres expires after 30 days
+    plan: free               # free Postgres expires after 30 days; use "basic-256mb" to keep data
     region: singapore
