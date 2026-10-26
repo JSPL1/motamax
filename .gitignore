@@ -9,3 +9,7 @@ assets/profile/
 node_modules/
 data/
 .env
+
+data-py/
+__pycache__/
+*.pyc

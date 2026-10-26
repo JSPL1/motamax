@@ -1,0 +1,3 @@
+Flask>=3.0,<4
+# Optional: only needed if MYSQL_DATABASE is set (cPanel MySQL)
+PyMySQL>=1.1,<2

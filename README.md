@@ -45,6 +45,15 @@ Without a database setting, data is stored in `data/db.json` (set `DATA_DIR` to 
 npm run brochure       # -> assets/Motamax-Company-Profile.pdf
 ```
 
+## Deploy on cPanel (GoDaddy) — Python
+
+The same site and portal also run as a Python/Flask app (`pyserver/`, `passenger_wsgi.py`) for hosts that offer **Setup Python App** but not Node.js:
+
+1. cPanel → **Setup Python App** → Python 3.11, application root e.g. `motamax_app`, URL = the domain root, startup file `passenger_wsgi.py`, entry point `application`.
+2. Upload and extract the repository into the application root, then **Run Pip Install** (`requirements.txt`).
+3. Environment variables: `ADMIN_NAME`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` (first admin, created if missing). Data, uploads and the session secret are kept in `data/` inside the application root.
+4. Restart the app. Let's Encrypt renewals keep working: `/.well-known/acme-challenge/` is served from `~/public_html`.
+
 ## Deploy (Render)
 
 `render.yaml` defines the Node web service. In Render set `ADMIN_NAME`, `ADMIN_USERNAME` (or `ADMIN_EMAIL`) and `ADMIN_PASSWORD`: that admin is created at start-up if missing (never overwritten). `SESSION_SECRET` is generated automatically.
