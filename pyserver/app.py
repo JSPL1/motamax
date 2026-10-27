@@ -1070,8 +1070,13 @@ def get_activity():
     for u in sorted(store.all('users'), key=lambda x: x.get('lastSeenAt') or x.get('lastLoginAt') or '', reverse=True):
         users.append({**public_user(u), 'lastLogin': u.get('lastLogin'), 'lastSeenAt': u.get('lastSeenAt'),
                       'loginCount': u.get('loginCount', 0), 'online': (u.get('lastSeenAt') or '') >= seen_cut})
-    logins = (store.get('settings', 'loginlog') or {}).get('events') or []
-    visits = (store.get('settings', 'visitlog') or {}).get('visits') or []
+    # entries recorded before location lookup existed get it now (local database, fast)
+    with_geo = lambda xs: [x if 'geo' in x else {**x, 'geo': geoip.locate(x.get('ip') or '')} for x in xs]  # noqa: E731
+    logins = with_geo((store.get('settings', 'loginlog') or {}).get('events') or [])
+    visits = with_geo((store.get('settings', 'visitlog') or {}).get('visits') or [])
+    for u in users:
+        if u.get('lastLogin') and 'geo' not in u['lastLogin']:
+            u['lastLogin'] = {**u['lastLogin'], 'geo': geoip.locate(u['lastLogin'].get('ip') or '')}
     # name each visitor where we know who it is: an enquiry sent from that browser
     known = {}
     for e in sorted(store.all('enquiries'), key=lambda x: x.get('createdAt') or ''):

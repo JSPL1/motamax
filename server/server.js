@@ -621,8 +621,11 @@ app.get('/api/activity', requireUser, requireAdmin, wrap(async (req, res) => {
   const users = (await store.all('users'))
     .sort((a, b) => String(b.lastSeenAt || b.lastLoginAt || '').localeCompare(String(a.lastSeenAt || a.lastLoginAt || '')))
     .map((u) => ({ ...publicUser(u), lastLogin: u.lastLogin || null, lastSeenAt: u.lastSeenAt || null, loginCount: u.loginCount || 0, online: (u.lastSeenAt || '') >= seenCut.replace(/\.\d{3}Z$/, 'Z') }));
-  const logins = ((await store.get('settings', 'loginlog')) || {}).events || [];
-  const visits = ((await store.get('settings', 'visitlog')) || {}).visits || [];
+  // entries recorded before location lookup existed get it now (local database, fast)
+  const withGeo = (xs) => xs.map((x) => ('geo' in x ? x : { ...x, geo: geoip.locate(x.ip || '') }));
+  const logins = withGeo(((await store.get('settings', 'loginlog')) || {}).events || []);
+  const visits = withGeo(((await store.get('settings', 'visitlog')) || {}).visits || []);
+  for (const u of users) if (u.lastLogin && !('geo' in u.lastLogin)) u.lastLogin = { ...u.lastLogin, geo: geoip.locate(u.lastLogin.ip || '') };
   // name each visitor where we know who it is: an enquiry sent from that browser
   const known = {};
   for (const e of (await store.all('enquiries')).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)))) {
