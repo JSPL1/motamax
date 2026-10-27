@@ -542,7 +542,7 @@
     'spin-in': 'Spin-in', bounce: 'Bounce drop', 'flip-y': '3D flip', heartbeat: 'Heartbeat', glow: '5-colour glow',
     swing: 'Pendulum swing', 'blur-in': 'Blur to focus', float: 'Floating', shimmer: 'Shimmer sweep', elastic: 'Elastic pop',
   };
-  const POS_INFO = { cta: 'Seal on the “Give us a chance” banner', footer: 'Footer', contact: 'Contact page (side panel)', 'float-left': 'Floating — bottom left', 'float-right': 'Floating — right side', hidden: 'Hidden' };
+  const POS_INFO = { footer: 'Footer', contact: 'Contact page (side panel)', 'float-left': 'Floating — bottom left', 'float-right': 'Floating — right side', hidden: 'Hidden' };
 
   async function viewSite() {
     setTitle('Site settings');

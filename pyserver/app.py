@@ -876,12 +876,13 @@ def restore_media():
 LOADER_STYLES = ['orbit', 'pulse', 'curtain', 'progress', 'ripple', 'flip', 'typewriter', 'tiles', 'particles', 'spotlight', 'zoom-nav']
 LOGO_ANIMS = ['spin-in', 'bounce', 'flip-y', 'heartbeat', 'glow', 'swing', 'blur-in', 'float', 'shimmer', 'elastic']
 FREQUENCIES = ['always', 'session', 'off']
-BADGE_POSITIONS = ['cta', 'footer', 'contact', 'float-left', 'float-right', 'hidden']
-LEGACY_POSITIONS = {'hero': 'cta', 'banner': 'cta'}
+BADGE_POSITIONS = ['footer', 'contact', 'float-left', 'float-right', 'hidden']
+# retired spots (home hero, page banners, the CTA band) now mean hidden
+LEGACY_POSITIONS = {'hero': 'hidden', 'banner': 'hidden', 'cta': 'hidden'}
 DEFAULT_SITE = {
     'loader': {'style': 'zoom-nav', 'logoAnim': 'elastic', 'frequency': 'session', 'minMs': 1400},
     'badges': [
-        {'id': 'badge-1', 'label': 'Services emblem (gold)', 'position': 'cta', 'source': 'badge', 'enabled': True},
+        {'id': 'badge-1', 'label': 'Services emblem (gold)', 'position': 'hidden', 'source': 'badge', 'enabled': True},
         {'id': 'badge-2', 'label': 'Solution Architect badge', 'position': 'footer', 'source': 'badge', 'enabled': True},
     ],
     'showVisitors': True,

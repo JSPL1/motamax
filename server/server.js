@@ -486,12 +486,13 @@ app.delete('/api/users/:id', requireUser, requireAdmin, wrap(async (req, res) =>
 const LOADER_STYLES = ['orbit', 'pulse', 'curtain', 'progress', 'ripple', 'flip', 'typewriter', 'tiles', 'particles', 'spotlight', 'zoom-nav'];
 const LOGO_ANIMS = ['spin-in', 'bounce', 'flip-y', 'heartbeat', 'glow', 'swing', 'blur-in', 'float', 'shimmer', 'elastic'];
 const FREQUENCIES = ['always', 'session', 'off'];
-const BADGE_POSITIONS = ['cta', 'footer', 'contact', 'float-left', 'float-right', 'hidden'];
-const LEGACY_POSITIONS = { hero: 'cta', banner: 'cta' };
+const BADGE_POSITIONS = ['footer', 'contact', 'float-left', 'float-right', 'hidden'];
+// retired spots (home hero, page banners, the CTA band) now mean hidden
+const LEGACY_POSITIONS = { hero: 'hidden', banner: 'hidden', cta: 'hidden' };
 const DEFAULT_SITE = {
   loader: { style: 'zoom-nav', logoAnim: 'elastic', frequency: 'session', minMs: 1400 },
   badges: [
-    { id: 'badge-1', label: 'Services emblem (gold)', position: 'cta', source: 'badge', enabled: true },
+    { id: 'badge-1', label: 'Services emblem (gold)', position: 'hidden', source: 'badge', enabled: true },
     { id: 'badge-2', label: 'Solution Architect badge', position: 'footer', source: 'badge', enabled: true },
   ],
   showVisitors: true,
