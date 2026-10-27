@@ -124,3 +124,15 @@
   .il-bar, .il-pop { animation: none; }
   .il-draw { stroke-dashoffset: 0; }
 }
+
+/* clients hero: larger emblem + orbiting client logos */
+.page-hero-inner:has(.hero-illus-lg) { grid-template-columns: 1fr minmax(300px, 430px); }
+.hero-illus-lg { width: 100%; max-width: 430px; justify-self: center; align-self: center; }
+.il-glow { animation: ilGlow 4s ease-in-out infinite; transform-origin: 200px 200px; }
+@keyframes ilGlow { 50% { opacity: .55; transform: scale(1.04); } }
+@media (max-width: 1080px) { .page-hero-inner:has(.hero-illus-lg) { grid-template-columns: 1fr 300px; } }
+@media (max-width: 720px) {
+  .page-hero-inner:has(.hero-illus-lg) { grid-template-columns: 1fr; }
+  .hero-illus.hero-illus-lg { display: block; width: min(320px, 86vw); justify-self: center; margin-top: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .il-glow { animation: none; } }

@@ -72,14 +72,28 @@
 
     /* client network */
     clients: () => {
-      const nodes = Array.from({ length: 8 }, (_, k) => { const a = k * Math.PI / 4 - Math.PI / 2; return [200 + 120 * Math.cos(a), 150 + 100 * Math.sin(a)]; });
+      // gold Motamax emblem in the middle, client logos orbiting it (logos stay upright while the ring turns)
+      const LOGOS = ['reliance', 'indianoil', 'airtel', 'tata-power', 'lic', 'drdo', 'jsw', 'ultratech'];
       const cols = [C.sky, C.violet, C.red, C.green, C.amber, C.sky, C.violet, C.red];
-      return wrap(`
-        ${nodes.map(([x, y], k) => `<path d="M200 150 L${x} ${y}" stroke="${cols[k]}" stroke-width="2" opacity=".5"/>${dotOn(`M${x} ${y} L200 150`, cols[k], 2.4, k * 0.3, 3.5)}`).join('')}
-        <path d="M${nodes.map(([x, y]) => `${x} ${y}`).join(' L')} Z" fill="none" stroke="#9AA6C8" stroke-dasharray="3 6" opacity=".6"/>
-        ${nodes.map(([x, y], k) => `<g class="il-pop" style="animation-delay:${k * 0.08}s"><circle cx="${x}" cy="${y}" r="20" fill="#fff" stroke="${cols[k]}" stroke-width="3"/><rect x="${x - 9}" y="${y - 6}" width="18" height="12" rx="3" fill="${cols[k]}"/></g>`).join('')}
-        <circle cx="200" cy="150" r="34" fill="${C.navy}"/><circle cx="200" cy="150" r="34" fill="none" stroke="${C.sky}" stroke-width="3" class="il-ring"/>
-        <path d="M184 158 L191 140 L200 154 L209 140 L216 158" stroke="#fff" stroke-width="3.4" fill="none" stroke-linejoin="round"/>`, 'Motamax connected to its client network');
+      const R = 158, cx = 200, cy = 200, spin = 70;
+      const nodes = LOGOS.map((_, k) => { const a = k * Math.PI / 4 - Math.PI / 2; return [cx + R * Math.cos(a), cy + R * Math.sin(a)]; });
+      return `<svg viewBox="0 0 400 400" role="img" aria-label="Motamax and its client network" class="illus-svg">
+        <defs><clipPath id="emblemClip"><circle cx="${cx}" cy="${cy}" r="104"/></clipPath>
+          <radialGradient id="emblemGlow"><stop offset="55%" stop-color="#FFC857" stop-opacity=".45"/><stop offset="100%" stop-color="#FFC857" stop-opacity="0"/></radialGradient></defs>
+        <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#9AA6C8" stroke-dasharray="3 7" opacity=".45"/>
+        <g><animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="${spin}s" repeatCount="indefinite"/>
+          ${nodes.map(([x, y], k) => `<path d="M${cx + 112 * (x - cx) / R} ${cy + 112 * (y - cy) / R} L${x} ${y}" stroke="${cols[k]}" stroke-width="1.6" opacity=".45"/>
+            ${dotOn(`M${x} ${y} L${cx + 112 * (x - cx) / R} ${cy + 112 * (y - cy) / R}`, cols[k], 2.4, k * 0.3, 3)}`).join('')}
+          ${nodes.map(([x, y], k) => `<g class="il-pop" style="animation-delay:${k * 0.08}s"><g>
+            <animateTransform attributeName="transform" type="rotate" from="0 ${x} ${y}" to="-360 ${x} ${y}" dur="${spin}s" repeatCount="indefinite"/>
+            <circle cx="${x}" cy="${y}" r="24" fill="#fff" stroke="${cols[k]}" stroke-width="2.5"/>
+            <image href="assets/clients/${LOGOS[k]}.png?v=hd1" x="${x - 20}" y="${y - 15}" width="40" height="30" preserveAspectRatio="xMidYMid meet"/></g></g>`).join('')}
+        </g>
+        <circle cx="${cx}" cy="${cy}" r="124" fill="url(#emblemGlow)" class="il-glow"/>
+        <circle cx="${cx}" cy="${cy}" r="113" fill="none" stroke="#FFC857" stroke-width="1.5" stroke-dasharray="2 6" opacity=".7">
+          <animateTransform attributeName="transform" type="rotate" from="360 ${cx} ${cy}" to="0 ${cx} ${cy}" dur="40s" repeatCount="indefinite"/></circle>
+        <image href="assets/badges/badge-1.webp" x="${cx - 104}" y="${cy - 104}" width="208" height="208" clip-path="url(#emblemClip)"/>
+      </svg>`;
     },
 
     /* gallery frames + camera */
