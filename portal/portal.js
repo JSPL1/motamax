@@ -624,7 +624,11 @@
   const PAGE_NAME = { '/': 'Home', '/index.html': 'Home', '/about.html': 'About', '/services.html': 'Services', '/industries.html': 'Industries',
     '/stories.html': 'Success stories', '/clients.html': 'Clients', '/work.html': 'Our work', '/contact.html': 'Contact', '/login.html': 'Login' };
   const pageName = (p) => PAGE_NAME[p] || p;
-  const device = (d) => `<span class="p-dev" style="--dc:${DEVICE_COLOR[d.device] || '#8E5CF5'}">${icon(DEVICE_ICON[d.device] || 'p-desktop')}<span><b>${esc(d.device || '—')}</b><small>${esc(d.os || '')}</small></span></span>`;
+  const device = (d) => `<span class="p-dev" style="--dc:${DEVICE_COLOR[d.device] || '#8E5CF5'}">${icon(DEVICE_ICON[d.device] || 'p-desktop')}<span><b>${esc(d.model || d.device || '—')}</b><small>${esc([d.model ? d.device : '', d.os].filter(Boolean).join(' · '))}</small></span></span>`;
+  const flag = (cc) => (/^[A-Z]{2}$/.test(cc || '') ? String.fromCodePoint(...[...cc].map((c) => 127397 + c.charCodeAt(0))) : '🌐');
+  const place = (g) => (g ? [g.city, g.region].filter(Boolean).join(', ') || g.country : '');
+  const loc = (g) => (g ? `<span class="p-loc"><i>${flag(g.cc)}</i><span><b>${esc(place(g))}</b><small>${esc(g.country || '')}</small></span></span>` : '<span class="p-muted">Unknown</span>');
+  const visitor = (v) => `<span class="p-visitor"><b>${esc(v.name || 'Anonymous')}</b><span>${v.userId ? '<span class="p-res team">Team</span>' : v.enquiry ? '<span class="p-res ok">Enquired</span>' : v.new ? '<span class="p-res new">New</span>' : '<span class="p-res ret">Returning</span>'}<small>${v.views > 1 ? v.views + ' views' : '1 view'}</small></span></span>`;
   const when = (iso) => `<span class="p-when"><b>${esc(ago(iso))}</b><small>${esc(fmtDate(iso))}</small></span>`;
   const ip = (v) => v ? `<code class="p-ip">${esc(v)}</code>` : '<span class="p-muted">—</span>';
   let ACT_TIMER = null;
@@ -660,6 +664,7 @@
             ${u.lastLoginAt ? `<dl class="p-facts">
               <dt>Last login</dt><dd>${when(u.lastLoginAt)}</dd>
               <dt>IP address</dt><dd>${ip(L?.ip)}</dd>
+              <dt>Location</dt><dd>${L ? loc(L.geo) : '<span class="p-muted">—</span>'}</dd>
               <dt>Device</dt><dd>${L ? device(L) : '<span class="p-muted">Shown after their next login</span>'}</dd>
               <dt>Browser</dt><dd>${esc(L?.browser || '—')}</dd>
               <dt>Total logins</dt><dd><b>${u.loginCount || (u.lastLoginAt ? '1+' : 0)}</b></dd>
@@ -680,20 +685,21 @@
             <input class="p-act-search" id="lgQ" type="search" placeholder="Search name, IP, browser…">
           </div>
           <div class="p-table-wrap"><table class="p-table p-act-table">
-            <thead><tr><th>When</th><th>User</th><th>Result</th><th>IP address</th><th>Device</th><th>Browser</th></tr></thead>
+            <thead><tr><th>When</th><th>User</th><th>Result</th><th>Location</th><th>IP address</th><th>Device</th><th>Browser</th></tr></thead>
             <tbody id="lgRows"></tbody></table></div>
           <p class="p-muted p-act-foot">The latest ${a.logins.length} login attempts are kept (up to 1,000).</p>
         </div>`;
       const draw = () => {
         const f = $('input[name=lgf]:checked').value; const q = $('#lgQ').value.trim().toLowerCase();
-        const rows = a.logins.filter((l) => (f === 'all' || (f === 'ok') === l.ok) && (!q || [l.name, l.login, l.ip, l.browser, l.os, l.device].join(' ').toLowerCase().includes(q)));
+        const rows = a.logins.filter((l) => (f === 'all' || (f === 'ok') === l.ok) && (!q || [l.name, l.login, l.ip, l.browser, l.os, l.device, place(l.geo), l.geo?.country].join(' ').toLowerCase().includes(q)));
         $('#lgRows').innerHTML = rows.map((l) => `<tr>
           <td data-l="When">${when(l.at)}</td>
           <td data-l="User"><b>${esc(l.name || l.login || '—')}</b>${l.name && l.login && l.login !== l.name.toLowerCase() ? `<small class="p-sub">${esc(l.login)}</small>` : ''}</td>
           <td data-l="Result">${l.ok ? '<span class="p-res ok">✓ Signed in</span>' : `<span class="p-res bad">✕ ${esc(l.reason || 'Failed')}</span>`}</td>
+          <td data-l="Location">${loc(l.geo)}</td>
           <td data-l="IP address">${ip(l.ip)}</td>
           <td data-l="Device">${device(l)}</td>
-          <td data-l="Browser">${esc(l.browser || '—')}</td></tr>`).join('') || '<tr><td colspan="6" class="p-empty">No login attempts match.</td></tr>';
+          <td data-l="Browser">${esc(l.browser || '—')}</td></tr>`).join('') || '<tr><td colspan="7" class="p-empty">No login attempts match.</td></tr>';
       };
       $('#lgF').addEventListener('change', (ev) => { $$('#lgF .p-chip').forEach((c) => c.classList.toggle('on', c.contains(ev.target) && ev.target.checked)); draw(); });
       $('#lgQ').addEventListener('input', draw);
@@ -726,30 +732,65 @@
           ${bars('Operating systems', S.os, pal(S.os))}
           ${bars('Most visited pages', S.pages, () => '#5B6CFF', pageName)}
         </div>
-        ${S.refs.length ? bars('Where visitors came from', S.refs, () => '#14B8A6') : ''}
+        <div class="p-act-three">
+          ${bars('Top locations', S.places || [], () => '#E3342F')}
+          ${bars('Countries', (S.countries || []), () => '#FF9F0A')}
+          ${bars('Where visitors came from', S.refs.length ? S.refs : [['Direct / typed address', S.views30]], () => '#14B8A6')}
+        </div>
+        ${a.geo ? '' : '<p class="p-muted p-act-note">📍 Visitor locations will appear once the location database is installed on the server.</p>'}
         <div class="p-card">
           <div class="p-act-filters">
             <h3 style="margin:0">Recent visits</h3>
             <div class="p-chips" id="vF">${['All', 'Mobile', 'Tablet', 'Desktop'].map((d, i) => `<label class="p-chip ${i ? '' : 'on'}"><input type="radio" name="vf" value="${d}" ${i ? '' : 'checked'}>${d}</label>`).join('')}</div>
-            <input class="p-act-search" id="vQ" type="search" placeholder="Search IP, page, browser…">
+            <input class="p-act-search" id="vQ" type="search" placeholder="Search name, city, IP, page, phone model…">
           </div>
           <div class="p-table-wrap"><table class="p-table p-act-table">
-            <thead><tr><th>When</th><th>Visitor</th><th>Page</th><th>IP address</th><th>Device</th><th>Browser</th><th>Came from</th></tr></thead>
+            <thead><tr><th>When</th><th>Visitor</th><th>Location</th><th>Page</th><th>Device</th><th>Browser</th><th>IP address</th><th></th></tr></thead>
             <tbody id="vRows"></tbody></table></div>
-          <p class="p-muted p-act-foot">Visits from the last 30 days are kept; search engines and bots are not counted.</p>
+          <p class="p-muted p-act-foot">Click a visit for full details and that visitor's page journey. Names appear when a visitor has sent an enquiry or is one of your team.
+            Visits from the last 30 days are kept; search engines and bots are not counted. IP geolocation by <a href="https://db-ip.com" target="_blank" rel="noopener">DB-IP</a>.</p>
         </div>`;
       const draw = () => {
         const f = $('input[name=vf]:checked').value; const q = $('#vQ').value.trim().toLowerCase();
-        const rows = a.visits.filter((v) => (f === 'All' || v.device === f) && (!q || [v.ip, v.page, pageName(v.page), v.browser, v.os, v.ref].join(' ').toLowerCase().includes(q))).slice(0, 200);
-        $('#vRows').innerHTML = rows.map((v) => `<tr>
+        const rows = a.visits.filter((v) => (f === 'All' || v.device === f) && (!q || [v.name, v.ip, v.page, pageName(v.page), v.browser, v.os, v.model, v.ref, place(v.geo), v.geo?.country].join(' ').toLowerCase().includes(q))).slice(0, 200);
+        $('#vRows').innerHTML = rows.map((v) => `<tr class="p-click" data-at="${esc(v.at)}" data-vid="${esc(v.vid || '')}" tabindex="0">
           <td data-l="When">${when(v.at)}</td>
-          <td data-l="Visitor">${v.new ? '<span class="p-res new">New visitor</span>' : '<span class="p-res ret">Returning</span>'}</td>
-          <td data-l="Page"><b>${esc(pageName(v.page))}</b></td>
-          <td data-l="IP address">${ip(v.ip)}</td>
+          <td data-l="Visitor">${visitor(v)}</td>
+          <td data-l="Location">${loc(v.geo)}</td>
+          <td data-l="Page"><b>${esc(pageName(v.page))}</b><small class="p-sub">${v.ref ? 'via ' + esc(v.ref) : 'Direct'}</small></td>
           <td data-l="Device">${device(v)}</td>
           <td data-l="Browser">${esc(v.browser || '—')}</td>
-          <td data-l="Came from">${v.ref ? esc(v.ref) : '<span class="p-muted">Direct</span>'}</td></tr>`).join('') || '<tr><td colspan="7" class="p-empty">No visits match.</td></tr>';
+          <td data-l="IP address">${ip(v.ip)}</td>
+          <td class="p-chev" aria-hidden="true">›</td></tr>`).join('') || '<tr><td colspan="8" class="p-empty">No visits match.</td></tr>';
       };
+      // full details + every page this visitor opened
+      const details = (v) => {
+        const trail = a.visits.filter((x) => v.vid && x.vid === v.vid).slice(0, 40);
+        const row = (k, val) => (val ? `<dt>${k}</dt><dd>${val}</dd>` : '');
+        openModal(`<h2 style="margin:0 0 4px">${esc(v.name || 'Anonymous visitor')}</h2>
+          <p class="p-muted" style="margin:0 0 16px">${v.userId ? 'Team member (signed in)' : v.enquiry ? `Sent enquiry <a href="#/enquiry/${esc(v.enquiry.enquiryId)}">${esc(v.enquiry.ref || '')}</a>${v.enquiry.org ? ' · ' + esc(v.enquiry.org) : ''}` : 'Not identified — has not sent an enquiry yet'}</p>
+          <dl class="p-facts p-vfacts">
+            ${row('Location', v.geo ? `${flag(v.geo.cc)} ${esc([v.geo.city, v.geo.region, v.geo.country].filter(Boolean).join(', '))}` : 'Unknown')}
+            ${row('IP address', ip(v.ip))}
+            ${row('Device', esc([v.device, v.model].filter(Boolean).join(' · ')))}
+            ${row('Operating system', esc(v.os || ''))}
+            ${row('Browser', esc(v.browser || ''))}
+            ${row('Screen', esc(v.scr ? v.scr.replace('x', ' × ') + ' px' : ''))}
+            ${row('Language', esc(v.lang || ''))}
+            ${row('Time zone', esc(v.tz || ''))}
+            ${row('Came from', v.ref ? esc(v.ref) : 'Direct / typed the address')}
+            ${row('Pages viewed', `<b>${v.views || trail.length}</b> in the last 30 days`)}
+          </dl>
+          ${trail.length ? `<h3 style="margin:18px 0 8px">Page journey</h3><ol class="p-trail">${trail.map((x) => `<li><b>${esc(pageName(x.page))}</b><span>${esc(fmtDate(x.at))}</span></li>`).join('')}</ol>` : ''}
+          <div style="display:flex;justify-content:flex-end;margin-top:18px"><button class="p-btn" type="button" id="vClose">Close</button></div>`);
+        $('#vClose').addEventListener('click', closeModal);
+        $$('a[href^="#/"]', modalBody).forEach((x) => x.addEventListener('click', closeModal));
+      };
+      $('#vRows').addEventListener('click', (ev) => {
+        const tr = ev.target.closest('tr[data-at]'); if (!tr) return;
+        const v = a.visits.find((x) => x.at === tr.dataset.at && (x.vid || '') === tr.dataset.vid); if (v) details(v);
+      });
+      $('#vRows').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') ev.target.closest('tr[data-at]')?.click(); });
       $('#vF').addEventListener('change', (ev) => { $$('#vF .p-chip').forEach((c) => c.classList.toggle('on', c.contains(ev.target) && ev.target.checked)); draw(); });
       $('#vQ').addEventListener('input', draw);
       draw();

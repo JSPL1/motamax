@@ -26,6 +26,7 @@ const sec = require('./security');
 const mailer = require('./mailer');
 const media = require('./media');
 const activity = require('./activity');
+const geoip = require('./geoip');
 
 const ROOT = path.join(__dirname, '..');
 const PROD = process.env.NODE_ENV === 'production';
@@ -136,6 +137,7 @@ app.post('/api/enquiries', limiter(8, 10 * 60 * 1000), wrap(async (req, res) => 
     city: clean(b.city, 80), interest: clean(b.interest, 160), preferredTime: clean(b.preferredTime, 80),
     message: cleanMultiline(b.message, 4000), source: clean(b.source, 120),
   };
+  e.visitorId = String(cookies(req).mmx_vid || '').slice(0, 10); // links website visits to this enquiry
   if (!e.name) throw fail(400, 'Please enter your name.');
   if (!e.phone && !e.email) throw fail(400, 'Please enter a phone number or email so we can reach you.');
   if (e.email && !isEmail(e.email)) throw fail(400, 'Please enter a valid email address.');
@@ -608,7 +610,7 @@ app.post('/api/visit', limiter(60, 60 * 1000), wrap(async (req, res) => {
     return d;
   });
   const vid = cookies(req).mmx_vid || sec.newId();
-  await activity.recordVisit(store, req, vid, isNew, req.body || {});
+  await activity.recordVisit(store, req, vid, isNew, req.body || {}, await currentUser(req));
   if (isNew) res.cookie('mmx_vid', vid, { httpOnly: true, sameSite: 'lax', secure: PROD, maxAge: 1000 * 60 * 60 * 24 * 365, path: '/' });
   res.json(await visitorCounts());
 }));
@@ -621,8 +623,19 @@ app.get('/api/activity', requireUser, requireAdmin, wrap(async (req, res) => {
     .map((u) => ({ ...publicUser(u), lastLogin: u.lastLogin || null, lastSeenAt: u.lastSeenAt || null, loginCount: u.loginCount || 0, online: (u.lastSeenAt || '') >= seenCut.replace(/\.\d{3}Z$/, 'Z') }));
   const logins = ((await store.get('settings', 'loginlog')) || {}).events || [];
   const visits = ((await store.get('settings', 'visitlog')) || {}).visits || [];
+  // name each visitor where we know who it is: an enquiry sent from that browser
+  const known = {};
+  for (const e of (await store.all('enquiries')).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)))) {
+    if (e.visitorId) known[e.visitorId] = { name: e.name || '', enquiryId: e.id, ref: e.ref, org: e.org || '' };
+  }
+  const counts = {}; for (const v of visits) counts[v.vid] = (counts[v.vid] || 0) + 1;
+  const recent = visits.slice(-400).reverse().map((v) => {
+    const x = { ...v, views: counts[v.vid] || 1 };
+    if (!x.name && known[v.vid]) Object.assign(x, { name: known[v.vid].name, enquiry: known[v.vid] });
+    return x;
+  });
   res.set('Cache-Control', 'no-store');
-  res.json({ users, logins: logins.slice(-300).reverse(), visits: visits.slice(-400).reverse(), summary: activity.summary(visits) });
+  res.json({ users, logins: logins.slice(-300).reverse(), visits: recent, summary: activity.summary(visits), geo: fs.existsSync(geoip.GEO_FILE) });
 }));
 
 /* ---------------- media (admin) ---------------- */

@@ -4,6 +4,8 @@ import re
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 
+from . import geoip
+
 LOGIN_CAP, VISIT_CAP, VISIT_DAYS = 1000, 5000, 30
 SEEN_EVERY_S = 120  # how often "last active" is written for a signed-in user
 
@@ -64,6 +66,24 @@ def parse_ua(ua, touch=0):
     return {'browser': browser, 'os': os_name, 'device': device}
 
 
+def apply_hints(info, b):
+    """Chrome hides the real OS version and phone model in its user agent; the page sends them as client hints."""
+    model = re.sub(r'[^A-Za-z0-9 ._()+-]', '', str(b.get('model') or ''))[:40].strip()
+    pv = str(b.get('osv') or '')
+    m = re.match(r'(\d+)', pv)
+    if m:
+        major = int(m.group(1))
+        if info['os'].startswith('Android'):
+            info['os'] = f'Android {major}'
+        elif info['os'].startswith('Windows') and pv:
+            info['os'] = 'Windows 11' if major >= 13 else 'Windows 10'
+        elif info['os'] == 'macOS' and major >= 10:
+            info['os'] = f'macOS {major}'
+    if model:
+        info['model'] = model
+    return info
+
+
 def client_ip(request):
     """The visitor's address. X-Forwarded-For is only trusted when the direct peer is a local proxy."""
     peer = request.remote_addr or ''
@@ -100,7 +120,8 @@ def _append(store, doc_id, key, entry, cap, max_days=None):
 
 
 def record_login(store, request, user, login_id, ok, reason=''):
-    info = {'at': _now(), 'ip': client_ip(request), **parse_ua(request.headers.get('User-Agent', ''))}
+    ip = client_ip(request)
+    info = {'at': _now(), 'ip': ip, 'geo': geoip.locate(ip), **parse_ua(request.headers.get('User-Agent', ''))}
     _append(store, 'loginlog', 'events', {**info, 'ok': ok, 'reason': reason, 'login': login_id[:80],
                                           'userId': user['id'] if user else None, 'name': user['name'] if user else ''}, LOGIN_CAP)
     if user and ok:
@@ -118,7 +139,7 @@ def touch_seen(store, user):
         store.update('users', user['id'], lambda d: {**d, 'lastSeenAt': _now()})
 
 
-def record_visit(store, request, vid, is_new, b):
+def record_visit(store, request, vid, is_new, b, user=None):
     page = str(b.get('page') or '/')[:80]
     if not re.fullmatch(r'/[A-Za-z0-9._/-]*', page) or page == '/':
         page = '/index.html'
@@ -131,9 +152,15 @@ def record_visit(store, request, vid, is_new, b):
         touch = int(b.get('touch') or 0)
     except (TypeError, ValueError):
         touch = 0
-    _append(store, 'visitlog', 'visits', {'at': _now(), 'vid': (vid or '')[:10], 'new': bool(is_new), 'ip': client_ip(request),
-                                         **parse_ua(request.headers.get('User-Agent', ''), touch), 'page': page, 'ref': ref_host},
-            VISIT_CAP, VISIT_DAYS)
+    ip = client_ip(request)
+    entry = {'at': _now(), 'vid': (vid or '')[:10], 'new': bool(is_new), 'ip': ip, 'geo': geoip.locate(ip),
+             **apply_hints(parse_ua(request.headers.get('User-Agent', ''), touch), b), 'page': page, 'ref': ref_host,
+             'lang': re.sub(r'[^A-Za-z-]', '', str(b.get('lang') or ''))[:12],
+             'tz': re.sub(r'[^A-Za-z0-9_/+-]', '', str(b.get('tz') or ''))[:40],
+             'scr': re.sub(r'[^0-9x]', '', str(b.get('scr') or ''))[:12]}
+    if user:  # one of our own team browsing the site while signed in
+        entry['userId'], entry['name'] = user['id'], user['name']
+    _append(store, 'visitlog', 'visits', entry, VISIT_CAP, VISIT_DAYS)
 
 
 def summary(visits, tz_offset_min=330):
@@ -162,6 +189,9 @@ def summary(visits, tz_offset_min=330):
         'views30': len(visits), 'people30': len({v.get('vid') or v.get('ip') for v in visits}),
         'viewsToday': len(todays), 'peopleToday': len({v.get('vid') or v.get('ip') for v in todays}),
         'devices': top('device', 3), 'browsers': top('browser', 6), 'os': top('os', 6), 'pages': top('page', 6),
+        'places': [[k, c] for k, c in Counter(', '.join(x for x in ((v.get('geo') or {}).get('city'), (v.get('geo') or {}).get('region')) if x)
+                                                for v in visits if v.get('geo')).most_common(6) if k],
+        'countries': [[k, c] for k, c in Counter((v.get('geo') or {}).get('country') for v in visits if (v.get('geo') or {}).get('country')).most_common(6)],
         'refs': [[k, c] for k, c in Counter(v['ref'] for v in visits if v.get('ref')).most_common(5)],
         'days': [{'day': d, 'views': per_day[d]['views'], 'people': len(per_day[d]['people'])} for d in days],
     }

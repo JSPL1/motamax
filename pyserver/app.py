@@ -24,7 +24,7 @@ from flask import Flask, request, jsonify, send_file, send_from_directory, redir
 from werkzeug.security import safe_join  # noqa: E402
 
 from . import security as sec  # noqa: E402
-from . import activity, mailer, media  # noqa: E402
+from . import activity, geoip, mailer, media  # noqa: E402
 from .store import create_store  # noqa: E402
 
 PROD = os.environ.get('NODE_ENV') == 'production' or os.environ.get('APP_ENV') == 'production'
@@ -336,6 +336,7 @@ def public_enquiry():
     e = {'name': clean(b.get('name'), 120), 'org': clean(b.get('org'), 160), 'email': clean(b.get('email'), 160).lower(),
          'phone': clean(b.get('phone'), 40), 'city': clean(b.get('city'), 80), 'interest': clean(b.get('interest'), 160),
          'preferredTime': clean(b.get('preferredTime'), 80), 'message': clean_multiline(b.get('message')), 'source': clean(b.get('source'), 120)}
+    e['visitorId'] = (request.cookies.get('mmx_vid') or '')[:10]  # links website visits to this enquiry
     if not e['name']:
         raise ApiError(400, 'Please enter your name.')
     if not e['phone'] and not e['email']:
@@ -1052,7 +1053,7 @@ def visit():
             pass
     store.update('settings', 'visitors', bump)
     vid = request.cookies.get('mmx_vid') or sec.new_id()
-    activity.record_visit(store, request, vid, new_visitor, body())
+    activity.record_visit(store, request, vid, new_visitor, body(), current_user())
     resp = make_response(jsonify(visitor_counts()))
     if new_visitor:
         resp.set_cookie('mmx_vid', vid, max_age=60 * 60 * 24 * 365, httponly=True, samesite='Lax',
@@ -1071,7 +1072,22 @@ def get_activity():
                       'loginCount': u.get('loginCount', 0), 'online': (u.get('lastSeenAt') or '') >= seen_cut})
     logins = (store.get('settings', 'loginlog') or {}).get('events') or []
     visits = (store.get('settings', 'visitlog') or {}).get('visits') or []
-    resp = jsonify(users=users, logins=logins[-300:][::-1], visits=visits[-400:][::-1], summary=activity.summary(visits))
+    # name each visitor where we know who it is: an enquiry sent from that browser
+    known = {}
+    for e in sorted(store.all('enquiries'), key=lambda x: x.get('createdAt') or ''):
+        if e.get('visitorId'):
+            known[e['visitorId']] = {'name': e.get('name') or '', 'enquiryId': e['id'], 'ref': e.get('ref'), 'org': e.get('org') or ''}
+    counts = {}
+    for v in visits:
+        counts[v.get('vid')] = counts.get(v.get('vid'), 0) + 1
+    recent = []
+    for v in visits[-400:][::-1]:
+        x = dict(v)
+        x['views'] = counts.get(v.get('vid'), 1)
+        if not x.get('name') and v.get('vid') in known:
+            x.update({'name': known[v['vid']]['name'], 'enquiry': known[v['vid']]})
+        recent.append(x)
+    resp = jsonify(users=users, logins=logins[-300:][::-1], visits=recent, summary=activity.summary(visits), geo=os.path.exists(geoip.GEO_FILE))
     resp.headers['Cache-Control'] = 'no-store'
     return resp
 

@@ -120,10 +120,17 @@
     placeBadges(site.badges);
     applySocial(site.social);
     // count this page view (unique visitors are tracked with a first-party cookie); always on, the counter is only shown when enabled
-    var counted = fetch('/api/visit', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
-      // page + referrer + touch support (lets the server tell an iPad from a Mac)
-      body: JSON.stringify({ page: location.pathname, ref: document.referrer, touch: navigator.maxTouchPoints || 0 }) })
-      .then(function (r) { return r.ok ? r.json() : site.visitors; }, function () { return site.visitors; });
+    var info = { page: location.pathname, ref: document.referrer, touch: navigator.maxTouchPoints || 0, lang: navigator.language || '',
+      scr: screen.width + 'x' + screen.height };
+    try { info.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { /* old browser */ }
+    // Chrome/Edge: real OS version and phone model (the user agent string hides them); give up after 400 ms
+    var hints = navigator.userAgentData && navigator.userAgentData.getHighEntropyValues
+      ? Promise.race([navigator.userAgentData.getHighEntropyValues(['platformVersion', 'model']).then(function (h) { info.osv = h.platformVersion || ''; info.model = h.model || ''; }, function () {}),
+        new Promise(function (r) { setTimeout(r, 400); })])
+      : Promise.resolve();
+    var counted = hints.then(function () {
+      return fetch('/api/visit', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(info) });
+    }).then(function (r) { return r.ok ? r.json() : site.visitors; }, function () { return site.visitors; });
     if (!site.showVisitors) { var s = $('.mmx-visitors'); if (s) s.remove(); return; }
     return counted.then(showVisitors);
   }).catch(function () { /* static hosting without the API: nothing to show */ });

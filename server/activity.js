@@ -1,6 +1,7 @@
 'use strict';
 /* Login and website-visit activity: device/browser detection, client IP, capped logs and a summary (mirrors pyserver/activity.py). */
 const net = require('net');
+const geoip = require('./geoip');
 
 const LOGIN_CAP = 1000; const VISIT_CAP = 5000; const VISIT_DAYS = 30;
 const SEEN_EVERY_MS = 120 * 1000;
@@ -37,6 +38,20 @@ function parseUa(ua = '', touch = 0) {
   return { browser, os, device };
 }
 
+// Chrome hides the real OS version and phone model in its user agent; the page sends them as client hints
+function applyHints(info, b = {}) {
+  const model = String(b.model || '').replace(/[^A-Za-z0-9 ._()+-]/g, '').slice(0, 40).trim();
+  const pv = String(b.osv || ''); const m = pv.match(/^(\d+)/);
+  if (m) {
+    const major = Number(m[1]);
+    if (info.os.startsWith('Android')) info.os = `Android ${major}`;
+    else if (info.os.startsWith('Windows')) info.os = major >= 13 ? 'Windows 11' : 'Windows 10';
+    else if (info.os === 'macOS' && major >= 10) info.os = `macOS ${major}`;
+  }
+  if (model) info.model = model;
+  return info;
+}
+
 // X-Forwarded-For is only trusted when the direct peer is a local proxy
 function clientIp(req) {
   let peer = (req.socket?.remoteAddress || '').replace(/^::ffff:/, '');
@@ -59,7 +74,8 @@ async function append(store, docId, key, entry, cap, maxDays) {
 }
 
 async function recordLogin(store, req, user, login, ok, reason = '') {
-  const info = { at: iso(), ip: clientIp(req), ...parseUa(req.get('user-agent') || '') };
+  const ip = clientIp(req);
+  const info = { at: iso(), ip, geo: geoip.locate(ip), ...parseUa(req.get('user-agent') || '') };
   await append(store, 'loginlog', 'events', { ...info, ok, reason, login: String(login).slice(0, 80), userId: user ? user.id : null, name: user ? user.name : '' }, LOGIN_CAP);
   if (user && ok) await store.update('users', user.id, (d) => ({ ...d, lastLoginAt: info.at, lastSeenAt: info.at, lastLogin: info, loginCount: (d.loginCount || 0) + 1 }));
 }
@@ -69,13 +85,22 @@ async function touchSeen(store, user) {
   if (!last || Date.now() - last >= SEEN_EVERY_MS) await store.update('users', user.id, (d) => ({ ...d, lastSeenAt: iso() }));
 }
 
-async function recordVisit(store, req, vid, isNew, b = {}) {
+async function recordVisit(store, req, vid, isNew, b = {}, user = null) {
   let page = String(b.page || '/').slice(0, 80);
   if (!/^\/[A-Za-z0-9._/-]*$/.test(page) || page === '/') page = '/index.html';
   const m = String(b.ref || '').match(/^https?:\/\/([^/:?#]+)/);
   let ref = m ? m[1].toLowerCase().slice(0, 80) : '';
   if (ref && ref.endsWith(String(req.hostname || '').toLowerCase())) ref = ''; // moving between our own pages
-  await append(store, 'visitlog', 'visits', { at: iso(), vid: String(vid || '').slice(0, 10), new: Boolean(isNew), ip: clientIp(req), ...parseUa(req.get('user-agent') || '', Number(b.touch) || 0), page, ref }, VISIT_CAP, VISIT_DAYS);
+  const ip = clientIp(req);
+  const entry = {
+    at: iso(), vid: String(vid || '').slice(0, 10), new: Boolean(isNew), ip, geo: geoip.locate(ip),
+    ...applyHints(parseUa(req.get('user-agent') || '', Number(b.touch) || 0), b), page, ref,
+    lang: String(b.lang || '').replace(/[^A-Za-z-]/g, '').slice(0, 12),
+    tz: String(b.tz || '').replace(/[^A-Za-z0-9_/+-]/g, '').slice(0, 40),
+    scr: String(b.scr || '').replace(/[^0-9x]/g, '').slice(0, 12),
+  };
+  if (user) { entry.userId = user.id; entry.name = user.name; } // one of our own team browsing the site while signed in
+  await append(store, 'visitlog', 'visits', entry, VISIT_CAP, VISIT_DAYS);
 }
 
 function summary(visits, tzOffsetMin = 330) {
@@ -92,11 +117,14 @@ function summary(visits, tzOffsetMin = 330) {
     for (const v of visits) { const k = String(v[key] || 'Unknown').replace(/ [\d./]+$/, ''); c.set(k, (c.get(k) || 0) + 1); }
     return [...c].sort((a, b) => b[1] - a[1]).slice(0, n);
   };
+  const count = (list) => { const c = new Map(); for (const k of list) c.set(k, (c.get(k) || 0) + 1); return [...c].sort((a, b) => b[1] - a[1]).slice(0, 6); };
   const refs = new Map(); for (const v of visits) if (v.ref) refs.set(v.ref, (refs.get(v.ref) || 0) + 1);
   return {
     views30: visits.length, people30: new Set(visits.map((v) => v.vid || v.ip)).size,
     viewsToday: todays.length, peopleToday: new Set(todays.map((v) => v.vid || v.ip)).size,
     devices: top('device', 3), browsers: top('browser'), os: top('os'), pages: top('page'),
+    places: count(visits.map((v) => [v.geo?.city, v.geo?.region].filter(Boolean).join(', ')).filter(Boolean)),
+    countries: count(visits.map((v) => v.geo?.country).filter(Boolean)),
     refs: [...refs].sort((a, b) => b[1] - a[1]).slice(0, 5),
     days: days.map((d) => ({ day: d, views: perDay[d].views, people: perDay[d].people.size })),
   };
