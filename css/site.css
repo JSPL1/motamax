@@ -48,3 +48,10 @@
   .mmx-badge.pos-float-left, .mmx-badge.pos-float-right { width: 64px; }
 }
 @media (prefers-reduced-motion: reduce) { .mmx-badge { animation: none !important; } }
+
+/* social links (managed in the portal) */
+.socials { flex-wrap: wrap; }
+.socials a { color: var(--text-2); transition: background .25s ease, color .25s ease, transform .25s ease, border-color .25s ease; }
+.socials a:hover, .socials a:focus-visible { background: var(--sc, var(--c1)); border-color: transparent; color: #fff; transform: translateY(-2px); }
+.socials[hidden], .fab[hidden], .enq-side .ci[hidden] { display: none !important; }
+.mmx-follow .socials { margin-top: 8px; }

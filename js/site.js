@@ -1,4 +1,4 @@
-/* Motamax — site-wide settings: brand badges, visitor counter, loader settings cache */
+/* Motamax — site-wide settings: brand badges, social links, visitor counter, loader settings cache */
 (function () {
   'use strict';
   var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -7,7 +7,7 @@
   var isLogin = page === 'login.html';
   var fmt = function (n) { return Number(n || 0).toLocaleString('en-IN'); };
 
-  function cache(site) { try { localStorage.setItem('mmx-site', JSON.stringify({ loader: site.loader, badges: site.badges, showVisitors: site.showVisitors })); } catch (e) { /* storage unavailable */ } }
+  function cache(site) { try { localStorage.setItem('mmx-site', JSON.stringify({ loader: site.loader, badges: site.badges, social: site.social, showVisitors: site.showVisitors })); } catch (e) { /* storage unavailable */ } }
   function cached() { try { return JSON.parse(localStorage.getItem('mmx-site') || 'null'); } catch (e) { return null; } }
 
   /* ---------- brand badges ---------- */
@@ -50,6 +50,51 @@
     });
   }
 
+  /* ---------- social media links ---------- */
+  var attr = function (s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); };
+  function socialLinks(list) {
+    var SO = window.MMX_SOCIAL;
+    return list.map(function (l) {
+      var url = SO.safe(l.url);
+      if (!url) return '';
+      var n = SO.networks[l.network] || SO.networks.website;
+      var ext = /^https?:/i.test(url) ? ' target="_blank" rel="noopener"' : '';
+      return '<a href="' + attr(url) + '"' + ext + ' aria-label="' + attr(l.label || n.name) + '" title="' + attr(l.label || n.name) + '" style="--sc:' + n.color + '">' + SO.icon(l.network) + '</a>';
+    }).join('');
+  }
+  function placeSocial(social) {
+    if (!social || !window.MMX_SOCIAL) return;
+    var on = (social.links || []).filter(function (l) { return l.enabled; });
+    document.querySelectorAll('.footer-inner .socials').forEach(function (box) {
+      var footer = on.filter(function (l) { return l.footer; });
+      box.innerHTML = socialLinks(footer);
+      box.hidden = !footer.length;
+    });
+    var side = $('.enq-side');
+    if (side) {
+      var follow = $('.mmx-follow', side), cl = on.filter(function (l) { return l.contact; });
+      if (!cl.length) { if (follow) follow.remove(); }
+      else {
+        if (!follow) { follow = document.createElement('div'); follow.className = 'ci glass mmx-follow'; side.appendChild(follow); }
+        follow.innerHTML = '<div><small>Follow us</small><div class="socials">' + socialLinks(cl) + '</div></div>';
+      }
+    }
+    // floating WhatsApp button + the contact page WhatsApp card use the chat number
+    var chat = social.chat || {}, num = String(chat.number || '').replace(/\D/g, '');
+    var wa = num ? 'https://wa.me/' + num + (chat.message ? '?text=' + encodeURIComponent(chat.message) : '') : null;
+    var fab = $('.fab-wa');
+    if (fab) { fab.hidden = !(chat.enabled && wa); if (wa) fab.href = wa; }
+    document.querySelectorAll('.enq-side a[href^="https://wa.me/"]').forEach(function (a) {
+      var card = a.closest('.ci');
+      if (wa) a.href = wa;
+      if (card) card.hidden = !wa;
+    });
+  }
+  // the floating buttons are added by enquiry.js; re-apply once they exist
+  var lastSocial = null;
+  function applySocial(s) { lastSocial = s; placeSocial(s); }
+  document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { placeSocial(lastSocial); }, 0); });
+
   /* ---------- visitor counter ---------- */
   function showVisitors(v) {
     if (!v) return;
@@ -68,12 +113,13 @@
   }
 
   var c = cached();
-  if (c) placeBadges(c.badges);
+  if (c) { placeBadges(c.badges); applySocial(c.social); }
 
   fetch('/api/site', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (site) {
     if (!site) return;
     cache(site);
     placeBadges(site.badges);
+    applySocial(site.social);
     if (!site.showVisitors) { var s = $('.mmx-visitors'); if (s) s.remove(); return; }
     // count this page view (unique visitors are tracked with a first-party cookie)
     return fetch('/api/visit', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' })

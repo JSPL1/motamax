@@ -67,7 +67,7 @@
       ['#/dashboard', 'p-dash', 'Dashboard'],
       ['#/pool', 'p-inbox', 'Open pool', counts.pool],
       ['#/mine', 'p-bucket', 'My bucket', counts.mine],
-      ...(isAdmin() ? [['#/all', 'p-list', 'All enquiries'], ['#/users', 'p-users', 'Team'], ['#/media', 'p-image', 'Media'], ...(isSuper() ? [['#/site', 'p-sliders', 'Site settings']] : []), ['#/mail', 'p-mail', 'Mail settings']] : []),
+      ...(isAdmin() ? [['#/all', 'p-list', 'All enquiries'], ['#/users', 'p-users', 'Team'], ['#/media', 'p-image', 'Media'], ...(isSuper() ? [['#/site', 'p-sliders', 'Site settings'], ['#/social', 'p-share', 'Social media']] : []), ['#/mail', 'p-mail', 'Mail settings']] : []),
       ['#/account', 'p-key', 'My account'],
     ];
     $('#nav').innerHTML = items.map(([h, i, t, c]) => `<a href="${h}" data-route="${h}">${icon(i)}<span>${t}</span>${c ? `<b class="p-count">${c}</b>` : ''}</a>`).join('');
@@ -115,6 +115,12 @@
   const view = $('#view');
   const setTitle = (t) => { $('#pageTitle').textContent = t; document.title = t + ' | Motamax Portal'; };
   async function route() {
+    if (SKIP_ROUTE) { SKIP_ROUTE = false; highlightNav(); return; }
+    if (SOCIAL_DIRTY) {
+      // stay on the page with the edits intact
+      if (!confirm('You have unsaved social media changes. Leave without saving?')) { SKIP_ROUTE = true; location.hash = '#/social'; return; }
+      SOCIAL_DIRTY = false;
+    }
     destroyCharts(); highlightNav();
     const [name, arg] = location.hash.replace(/^#\//, '').split('?')[0].split('/');
     view.innerHTML = '<div class="p-spin center"></div>';
@@ -129,6 +135,7 @@
         case 'mail': return isAdmin() ? await viewMail() : (location.hash = '#/dashboard');
         case 'media': return isAdmin() ? await viewMedia() : (location.hash = '#/dashboard');
         case 'site': return isAdmin() ? await viewSite() : (location.hash = '#/dashboard');
+        case 'social': return isSuper() ? await viewSocial() : (location.hash = '#/dashboard');
         case 'account': return viewAccount();
         default: location.hash = '#/dashboard';
       }
@@ -608,6 +615,199 @@
         toast('Site settings saved — visitors see them on their next visit');
       } catch (err) { toast(err.message, 'err'); }
     });
+  }
+
+  /* ---------------- social media links (super admin) ---------------- */
+  var SOCIAL_DIRTY = false, SKIP_ROUTE = false; // var: route() may run before this line is reached
+  addEventListener('beforeunload', (ev) => { if (SOCIAL_DIRTY) { ev.preventDefault(); ev.returnValue = ''; } });
+  // mirrors the server's clean-up so the preview and "Test" use the final address
+  function socialUrl(network, raw) {
+    let s = String(raw || '').trim();
+    const d = s.replace(/\D/g, ''); const intl = (x) => (x.length === 10 ? '91' + x : x);
+    if (network === 'email' && s.includes('@') && !/^mailto:/i.test(s)) s = 'mailto:' + s;
+    else if (network === 'phone' && !/^tel:/i.test(s) && d.length >= 6 && d.length <= 15) s = 'tel:+' + intl(d);
+    else if (network === 'whatsapp' && /^[\d\s+()-]{8,}$/.test(s)) s = 'https://wa.me/' + intl(d);
+    else if (s && !/^[a-z][a-z0-9+.-]*:/i.test(s)) s = 'https://' + s.replace(/^\/+/, '');
+    return s.length <= 500 && /^(https?:\/\/[^\s<>"'`]+\.[^\s<>"'`]+|mailto:[^\s<>"'`@]+@[^\s<>"'`]+|tel:\+?[\d-]{6,20})$/i.test(s) ? s : null;
+  }
+  async function viewSocial() {
+    setTitle('Social media');
+    const SO = window.MMX_SOCIAL;
+    if (!SO) { view.innerHTML = '<div class="p-card p-empty">Could not load the social icons. Refresh the page.</div>'; return; }
+    const s = await api('/site');
+    let links = (s.social?.links || []).map((l) => ({ ...l }));
+    let chat = { ...(s.social?.chat || {}) };
+    let saved = JSON.stringify({ links, chat });
+    const uid = () => 'l' + Math.random().toString(36).slice(2, 9);
+    const netOptions = (sel) => SO.order.map((k) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${esc(SO.networks[k].name)}</option>`).join('');
+
+    view.innerHTML = `
+      <div class="p-soc-bar p-card">
+        <div><b>Social media links</b><small class="p-muted">Shown as icons in the website footer and on the Contact page. Changes go live when you save.</small></div>
+        <span class="p-soc-dirty" id="socDirty" hidden>Unsaved changes</span>
+        <button class="p-btn" id="socUndo" disabled>Discard changes</button>
+        <button class="p-btn p-btn-primary" id="socSave" disabled>Save changes</button>
+      </div>
+      <div class="p-soc-grid">
+        <div class="p-card">
+          <div class="p-card-head"><h3>Links <small class="p-muted" id="socCount"></small></h3><button class="p-btn p-btn-primary" id="socAdd">+ Add link</button></div>
+          <p class="p-muted" style="margin:0 0 12px;font-size:13px">Paste an address and the network is picked automatically. Drag ⠿ or use ↑ ↓ to change the order.</p>
+          <div id="socList" class="p-soc-list"></div>
+          <div class="p-soc-quick"><small class="p-muted">Quick add:</small><span id="socQuick"></span></div>
+        </div>
+        <div>
+          <div class="p-card">
+            <h3>Live preview</h3>
+            <small class="p-muted">Website footer</small>
+            <div class="p-soc-preview" id="pvFooter"></div>
+            <small class="p-muted">Contact page · “Follow us”</small>
+            <div class="p-soc-preview light" id="pvContact"></div>
+          </div>
+          <div class="p-card">
+            <h3>Floating WhatsApp chat button</h3>
+            <p class="p-muted" style="margin:0 0 12px;font-size:13px">The green chat bubble at the bottom-right of every page, and the WhatsApp card on the Contact page.</p>
+            <label class="p-check"><input type="checkbox" id="chatOn" ${chat.enabled ? 'checked' : ''}> Show the floating chat button</label>
+            <label class="p-block">WhatsApp number (with country code)<input id="chatNum" inputmode="tel" placeholder="91 99380 41356" value="${esc(chat.number || '')}"></label>
+            <label class="p-block">Pre-filled message<input id="chatMsg" maxlength="200" placeholder="Hello Motamax, I have an enquiry." value="${esc(chat.message || '')}"></label>
+            <a class="p-btn sm" id="chatTest" target="_blank" rel="noopener">Test chat ↗</a>
+          </div>
+        </div>
+      </div>`;
+
+    const dirty = () => {
+      SOCIAL_DIRTY = JSON.stringify({ links, chat }) !== saved;
+      $('#socDirty').hidden = !SOCIAL_DIRTY; $('#socSave').disabled = !SOCIAL_DIRTY; $('#socUndo').disabled = !SOCIAL_DIRTY;
+    };
+    const preview = () => {
+      const row = (place) => links.filter((l) => l.enabled && l[place] && socialUrl(l.network, l.url))
+        .map((l) => `<span style="--sc:${SO.networks[l.network]?.color || '#8E5CF5'}" title="${esc(l.label || SO.networks[l.network]?.name)}">${SO.icon(l.network)}</span>`).join('') || '<em>Nothing shown here</em>';
+      $('#pvFooter').innerHTML = row('footer'); $('#pvContact').innerHTML = row('contact');
+      const n = String(chat.number || '').replace(/\D/g, '');
+      const t = $('#chatTest');
+      if (n.length >= 8) { t.href = 'https://wa.me/' + (n.length === 10 ? '91' + n : n) + (chat.message ? '?text=' + encodeURIComponent(chat.message) : ''); t.classList.remove('disabled'); }
+      else { t.removeAttribute('href'); t.classList.add('disabled'); }
+      $('#socCount').textContent = `· ${links.filter((l) => l.enabled).length} shown of ${links.length}`;
+    };
+    const rowHtml = (l, i) => {
+      const n = SO.networks[l.network] || SO.networks.website;
+      const url = socialUrl(l.network, l.url);
+      return `<div class="p-soc-row ${l.enabled ? '' : 'off'}" draggable="true" data-i="${i}" style="--sc:${n.color}">
+        <span class="p-soc-handle" title="Drag to reorder">⠿</span>
+        <span class="p-soc-ico">${SO.icon(l.network, 20)}</span>
+        <div class="p-soc-fields">
+          <div class="p-soc-line">
+            <select data-k="network" aria-label="Network">${netOptions(l.network)}</select>
+            <input data-k="url" value="${esc(l.url)}" placeholder="${esc(n.hint)}" aria-label="Address" class="${l.url && !url ? 'bad' : ''}">
+          </div>
+          <div class="p-soc-line">
+            <input data-k="label" value="${esc(l.label || '')}" maxlength="60" placeholder="Tooltip text (optional), e.g. ${esc(n.name)} — Motamax India" aria-label="Tooltip">
+          </div>
+          ${l.url && !url ? '<small class="p-soc-err">Enter a full address like https://…, an email or a phone number.</small>' : ''}
+          <div class="p-soc-line opts">
+            <label><input type="checkbox" data-k="enabled" ${l.enabled ? 'checked' : ''}> Visible</label>
+            <label><input type="checkbox" data-k="footer" ${l.footer ? 'checked' : ''}> Footer</label>
+            <label><input type="checkbox" data-k="contact" ${l.contact ? 'checked' : ''}> Contact page</label>
+            <span class="sp"></span>
+            <button class="p-btn sm" data-act="up" ${i === 0 ? 'disabled' : ''} title="Move up">↑</button>
+            <button class="p-btn sm" data-act="down" ${i === links.length - 1 ? 'disabled' : ''} title="Move down">↓</button>
+            ${url ? `<a class="p-btn sm" href="${esc(url)}" target="_blank" rel="noopener" title="Open this link">Test ↗</a>` : ''}
+            <button class="p-btn sm" data-act="dup" title="Duplicate">Copy</button>
+            <button class="p-btn sm p-btn-ghost-danger" data-act="del">Remove</button>
+          </div>
+        </div>
+      </div>`;
+    };
+    const render = () => {
+      $('#socList').innerHTML = links.length ? links.map(rowHtml).join('') : '<div class="p-empty" style="padding:26px">No links yet — click “+ Add link”. The footer icons are hidden while the list is empty.</div>';
+      $('#socQuick').innerHTML = SO.order.filter((k) => k !== 'website' && !links.some((l) => l.network === k))
+        .map((k) => `<button class="p-soc-chip" data-add="${k}" style="--sc:${SO.networks[k].color}" title="Add ${esc(SO.networks[k].name)}">${SO.icon(k, 15)}<span>${esc(SO.networks[k].name)}</span></button>`).join('') || '<small class="p-muted">every network is added</small>';
+      preview(); dirty();
+    };
+    const add = (network = 'website') => {
+      links.push({ id: uid(), network, url: '', label: '', enabled: true, footer: true, contact: true, auto: network === 'website' });
+      render();
+      const rows = $$('.p-soc-row'); const last = rows[rows.length - 1];
+      last?.scrollIntoView({ block: 'center', behavior: 'smooth' }); $('[data-k=url]', last)?.focus();
+    };
+
+    const list = $('#socList');
+    list.addEventListener('input', (ev) => {
+      const row = ev.target.closest('.p-soc-row'); if (!row) return;
+      const l = links[+row.dataset.i]; const k = ev.target.dataset.k;
+      if (k === 'url' || k === 'label') l[k] = ev.target.value;
+      if (k === 'url' && l.auto) {
+        const g = SO.detect(l.url);
+        if (g && g !== l.network) {
+          l.network = g; const pos = ev.target.selectionStart; render();
+          const inp = $(`.p-soc-row[data-i="${row.dataset.i}"] [data-k=url]`); inp.focus(); inp.setSelectionRange(pos, pos); return;
+        }
+      }
+      if (k === 'url') ev.target.classList.toggle('bad', Boolean(l.url) && !socialUrl(l.network, l.url));
+      preview(); dirty();
+    });
+    list.addEventListener('change', (ev) => {
+      const row = ev.target.closest('.p-soc-row'); if (!row) return;
+      const l = links[+row.dataset.i]; const k = ev.target.dataset.k;
+      if (k === 'network') { l.network = ev.target.value; l.auto = false; }
+      else if (['enabled', 'footer', 'contact'].includes(k)) l[k] = ev.target.checked;
+      else return; // text fields update live; re-rendering on blur would swallow the next click
+      render();
+    });
+    list.addEventListener('click', (ev) => {
+      const b = ev.target.closest('[data-act]'); if (!b) return;
+      const i = +b.closest('.p-soc-row').dataset.i;
+      if (b.dataset.act === 'up' && i > 0) [links[i - 1], links[i]] = [links[i], links[i - 1]];
+      if (b.dataset.act === 'down' && i < links.length - 1) [links[i + 1], links[i]] = [links[i], links[i + 1]];
+      if (b.dataset.act === 'dup') links.splice(i + 1, 0, { ...links[i], id: uid() });
+      if (b.dataset.act === 'del') {
+        const n = SO.networks[links[i].network]?.name || 'this link';
+        if (!confirm(`Remove ${n}${links[i].url ? ' (' + links[i].url + ')' : ''}?\nNothing changes on the website until you save.`)) return;
+        links.splice(i, 1);
+      }
+      render();
+    });
+    // drag and drop reordering (by the row, not while typing in a field)
+    let dragFrom = null;
+    list.addEventListener('dragstart', (ev) => {
+      const r = ev.target.closest?.('.p-soc-row');
+      if (!r || /INPUT|SELECT/.test(ev.target.tagName)) { ev.preventDefault(); return; }
+      dragFrom = +r.dataset.i; r.classList.add('dragging'); ev.dataTransfer.effectAllowed = 'move'; ev.dataTransfer.setData('text/plain', '');
+    });
+    list.addEventListener('dragover', (ev) => {
+      if (dragFrom === null) return; ev.preventDefault();
+      const over = ev.target.closest('.p-soc-row'); $$('.p-soc-row', list).forEach((r) => r.classList.toggle('drop', r === over));
+    });
+    list.addEventListener('drop', (ev) => {
+      ev.preventDefault(); const r = ev.target.closest('.p-soc-row');
+      if (r && dragFrom !== null) { const [m] = links.splice(dragFrom, 1); links.splice(+r.dataset.i, 0, m); }
+      dragFrom = null; render();
+    });
+    list.addEventListener('dragend', () => { dragFrom = null; $$('.p-soc-row', list).forEach((r) => r.classList.remove('dragging', 'drop')); });
+
+    $('#socAdd').addEventListener('click', () => add());
+    $('#socQuick').addEventListener('click', (ev) => { const b = ev.target.closest('[data-add]'); if (b) add(b.dataset.add); });
+    $('#chatOn').addEventListener('change', (ev) => { chat.enabled = ev.target.checked; preview(); dirty(); });
+    $('#chatNum').addEventListener('input', (ev) => { chat.number = ev.target.value; preview(); dirty(); });
+    $('#chatMsg').addEventListener('input', (ev) => { chat.message = ev.target.value; preview(); dirty(); });
+    $('#socUndo').addEventListener('click', () => {
+      ({ links, chat } = JSON.parse(saved));
+      $('#chatOn').checked = Boolean(chat.enabled); $('#chatNum').value = chat.number || ''; $('#chatMsg').value = chat.message || '';
+      render(); toast('Changes discarded');
+    });
+    $('#socSave').addEventListener('click', async () => {
+      const bad = links.findIndex((l) => !socialUrl(l.network, l.url));
+      if (bad >= 0) { toast(`Link ${bad + 1}: enter a valid address before saving`, 'err'); $$('.p-soc-row')[bad]?.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
+      const btn = $('#socSave'); btn.classList.add('loading'); btn.disabled = true;
+      try {
+        const r = await api('/social', { method: 'PUT', body: { links: links.map(({ auto, ...l }) => l), chat } });
+        links = r.links.map((l) => ({ ...l })); chat = { ...r.chat }; saved = JSON.stringify({ links, chat });
+        $('#chatNum').value = chat.number || '';
+        try { const c = JSON.parse(localStorage.getItem('mmx-site') || '{}'); c.social = r; localStorage.setItem('mmx-site', JSON.stringify(c)); } catch { /* storage unavailable */ }
+        render(); toast('Social links saved — live on the website now');
+      } catch (err) { toast(err.message, 'err'); dirty(); }
+      btn.classList.remove('loading');
+    });
+    render();
   }
 
   /* ---------------- mail settings (admin) ---------------- */

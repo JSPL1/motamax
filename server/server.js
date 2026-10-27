@@ -506,7 +506,7 @@ async function visitorCounts() {
 app.get('/api/site', wrap(async (req, res) => {
   const s = await loadSite();
   res.set('Cache-Control', 'no-cache');
-  res.json({ ...s, visitors: s.showVisitors ? await visitorCounts() : null, options: { styles: LOADER_STYLES, logoAnims: LOGO_ANIMS, frequencies: FREQUENCIES, positions: BADGE_POSITIONS } });
+  res.json({ ...s, social: await loadSocial(), visitors: s.showVisitors ? await visitorCounts() : null, options: { styles: LOADER_STYLES, logoAnims: LOGO_ANIMS, frequencies: FREQUENCIES, positions: BADGE_POSITIONS } });
 }));
 app.put('/api/site', requireUser, requireAdmin, wrap(async (req, res) => {
   if (!req.user.superAdmin) throw fail(403, 'Only the super admin can change site appearance.');
@@ -532,6 +532,54 @@ app.put('/api/site', requireUser, requireAdmin, wrap(async (req, res) => {
   if (await store.get('settings', 'site')) await store.update('settings', 'site', () => doc); else await store.insert('settings', doc);
   res.json(await loadSite());
 }));
+// ---------- social media links (super admin) ----------
+const SOCIAL_NETWORKS = ['facebook', 'x', 'instagram', 'linkedin', 'youtube', 'whatsapp', 'telegram', 'pinterest', 'threads', 'maps', 'email', 'phone', 'website'];
+const DEFAULT_SOCIAL = {
+  links: [
+    { id: 'facebook', network: 'facebook', url: 'https://www.facebook.com/', label: 'Facebook — Motamax India', enabled: true, footer: true, contact: true },
+    { id: 'x', network: 'x', url: 'https://x.com/Motamax_bbsr', label: 'X — @Motamax_bbsr', enabled: true, footer: true, contact: true },
+    { id: 'whatsapp', network: 'whatsapp', url: 'https://wa.me/919938041356', label: 'WhatsApp', enabled: true, footer: true, contact: true },
+  ],
+  chat: { enabled: true, number: '919938041356', message: 'Hello Motamax, I have an enquiry.' },
+};
+const SOCIAL_URL = /^(https?:\/\/[^\s<>"'`]+\.[^\s<>"'`]+|mailto:[^\s<>"'`@]+@[^\s<>"'`]+|tel:\+?[\d-]{6,20})$/i;
+function socialUrl(network, raw) {
+  let s = String(raw ?? '').trim();
+  const digits = s.replace(/\D/g, '');
+  const intl = (d) => (d.length === 10 ? '91' + d : d);
+  if (network === 'email' && s.includes('@') && !/^mailto:/i.test(s)) s = 'mailto:' + s;
+  else if (network === 'phone' && !/^tel:/i.test(s) && digits.length >= 6 && digits.length <= 15) s = 'tel:+' + intl(digits);
+  else if (network === 'whatsapp' && /^[\d\s+()-]{8,}$/.test(s)) s = 'https://wa.me/' + intl(digits);
+  else if (s && !/^[a-z][a-z0-9+.-]*:/i.test(s)) s = 'https://' + s.replace(/^\/+/, '');
+  return s.length <= 500 && SOCIAL_URL.test(s) ? s : null;
+}
+async function loadSocial() {
+  const doc = await store.get('settings', 'social');
+  if (!doc) return JSON.parse(JSON.stringify(DEFAULT_SOCIAL));
+  return { links: doc.links || [], chat: { ...DEFAULT_SOCIAL.chat, ...(doc.chat || {}) } };
+}
+app.put('/api/social', requireUser, requireAdmin, wrap(async (req, res) => {
+  if (!req.user.superAdmin) throw fail(403, 'Only the super admin can change social media links.');
+  const b = req.body || {};
+  const seen = new Set();
+  const links = (Array.isArray(b.links) ? b.links : []).slice(0, 30).filter((x) => x && typeof x === 'object').map((x, i) => {
+    const network = SOCIAL_NETWORKS.includes(x.network) ? x.network : 'website';
+    const url = socialUrl(network, x.url);
+    if (!url) throw fail(400, `Link ${i + 1}: enter a valid address (https://…, an email or a phone number).`);
+    let id = String(x.id || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 24);
+    if (!id || seen.has(id)) id = sec.newId().slice(0, 12);
+    seen.add(id);
+    return { id, network, url, label: clean(x.label, 60), enabled: x.enabled !== false, footer: x.footer !== false, contact: x.contact !== false };
+  });
+  const c = b.chat || {};
+  let number = String(c.number || '').replace(/\D/g, '');
+  if (number.length === 10) number = '91' + number;
+  if (c.enabled && (number.length < 8 || number.length > 15)) throw fail(400, 'Floating chat button: enter a WhatsApp number with country code.');
+  const doc = { id: 'social', links, chat: { enabled: Boolean(c.enabled), number, message: clean(c.message, 200) } };
+  if (await store.get('settings', 'social')) await store.update('settings', 'social', () => doc); else await store.insert('settings', doc);
+  res.json(await loadSocial());
+}));
+
 const BOT_RE = /bot|crawl|spider|slurp|preview|monitor|headless|lighthouse|curl|wget|python-requests/i;
 app.post('/api/visit', limiter(60, 60 * 1000), wrap(async (req, res) => {
   const ua = req.get('user-agent') || '';

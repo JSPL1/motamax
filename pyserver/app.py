@@ -893,6 +893,75 @@ def load_site():
     return {'loader': loader, 'badges': badges, 'showVisitors': doc.get('showVisitors', DEFAULT_SITE['showVisitors'])}
 
 
+# ---------- social media links (super admin) ----------
+SOCIAL_NETWORKS = ['facebook', 'x', 'instagram', 'linkedin', 'youtube', 'whatsapp', 'telegram', 'pinterest', 'threads', 'maps', 'email', 'phone', 'website']
+DEFAULT_SOCIAL = {
+    'links': [
+        {'id': 'facebook', 'network': 'facebook', 'url': 'https://www.facebook.com/', 'label': 'Facebook — Motamax India', 'enabled': True, 'footer': True, 'contact': True},
+        {'id': 'x', 'network': 'x', 'url': 'https://x.com/Motamax_bbsr', 'label': 'X — @Motamax_bbsr', 'enabled': True, 'footer': True, 'contact': True},
+        {'id': 'whatsapp', 'network': 'whatsapp', 'url': 'https://wa.me/919938041356', 'label': 'WhatsApp', 'enabled': True, 'footer': True, 'contact': True},
+    ],
+    'chat': {'enabled': True, 'number': '919938041356', 'message': 'Hello Motamax, I have an enquiry.'},
+}
+SOCIAL_URL = re.compile(r'^(https?://[^\s<>\x22\x27`]+\.[^\s<>\x22\x27`]+|mailto:[^\s<>\x22\x27`@]+@[^\s<>\x22\x27`]+|tel:\+?[\d-]{6,20})$', re.I)
+
+
+def social_url(network, raw):
+    s = str(raw or '').strip()
+    digits = re.sub(r'\D', '', s)
+    if network == 'email' and '@' in s and not s.lower().startswith('mailto:'):
+        s = 'mailto:' + s
+    elif network == 'phone' and not s.lower().startswith('tel:') and 6 <= len(digits) <= 15:
+        s = 'tel:+' + ('91' + digits if len(digits) == 10 else digits)
+    elif network == 'whatsapp' and re.fullmatch(r'[\d\s+()-]{8,}', s):
+        s = 'https://wa.me/' + ('91' + digits if len(digits) == 10 else digits)
+    elif s and not re.match(r'^[a-z][a-z0-9+.-]*:', s, re.I):
+        s = 'https://' + s.lstrip('/')
+    return s if len(s) <= 500 and SOCIAL_URL.match(s) else None
+
+
+def load_social():
+    doc = store.get('settings', 'social')
+    if not doc:
+        return {k: (list(v) if isinstance(v, list) else dict(v)) for k, v in DEFAULT_SOCIAL.items()}
+    return {'links': doc.get('links') or [], 'chat': {**DEFAULT_SOCIAL['chat'], **(doc.get('chat') or {})}}
+
+
+@app.put('/api/social')
+def put_social():
+    u = require_admin()
+    if not u.get('superAdmin'):
+        raise ApiError(403, 'Only the super admin can change social media links.')
+    b = body()
+    links, seen = [], set()
+    for i, x in enumerate((b.get('links') or [])[:30]):
+        if not isinstance(x, dict):
+            continue
+        network = x.get('network') if x.get('network') in SOCIAL_NETWORKS else 'website'
+        url = social_url(network, x.get('url'))
+        if not url:
+            raise ApiError(400, f'Link {i + 1}: enter a valid address (https://…, an email or a phone number).')
+        lid = re.sub(r'[^a-zA-Z0-9_-]', '', str(x.get('id') or ''))[:24]
+        if not lid or lid in seen:
+            lid = sec.new_id()[:12]
+        seen.add(lid)
+        links.append({'id': lid, 'network': network, 'url': url, 'label': clean(x.get('label'), 60),
+                      'enabled': bool(x.get('enabled', True)), 'footer': bool(x.get('footer', True)), 'contact': bool(x.get('contact', True))})
+    c = b.get('chat') or {}
+    number = re.sub(r'\D', '', str(c.get('number') or ''))
+    if len(number) == 10:
+        number = '91' + number
+    if c.get('enabled') and not 8 <= len(number) <= 15:
+        raise ApiError(400, 'Floating chat button: enter a WhatsApp number with country code.')
+    doc = {'id': 'social', 'links': links,
+           'chat': {'enabled': bool(c.get('enabled')), 'number': number, 'message': clean(c.get('message'), 200)}}
+    if store.get('settings', 'social'):
+        store.update('settings', 'social', lambda _: doc)
+    else:
+        store.insert('settings', doc)
+    return jsonify(load_social())
+
+
 def visitor_counts():
     v = store.get('settings', 'visitors') or {}
     today = datetime.now().strftime('%Y-%m-%d')
@@ -902,7 +971,7 @@ def visitor_counts():
 @app.get('/api/site')
 def get_site():
     s = load_site()
-    resp = jsonify({**s, 'visitors': visitor_counts() if s['showVisitors'] else None,
+    resp = jsonify({**s, 'social': load_social(), 'visitors': visitor_counts() if s['showVisitors'] else None,
                     'options': {'styles': LOADER_STYLES, 'logoAnims': LOGO_ANIMS, 'frequencies': FREQUENCIES, 'positions': BADGE_POSITIONS}})
     resp.headers['Cache-Control'] = 'no-cache'
     return resp
