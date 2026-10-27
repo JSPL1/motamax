@@ -136,3 +136,6 @@
   .hero-illus.hero-illus-lg { display: block; width: min(320px, 86vw); justify-self: center; margin-top: 8px; }
 }
 @media (prefers-reduced-motion: reduce) { .il-glow { animation: none; } }
+.il-breathe { animation: ilBreathe 6s ease-in-out infinite; }
+@keyframes ilBreathe { 50% { transform: scale(1.05); fill-opacity: .2; } }
+@media (prefers-reduced-motion: reduce) { .il-breathe { animation: none; } }

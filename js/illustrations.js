@@ -38,14 +38,28 @@
       'Integrated site with telecom tower, CCTV, solar panels, transformer and server rack'),
 
     /* sustainability rings */
-    about: () => wrap(`
-      <g class="il-spin-slow" style="transform-origin:200px 150px">${[0, 1, 2].map((k) => { const a = -Math.PI / 2 + k * 2 * Math.PI / 3; return `<circle cx="${200 + 38 * Math.cos(a)}" cy="${150 + 38 * Math.sin(a)}" r="62" fill="${[C.green, C.violet, C.amber][k]}" fill-opacity=".16" stroke="${[C.green, C.violet, C.amber][k]}" stroke-width="3"/>`; }).join('')}</g>
-      <circle cx="200" cy="150" r="22" fill="${C.navy}"/><path d="M188 158 L194 142 L200 154 L206 142 L212 158" stroke="#fff" stroke-width="3" fill="none" stroke-linejoin="round"/>
-      <g font-family="Inter,system-ui,sans-serif" font-weight="700" font-size="13" text-anchor="middle">
-        <text x="200" y="40" fill="${C.green}">ENVIRONMENT</text><text x="88" y="232" fill="${C.violet}">SOCIAL</text><text x="312" y="232" fill="${C.amber}">ECONOMIC</text></g>
-      <circle r="5" fill="${C.sky}"><animateMotion dur="9s" repeatCount="indefinite" path="M200 40 A110 110 0 1 1 199.9 40"/></circle>
-      <circle r="4" fill="${C.red}"><animateMotion dur="13s" repeatCount="indefinite" path="M200 270 A120 120 0 1 0 200.1 270"/></circle>`,
-      'Three pillars of sustainability: environmental, social and economic'),
+    about: () => {
+      // Solution Architect badge at the heart of the three sustainability pillars
+      const cx = 200, cy = 200, off = 50, r = 108;
+      const P = [['ENVIRONMENT', C.green, -90], ['SOCIAL', C.violet, 150], ['ECONOMIC', C.amber, 30]];
+      const pt = (deg, d) => [cx + d * Math.cos(deg * Math.PI / 180), cy + d * Math.sin(deg * Math.PI / 180)];
+      return `<svg viewBox="0 0 400 400" role="img" aria-label="Motamax Solution Architect badge at the centre of environmental, social and economic sustainability" class="illus-svg">
+        <defs><clipPath id="aboutBadgeClip"><circle cx="${cx}" cy="${cy}" r="96"/></clipPath>
+          <radialGradient id="aboutGlow"><stop offset="60%" stop-color="#5BC0FF" stop-opacity=".45"/><stop offset="100%" stop-color="#5BC0FF" stop-opacity="0"/></radialGradient></defs>
+        ${P.map(([, col, deg], k) => { const [x, y] = pt(deg, off); return `<circle cx="${x}" cy="${y}" r="${r}" fill="${col}" fill-opacity=".13" stroke="${col}" stroke-width="2.5" class="il-breathe" style="transform-origin:${x}px ${y}px;animation-delay:${k * 1.2}s"/>`; }).join('')}
+        <circle r="5" fill="${C.sky}"><animateMotion dur="12s" repeatCount="indefinite" path="M${cx} ${cy - 186} A186 186 0 1 1 ${cx - 0.1} ${cy - 186}"/></circle>
+        <circle r="4" fill="${C.red}"><animateMotion dur="16s" repeatCount="indefinite" path="M${cx} ${cy + 180} A180 180 0 1 0 ${cx + 0.1} ${cy + 180}"/></circle>
+        <circle cx="${cx}" cy="${cy}" r="122" fill="url(#aboutGlow)" class="il-glow"/>
+        <circle cx="${cx}" cy="${cy}" r="104" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="2 6">
+          <animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="40s" repeatCount="indefinite"/></circle>
+        <circle cx="${cx}" cy="${cy}" r="98" fill="#fff"/>
+        <image href="assets/badges/badge-2.webp" x="${cx - 96}" y="${cy - 96}" width="192" height="192" clip-path="url(#aboutBadgeClip)"/>
+        <g font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="12" letter-spacing="1" text-anchor="middle">
+          ${P.map(([label, col, deg], k) => { const [x, y] = pt(deg, off + r - 6); const w = label.length * 9 + 26; return `<g class="il-pop" style="animation-delay:${0.3 + k * 0.15}s">
+            <rect x="${x - w / 2}" y="${y - 14}" width="${w}" height="28" rx="14" fill="${col}"/><text x="${x}" y="${y + 4.5}" fill="#fff">${label}</text></g>`; }).join('')}
+        </g>
+      </svg>`;
+    },
 
     /* industrial skyline */
     industries: () => wrap(`
