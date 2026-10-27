@@ -24,7 +24,7 @@ from flask import Flask, request, jsonify, send_file, send_from_directory, redir
 from werkzeug.security import safe_join  # noqa: E402
 
 from . import security as sec  # noqa: E402
-from . import mailer, media  # noqa: E402
+from . import activity, mailer, media  # noqa: E402
 from .store import create_store  # noqa: E402
 
 PROD = os.environ.get('NODE_ENV') == 'production' or os.environ.get('APP_ENV') == 'production'
@@ -196,7 +196,10 @@ def current_user():
     if not s:
         return None
     u = store.get('users', s.get('uid'))
-    return u if u and u.get('active') else None
+    if not u or not u.get('active'):
+        return None
+    activity.touch_seen(store, u)
+    return u
 
 
 def require_user():
@@ -369,10 +372,12 @@ def login():
     users = store.all('users')
     u = next((x for x in users if login_id and (x.get('email') == login_id or x.get('username') == login_id)), None)
     if not u or not sec.verify_password(str(b.get('password') or ''), u.get('passHash')):
+        activity.record_login(store, request, u, login_id, False, 'Wrong password' if u else 'Unknown user')
         raise ApiError(401, 'Incorrect username/email or password.')
     if not u.get('active'):
+        activity.record_login(store, request, u, login_id, False, 'Account suspended')
         raise ApiError(403, 'This account is suspended. Please contact your administrator.')
-    store.update('users', u['id'], lambda d: {**d, 'lastLoginAt': now()})
+    activity.record_login(store, request, u, login_id, True)
     ttl = SESSION_TTL * 14 if b.get('remember') else SESSION_TTL
     resp = make_response(jsonify(user=public_user(u)))
     resp.set_cookie(COOKIE, sec.sign_session({'uid': u['id']}, ttl), max_age=ttl // 1000, httponly=True, samesite='Lax',
@@ -1045,10 +1050,28 @@ def visit():
         except Exception:  # noqa: BLE001 - created concurrently
             pass
     store.update('settings', 'visitors', bump)
+    vid = request.cookies.get('mmx_vid') or sec.new_id()
+    activity.record_visit(store, request, vid, new_visitor, body())
     resp = make_response(jsonify(visitor_counts()))
     if new_visitor:
-        resp.set_cookie('mmx_vid', sec.new_id(), max_age=60 * 60 * 24 * 365, httponly=True, samesite='Lax',
+        resp.set_cookie('mmx_vid', vid, max_age=60 * 60 * 24 * 365, httponly=True, samesite='Lax',
                         secure=request.is_secure or request.headers.get('X-Forwarded-Proto') == 'https', path='/')
+    return resp
+
+
+# ---------------- activity (admins) ----------------
+@app.get('/api/activity')
+def get_activity():
+    require_admin()
+    seen_cut = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat(timespec='seconds').replace('+00:00', 'Z')
+    users = []
+    for u in sorted(store.all('users'), key=lambda x: x.get('lastSeenAt') or x.get('lastLoginAt') or '', reverse=True):
+        users.append({**public_user(u), 'lastLogin': u.get('lastLogin'), 'lastSeenAt': u.get('lastSeenAt'),
+                      'loginCount': u.get('loginCount', 0), 'online': (u.get('lastSeenAt') or '') >= seen_cut})
+    logins = (store.get('settings', 'loginlog') or {}).get('events') or []
+    visits = (store.get('settings', 'visitlog') or {}).get('visits') or []
+    resp = jsonify(users=users, logins=logins[-300:][::-1], visits=visits[-400:][::-1], summary=activity.summary(visits))
+    resp.headers['Cache-Control'] = 'no-store'
     return resp
 
 

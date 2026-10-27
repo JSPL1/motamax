@@ -67,7 +67,7 @@
       ['#/dashboard', 'p-dash', 'Dashboard'],
       ['#/pool', 'p-inbox', 'Open pool', counts.pool],
       ['#/mine', 'p-bucket', 'My bucket', counts.mine],
-      ...(isAdmin() ? [['#/all', 'p-list', 'All enquiries'], ['#/users', 'p-users', 'Team'], ['#/media', 'p-image', 'Media'], ...(isSuper() ? [['#/site', 'p-sliders', 'Site settings'], ['#/social', 'p-share', 'Social media']] : []), ['#/mail', 'p-mail', 'Mail settings']] : []),
+      ...(isAdmin() ? [['#/all', 'p-list', 'All enquiries'], ['#/users', 'p-users', 'Team'], ['#/activity', 'p-activity', 'Activity'], ['#/media', 'p-image', 'Media'], ...(isSuper() ? [['#/site', 'p-sliders', 'Site settings'], ['#/social', 'p-share', 'Social media']] : []), ['#/mail', 'p-mail', 'Mail settings']] : []),
       ['#/account', 'p-key', 'My account'],
     ];
     $('#nav').innerHTML = items.map(([h, i, t, c]) => `<a href="${h}" data-route="${h}">${icon(i)}<span>${t}</span>${c ? `<b class="p-count">${c}</b>` : ''}</a>`).join('');
@@ -132,6 +132,7 @@
         case 'all': return isAdmin() ? await viewList('all') : (location.hash = '#/dashboard');
         case 'enquiry': return await viewEnquiry(arg);
         case 'users': return isAdmin() ? await viewUsers() : (location.hash = '#/dashboard');
+        case 'activity': return isAdmin() ? await viewActivity() : (location.hash = '#/dashboard');
         case 'mail': return isAdmin() ? await viewMail() : (location.hash = '#/dashboard');
         case 'media': return isAdmin() ? await viewMedia() : (location.hash = '#/dashboard');
         case 'site': return isAdmin() ? await viewSite() : (location.hash = '#/dashboard');
@@ -615,6 +616,154 @@
         toast('Site settings saved — visitors see them on their next visit');
       } catch (err) { toast(err.message, 'err'); }
     });
+  }
+
+  /* ---------------- activity: team logins + website visitors (admins) ---------------- */
+  const DEVICE_ICON = { Mobile: 'p-phone', Tablet: 'p-tablet', Desktop: 'p-desktop' };
+  const DEVICE_COLOR = { Mobile: '#1A9BD7', Tablet: '#8E5CF5', Desktop: '#22B45A' };
+  const PAGE_NAME = { '/': 'Home', '/index.html': 'Home', '/about.html': 'About', '/services.html': 'Services', '/industries.html': 'Industries',
+    '/stories.html': 'Success stories', '/clients.html': 'Clients', '/work.html': 'Our work', '/contact.html': 'Contact', '/login.html': 'Login' };
+  const pageName = (p) => PAGE_NAME[p] || p;
+  const device = (d) => `<span class="p-dev" style="--dc:${DEVICE_COLOR[d.device] || '#8E5CF5'}">${icon(DEVICE_ICON[d.device] || 'p-desktop')}<span><b>${esc(d.device || '—')}</b><small>${esc(d.os || '')}</small></span></span>`;
+  const when = (iso) => `<span class="p-when"><b>${esc(ago(iso))}</b><small>${esc(fmtDate(iso))}</small></span>`;
+  const ip = (v) => v ? `<code class="p-ip">${esc(v)}</code>` : '<span class="p-muted">—</span>';
+  let ACT_TIMER = null;
+
+  async function viewActivity() {
+    setTitle('Activity');
+    clearInterval(ACT_TIMER);
+    const tab = new URLSearchParams(location.hash.split('?')[1] || '').get('tab') || 'team';
+    const a = await api('/activity');
+    const S = a.summary;
+    const failed = a.logins.filter((l) => !l.ok).length;
+    const TABS = [['team', 'Team', a.users.length], ['logins', 'Login history', a.logins.length], ['visitors', 'Website visitors', S.peopleToday + ' today']];
+    view.innerHTML = `
+      <div class="p-act-head">
+        <div class="p-tabs">${TABS.map(([k, l, n]) => `<a href="#/activity?tab=${k}" class="${k === tab ? 'on' : ''}">${l} <small>${n}</small></a>`).join('')}</div>
+        <span class="p-muted p-act-upd">Updated ${new Date().toLocaleTimeString('en-IN', { timeStyle: 'short' })} · refreshes every minute</span>
+      </div>
+      <div id="actBody"></div>`;
+    const body = $('#actBody');
+
+    if (tab === 'team') {
+      const online = a.users.filter((u) => u.online).length;
+      body.innerHTML = `
+        <p class="p-muted p-act-note">${online ? `<b class="p-live">●</b> ${online} online now · ` : ''}Who signed in to this portal, when, from which IP address and on which device.</p>
+        <div class="p-act-grid">${a.users.map((u) => {
+          const L = u.lastLogin;
+          return `<div class="p-card p-person ${u.active ? '' : 'off'}">
+            <div class="p-person-top">
+              <span class="p-avatar lg">${esc(initials(u.name))}${u.online ? '<i class="p-online" title="Online now"></i>' : ''}</span>
+              <div><b>${esc(u.name)}</b><small>${esc(roleLabel(u))}${u.active ? '' : ' · <span style="color:#E3342F">Suspended</span>'}</small></div>
+              <span class="p-status ${u.online ? 'on' : ''}">${u.online ? 'Online now' : (u.lastSeenAt || u.lastLoginAt) ? 'Active ' + esc(ago(u.lastSeenAt || u.lastLoginAt)) : 'Never logged in'}</span>
+            </div>
+            ${u.lastLoginAt ? `<dl class="p-facts">
+              <dt>Last login</dt><dd>${when(u.lastLoginAt)}</dd>
+              <dt>IP address</dt><dd>${ip(L?.ip)}</dd>
+              <dt>Device</dt><dd>${L ? device(L) : '<span class="p-muted">Shown after their next login</span>'}</dd>
+              <dt>Browser</dt><dd>${esc(L?.browser || '—')}</dd>
+              <dt>Total logins</dt><dd><b>${u.loginCount || (u.lastLoginAt ? '1+' : 0)}</b></dd>
+            </dl>` : '<div class="p-empty" style="padding:18px 0 6px">Has not logged in yet</div>'}
+          </div>`;
+        }).join('')}</div>`;
+    }
+
+    if (tab === 'logins') {
+      body.innerHTML = `
+        <div class="p-card">
+          <div class="p-act-filters">
+            <div class="p-chips" id="lgF">
+              <label class="p-chip on"><input type="radio" name="lgf" value="all" checked>All <small>${a.logins.length}</small></label>
+              <label class="p-chip"><input type="radio" name="lgf" value="ok">Successful <small>${a.logins.length - failed}</small></label>
+              <label class="p-chip"><input type="radio" name="lgf" value="fail">Failed <small>${failed}</small></label>
+            </div>
+            <input class="p-act-search" id="lgQ" type="search" placeholder="Search name, IP, browser…">
+          </div>
+          <div class="p-table-wrap"><table class="p-table p-act-table">
+            <thead><tr><th>When</th><th>User</th><th>Result</th><th>IP address</th><th>Device</th><th>Browser</th></tr></thead>
+            <tbody id="lgRows"></tbody></table></div>
+          <p class="p-muted p-act-foot">The latest ${a.logins.length} login attempts are kept (up to 1,000).</p>
+        </div>`;
+      const draw = () => {
+        const f = $('input[name=lgf]:checked').value; const q = $('#lgQ').value.trim().toLowerCase();
+        const rows = a.logins.filter((l) => (f === 'all' || (f === 'ok') === l.ok) && (!q || [l.name, l.login, l.ip, l.browser, l.os, l.device].join(' ').toLowerCase().includes(q)));
+        $('#lgRows').innerHTML = rows.map((l) => `<tr>
+          <td data-l="When">${when(l.at)}</td>
+          <td data-l="User"><b>${esc(l.name || l.login || '—')}</b>${l.name && l.login && l.login !== l.name.toLowerCase() ? `<small class="p-sub">${esc(l.login)}</small>` : ''}</td>
+          <td data-l="Result">${l.ok ? '<span class="p-res ok">✓ Signed in</span>' : `<span class="p-res bad">✕ ${esc(l.reason || 'Failed')}</span>`}</td>
+          <td data-l="IP address">${ip(l.ip)}</td>
+          <td data-l="Device">${device(l)}</td>
+          <td data-l="Browser">${esc(l.browser || '—')}</td></tr>`).join('') || '<tr><td colspan="6" class="p-empty">No login attempts match.</td></tr>';
+      };
+      $('#lgF').addEventListener('change', (ev) => { $$('#lgF .p-chip').forEach((c) => c.classList.toggle('on', c.contains(ev.target) && ev.target.checked)); draw(); });
+      $('#lgQ').addEventListener('input', draw);
+      draw();
+    }
+
+    if (tab === 'visitors') {
+      const total = S.devices.reduce((n, [, c]) => n + c, 0) || 1;
+      const bars = (title, rows, colorOf, nameOf = (k) => k) => {
+        const max = Math.max(1, ...rows.map(([, c]) => c));
+        return `<div class="p-card p-break"><h3>${title}</h3>${rows.length ? rows.map(([k, c]) => `
+          <div class="p-hbar"><span>${esc(nameOf(k))}</span><b>${c}</b><i><em style="width:${(c / max) * 100}%;background:${colorOf(k)}"></em></i></div>`).join('') : '<p class="p-muted">No data yet</p>'}</div>`;
+      };
+      const PAL = ['#1A9BD7', '#22B45A', '#8E5CF5', '#FF9F0A', '#E3342F', '#14B8A6'];
+      const pal = (rows) => { const m = Object.fromEntries(rows.map(([k], i) => [k, PAL[i % PAL.length]])); return (k) => m[k]; };
+      body.innerHTML = `
+        <div class="p-kpis p-act-kpis">
+          ${[['Visitors today', S.peopleToday, '#1A9BD7'], ['Page views today', S.viewsToday, '#22B45A'], ['Visitors · 30 days', S.people30, '#8E5CF5'], ['Page views · 30 days', S.views30, '#FF9F0A']]
+            .map(([l, v, c], i) => `<div class="p-kpi" style="--kc:${c};--i:${i}"><small>${l}</small><b>${Number(v).toLocaleString('en-IN')}</b><i></i></div>`).join('')}
+        </div>
+        <div class="p-act-two">
+          <div class="p-card"><h3>Last 14 days</h3><div style="height:230px"><canvas id="cVisits"></canvas></div></div>
+          <div class="p-card p-devices"><h3>What visitors use</h3>
+            ${['Mobile', 'Desktop', 'Tablet'].map((d) => { const c = (S.devices.find(([k]) => k === d) || [, 0])[1]; return `
+              <div class="p-devrow" style="--dc:${DEVICE_COLOR[d]}">${icon(DEVICE_ICON[d])}<span>${d}</span><b>${Math.round((c / total) * 100)}%</b><small>${c} views</small><i><em style="width:${(c / total) * 100}%"></em></i></div>`; }).join('')}
+          </div>
+        </div>
+        <div class="p-act-three">
+          ${bars('Browsers', S.browsers, pal(S.browsers))}
+          ${bars('Operating systems', S.os, pal(S.os))}
+          ${bars('Most visited pages', S.pages, () => '#5B6CFF', pageName)}
+        </div>
+        ${S.refs.length ? bars('Where visitors came from', S.refs, () => '#14B8A6') : ''}
+        <div class="p-card">
+          <div class="p-act-filters">
+            <h3 style="margin:0">Recent visits</h3>
+            <div class="p-chips" id="vF">${['All', 'Mobile', 'Tablet', 'Desktop'].map((d, i) => `<label class="p-chip ${i ? '' : 'on'}"><input type="radio" name="vf" value="${d}" ${i ? '' : 'checked'}>${d}</label>`).join('')}</div>
+            <input class="p-act-search" id="vQ" type="search" placeholder="Search IP, page, browser…">
+          </div>
+          <div class="p-table-wrap"><table class="p-table p-act-table">
+            <thead><tr><th>When</th><th>Visitor</th><th>Page</th><th>IP address</th><th>Device</th><th>Browser</th><th>Came from</th></tr></thead>
+            <tbody id="vRows"></tbody></table></div>
+          <p class="p-muted p-act-foot">Visits from the last 30 days are kept; search engines and bots are not counted.</p>
+        </div>`;
+      const draw = () => {
+        const f = $('input[name=vf]:checked').value; const q = $('#vQ').value.trim().toLowerCase();
+        const rows = a.visits.filter((v) => (f === 'All' || v.device === f) && (!q || [v.ip, v.page, pageName(v.page), v.browser, v.os, v.ref].join(' ').toLowerCase().includes(q))).slice(0, 200);
+        $('#vRows').innerHTML = rows.map((v) => `<tr>
+          <td data-l="When">${when(v.at)}</td>
+          <td data-l="Visitor">${v.new ? '<span class="p-res new">New visitor</span>' : '<span class="p-res ret">Returning</span>'}</td>
+          <td data-l="Page"><b>${esc(pageName(v.page))}</b></td>
+          <td data-l="IP address">${ip(v.ip)}</td>
+          <td data-l="Device">${device(v)}</td>
+          <td data-l="Browser">${esc(v.browser || '—')}</td>
+          <td data-l="Came from">${v.ref ? esc(v.ref) : '<span class="p-muted">Direct</span>'}</td></tr>`).join('') || '<tr><td colspan="7" class="p-empty">No visits match.</td></tr>';
+      };
+      $('#vF').addEventListener('change', (ev) => { $$('#vF .p-chip').forEach((c) => c.classList.toggle('on', c.contains(ev.target) && ev.target.checked)); draw(); });
+      $('#vQ').addEventListener('input', draw);
+      draw();
+      charts.push(new Chart($('#cVisits'), { type: 'bar', data: { labels: S.days.map((d) => new Date(d.day + 'T00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })),
+        datasets: [{ label: 'Visitors', data: S.days.map((d) => d.people), backgroundColor: '#1A9BD7', borderRadius: 6 }, { label: 'Page views', data: S.days.map((d) => d.views), backgroundColor: 'rgba(34,180,90,.55)', borderRadius: 6 }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } } } }));
+    }
+
+    // keep the numbers fresh while this page is open (skipped while someone is typing a search)
+    ACT_TIMER = setInterval(() => {
+      if (!location.hash.startsWith('#/activity')) { clearInterval(ACT_TIMER); return; }
+      if (document.activeElement?.matches('.p-act-search') || document.hidden) return;
+      route();
+    }, 60000);
   }
 
   /* ---------------- social media links (super admin) ---------------- */

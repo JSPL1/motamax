@@ -25,6 +25,7 @@ const createStore = require('./store');
 const sec = require('./security');
 const mailer = require('./mailer');
 const media = require('./media');
+const activity = require('./activity');
 
 const ROOT = path.join(__dirname, '..');
 const PROD = process.env.NODE_ENV === 'production';
@@ -95,7 +96,9 @@ async function currentUser(req) {
   const s = sec.readSession(cookies(req)[COOKIE]);
   if (!s) return null;
   const u = await store.get('users', s.uid);
-  return u && u.active ? u : null;
+  if (!u || !u.active) return null;
+  await activity.touchSeen(store, u);
+  return u;
 }
 const requireUser = wrap(async (req, res, next) => {
   const u = await currentUser(req);
@@ -184,9 +187,15 @@ app.post('/api/auth/login', limiter(10, 5 * 60 * 1000), wrap(async (req, res) =>
   const password = String(req.body?.password || '');
   const users = await store.all('users');
   const u = login && users.find((x) => x.email === login || x.username === login);
-  if (!u || !sec.verifyPassword(password, u.passHash)) throw fail(401, 'Incorrect username/email or password.');
-  if (!u.active) throw fail(403, 'This account is suspended. Please contact your administrator.');
-  await store.update('users', u.id, (d) => { d.lastLoginAt = now(); return d; });
+  if (!u || !sec.verifyPassword(password, u.passHash)) {
+    await activity.recordLogin(store, req, u, login, false, u ? 'Wrong password' : 'Unknown user');
+    throw fail(401, 'Incorrect username/email or password.');
+  }
+  if (!u.active) {
+    await activity.recordLogin(store, req, u, login, false, 'Account suspended');
+    throw fail(403, 'This account is suspended. Please contact your administrator.');
+  }
+  await activity.recordLogin(store, req, u, login, true);
   const ttl = req.body?.remember ? SESSION_TTL * 14 : SESSION_TTL;
   setSession(res, sec.signSession({ uid: u.id }, ttl), ttl);
   res.json({ user: publicUser(u) });
@@ -597,8 +606,22 @@ app.post('/api/visit', limiter(60, 60 * 1000), wrap(async (req, res) => {
     }
     return d;
   });
-  if (isNew) res.cookie('mmx_vid', sec.newId(), { httpOnly: true, sameSite: 'lax', secure: PROD, maxAge: 1000 * 60 * 60 * 24 * 365, path: '/' });
+  const vid = cookies(req).mmx_vid || sec.newId();
+  await activity.recordVisit(store, req, vid, isNew, req.body || {});
+  if (isNew) res.cookie('mmx_vid', vid, { httpOnly: true, sameSite: 'lax', secure: PROD, maxAge: 1000 * 60 * 60 * 24 * 365, path: '/' });
   res.json(await visitorCounts());
+}));
+
+/* ---------------- activity (admins) ---------------- */
+app.get('/api/activity', requireUser, requireAdmin, wrap(async (req, res) => {
+  const seenCut = new Date(Date.now() - 5 * 60000).toISOString();
+  const users = (await store.all('users'))
+    .sort((a, b) => String(b.lastSeenAt || b.lastLoginAt || '').localeCompare(String(a.lastSeenAt || a.lastLoginAt || '')))
+    .map((u) => ({ ...publicUser(u), lastLogin: u.lastLogin || null, lastSeenAt: u.lastSeenAt || null, loginCount: u.loginCount || 0, online: (u.lastSeenAt || '') >= seenCut.replace(/\.\d{3}Z$/, 'Z') }));
+  const logins = ((await store.get('settings', 'loginlog')) || {}).events || [];
+  const visits = ((await store.get('settings', 'visitlog')) || {}).visits || [];
+  res.set('Cache-Control', 'no-store');
+  res.json({ users, logins: logins.slice(-300).reverse(), visits: visits.slice(-400).reverse(), summary: activity.summary(visits) });
 }));
 
 /* ---------------- media (admin) ---------------- */

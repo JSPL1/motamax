@@ -120,9 +120,12 @@
     cache(site);
     placeBadges(site.badges);
     applySocial(site.social);
+    // count this page view (unique visitors are tracked with a first-party cookie); always on, the counter is only shown when enabled
+    var counted = fetch('/api/visit', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+      // page + referrer + touch support (lets the server tell an iPad from a Mac)
+      body: JSON.stringify({ page: location.pathname, ref: document.referrer, touch: navigator.maxTouchPoints || 0 }) })
+      .then(function (r) { return r.ok ? r.json() : site.visitors; }, function () { return site.visitors; });
     if (!site.showVisitors) { var s = $('.mmx-visitors'); if (s) s.remove(); return; }
-    // count this page view (unique visitors are tracked with a first-party cookie)
-    return fetch('/api/visit', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' })
-      .then(function (r) { return r.ok ? r.json() : site.visitors; }).then(showVisitors, function () { showVisitors(site.visitors); });
+    return counted.then(showVisitors);
   }).catch(function () { /* static hosting without the API: nothing to show */ });
 })();
