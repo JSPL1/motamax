@@ -40,20 +40,20 @@
     /* sustainability rings */
     about: () => {
       // Solution Architect badge at the heart of the three sustainability pillars
-      const cx = 200, cy = 200, off = 50, r = 108;
+      const cx = 200, cy = 200, off = 44, r = 98;
       const P = [['ENVIRONMENT', C.green, -90], ['SOCIAL', C.violet, 150], ['ECONOMIC', C.amber, 30]];
       const pt = (deg, d) => [cx + d * Math.cos(deg * Math.PI / 180), cy + d * Math.sin(deg * Math.PI / 180)];
       return `<svg viewBox="0 0 400 400" role="img" aria-label="Motamax Solution Architect badge at the centre of environmental, social and economic sustainability" class="illus-svg">
-        <defs><clipPath id="aboutBadgeClip"><circle cx="${cx}" cy="${cy}" r="96"/></clipPath>
+        <defs><clipPath id="aboutBadgeClip"><circle cx="${cx}" cy="${cy}" r="78"/></clipPath>
           <radialGradient id="aboutGlow"><stop offset="60%" stop-color="#5BC0FF" stop-opacity=".45"/><stop offset="100%" stop-color="#5BC0FF" stop-opacity="0"/></radialGradient></defs>
         ${P.map(([, col, deg], k) => { const [x, y] = pt(deg, off); return `<circle cx="${x}" cy="${y}" r="${r}" fill="${col}" fill-opacity=".13" stroke="${col}" stroke-width="2.5" class="il-breathe" style="transform-origin:${x}px ${y}px;animation-delay:${k * 1.2}s"/>`; }).join('')}
         <circle r="5" fill="${C.sky}"><animateMotion dur="12s" repeatCount="indefinite" path="M${cx} ${cy - 186} A186 186 0 1 1 ${cx - 0.1} ${cy - 186}"/></circle>
         <circle r="4" fill="${C.red}"><animateMotion dur="16s" repeatCount="indefinite" path="M${cx} ${cy + 180} A180 180 0 1 0 ${cx + 0.1} ${cy + 180}"/></circle>
-        <circle cx="${cx}" cy="${cy}" r="122" fill="url(#aboutGlow)" class="il-glow"/>
-        <circle cx="${cx}" cy="${cy}" r="104" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="2 6">
+        <circle cx="${cx}" cy="${cy}" r="102" fill="url(#aboutGlow)" class="il-glow"/>
+        <circle cx="${cx}" cy="${cy}" r="86" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="2 6">
           <animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="40s" repeatCount="indefinite"/></circle>
-        <circle cx="${cx}" cy="${cy}" r="98" fill="#fff"/>
-        <image href="assets/badges/badge-2.webp" x="${cx - 96}" y="${cy - 96}" width="192" height="192" clip-path="url(#aboutBadgeClip)"/>
+        <circle cx="${cx}" cy="${cy}" r="80" fill="#fff"/>
+        <image href="assets/badges/badge-2.webp" x="${cx - 78}" y="${cy - 78}" width="156" height="156" clip-path="url(#aboutBadgeClip)"/>
         <g font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="12" letter-spacing="1" text-anchor="middle">
           ${P.map(([label, col, deg], k) => { const [x, y] = pt(deg, off + r - 6); const w = label.length * 9 + 26; return `<g class="il-pop" style="animation-delay:${0.3 + k * 0.15}s">
             <rect x="${x - w / 2}" y="${y - 14}" width="${w}" height="28" rx="14" fill="${col}"/><text x="${x}" y="${y + 4.5}" fill="#fff">${label}</text></g>`; }).join('')}
@@ -89,24 +89,24 @@
       // gold Motamax emblem in the middle, client logos orbiting it (logos stay upright while the ring turns)
       const LOGOS = ['reliance', 'indianoil', 'airtel', 'tata-power', 'lic', 'drdo', 'jsw', 'ultratech'];
       const cols = [C.sky, C.violet, C.red, C.green, C.amber, C.sky, C.violet, C.red];
-      const R = 158, cx = 200, cy = 200, spin = 70;
+      const R = 150, cx = 200, cy = 200, spin = 70;
       const nodes = LOGOS.map((_, k) => { const a = k * Math.PI / 4 - Math.PI / 2; return [cx + R * Math.cos(a), cy + R * Math.sin(a)]; });
       return `<svg viewBox="0 0 400 400" role="img" aria-label="Motamax and its client network" class="illus-svg">
-        <defs><clipPath id="emblemClip"><circle cx="${cx}" cy="${cy}" r="104"/></clipPath>
+        <defs><clipPath id="emblemClip"><circle cx="${cx}" cy="${cy}" r="84"/></clipPath>
           <radialGradient id="emblemGlow"><stop offset="55%" stop-color="#FFC857" stop-opacity=".45"/><stop offset="100%" stop-color="#FFC857" stop-opacity="0"/></radialGradient></defs>
         <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#9AA6C8" stroke-dasharray="3 7" opacity=".45"/>
         <g><animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="${spin}s" repeatCount="indefinite"/>
-          ${nodes.map(([x, y], k) => `<path d="M${cx + 112 * (x - cx) / R} ${cy + 112 * (y - cy) / R} L${x} ${y}" stroke="${cols[k]}" stroke-width="1.6" opacity=".45"/>
-            ${dotOn(`M${x} ${y} L${cx + 112 * (x - cx) / R} ${cy + 112 * (y - cy) / R}`, cols[k], 2.4, k * 0.3, 3)}`).join('')}
+          ${nodes.map(([x, y], k) => `<path d="M${cx + 94 * (x - cx) / R} ${cy + 94 * (y - cy) / R} L${x} ${y}" stroke="${cols[k]}" stroke-width="1.6" opacity=".45"/>
+            ${dotOn(`M${x} ${y} L${cx + 94 * (x - cx) / R} ${cy + 94 * (y - cy) / R}`, cols[k], 2.4, k * 0.3, 3)}`).join('')}
           ${nodes.map(([x, y], k) => `<g class="il-pop" style="animation-delay:${k * 0.08}s"><g>
             <animateTransform attributeName="transform" type="rotate" from="0 ${x} ${y}" to="-360 ${x} ${y}" dur="${spin}s" repeatCount="indefinite"/>
-            <circle cx="${x}" cy="${y}" r="24" fill="#fff" stroke="${cols[k]}" stroke-width="2.5"/>
-            <image href="assets/clients/${LOGOS[k]}.png?v=hd1" x="${x - 20}" y="${y - 15}" width="40" height="30" preserveAspectRatio="xMidYMid meet"/></g></g>`).join('')}
+            <circle cx="${x}" cy="${y}" r="21" fill="#fff" stroke="${cols[k]}" stroke-width="2.5"/>
+            <image href="assets/clients/${LOGOS[k]}.png?v=hd1" x="${x - 16}" y="${y - 12}" width="32" height="24" preserveAspectRatio="xMidYMid meet"/></g></g>`).join('')}
         </g>
-        <circle cx="${cx}" cy="${cy}" r="124" fill="url(#emblemGlow)" class="il-glow"/>
-        <circle cx="${cx}" cy="${cy}" r="113" fill="none" stroke="#FFC857" stroke-width="1.5" stroke-dasharray="2 6" opacity=".7">
+        <circle cx="${cx}" cy="${cy}" r="104" fill="url(#emblemGlow)" class="il-glow"/>
+        <circle cx="${cx}" cy="${cy}" r="93" fill="none" stroke="#FFC857" stroke-width="1.5" stroke-dasharray="2 6" opacity=".7">
           <animateTransform attributeName="transform" type="rotate" from="360 ${cx} ${cy}" to="0 ${cx} ${cy}" dur="40s" repeatCount="indefinite"/></circle>
-        <image href="assets/badges/badge-1.webp" x="${cx - 104}" y="${cy - 104}" width="208" height="208" clip-path="url(#emblemClip)"/>
+        <image href="assets/badges/badge-1.webp" x="${cx - 84}" y="${cy - 84}" width="168" height="168" clip-path="url(#emblemClip)"/>
       </svg>`;
     },
 
