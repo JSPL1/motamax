@@ -191,7 +191,7 @@
 
   // Logo marquees (duplicated for a seamless loop); a second row runs the other way
   const logoTile = ([n, , logo]) => logo
-    ? `<span class="logo-chip"><img src="assets/clients/${logo}.png" alt="${esc(n)}" decoding="async" width="110" height="80"></span>`
+    ? `<span class="logo-chip"><img src="assets/clients/${logo}.png?v=hd1" alt="${esc(n)}" decoding="async" width="110" height="80"></span>`
     : `<span class="logo-chip text">${esc(n)}</span>`;
   const withLogos = CLIENTS.filter((c) => c[2]);
   const fillTrack = (el, list) => { const row = list.map(logoTile).join(''); el.innerHTML = row + row; };
@@ -285,7 +285,7 @@
     cg.innerHTML = CLIENTS.map(([n, sec, logo], i) => {
       const initials = n.replace(/[^A-Za-z ]/g, '').split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
       const mark = logo
-        ? `<span class="client-logo"><img src="assets/clients/${logo}.png" alt="${esc(n)} logo" loading="lazy" decoding="async" width="220" height="160"></span>`
+        ? `<span class="client-logo"><img src="assets/clients/${logo}.png?v=hd1" alt="${esc(n)} logo" loading="lazy" decoding="async" width="220" height="160"></span>`
         : `<span class="client-logo"><span class="mono ${MONO_COLORS[i % MONO_COLORS.length]}">${initials}</span></span>`;
       return `<div class="client glass reveal">${mark}<div><b>${esc(n)}</b><small>${esc(sec)}</small></div></div>`;
     }).join('');
